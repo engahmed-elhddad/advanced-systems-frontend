@@ -5,6 +5,9 @@ export const metadata = {
   title: "Advanced Systems | Industrial Automation Supplier Egypt",
   description:
     "Industrial Trading & Automation Solutions. New, Refurbished & Tested Equipment.",
+    verification:{
+      google:"2gJzgVPjoS0mwS4tHz3w6TmaMWAQFxY_GDZ7pg1Gkog",
+    },
 }
 
 export default function RootLayout({
