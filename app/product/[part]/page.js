@@ -119,10 +119,25 @@ export default async function ProductPage({ params, searchParams }) {
 
         <div>
 
-          <h1 className="text-4xl font-bold mb-6">
+          <h1 className="text-4xl font-bold mb-4">
             {product.part_number}
           </h1>
 
+          {/* Manufacturer */}
+          {product.manufacturer && (
+            <div className="text-gray-600 mb-2">
+              Manufacturer: <strong>{product.manufacturer}</strong>
+            </div>
+          )}
+
+          {/* Category */}
+          {product.category && (
+            <div className="text-gray-600 mb-4">
+              Category: {product.category}
+            </div>
+          )}
+
+          {/* Availability */}
           <div className="mb-4">
             <span className={`px-4 py-2 rounded text-white text-sm font-semibold
               ${inStock ? "bg-green-600" : "bg-red-600"}`}>
@@ -130,6 +145,7 @@ export default async function ProductPage({ params, searchParams }) {
             </span>
           </div>
 
+          {/* Condition */}
           {product.condition && !isExternal && (
             <div className="mb-6">
               <span className={`px-4 py-2 rounded text-white text-sm font-semibold ${conditionColor}`}>
@@ -138,6 +154,27 @@ export default async function ProductPage({ params, searchParams }) {
             </div>
           )}
 
+          {/* Description */}
+          {product.description && (
+            <p className="text-gray-700 mb-6">
+              {product.description}
+            </p>
+          )}
+
+          {/* DATASHEET BUTTON */}
+          {product.datasheet && (
+            <div className="mb-6">
+              <a
+                href={product.datasheet}
+                target="_blank"
+                className="inline-block bg-gray-800 hover:bg-black text-white px-6 py-3 rounded font-semibold"
+              >
+                View Datasheet
+              </a>
+            </div>
+          )}
+
+          {/* PRICE OR RFQ */}
           {!isExternal ? (
             <>
               <div className="text-3xl font-bold mb-6">
