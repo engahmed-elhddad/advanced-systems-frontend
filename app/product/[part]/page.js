@@ -35,8 +35,8 @@ export async function generateMetadata({ params }) {
   }
 
   return {
-    title: `${product.part_number} | ${product.condition || "Industrial"} | Advanced Systems Egypt`,
-    description: `Buy ${product.part_number}. ${product.condition || ""}. ${product.availability || ""}. Industrial Automation Supplier in Egypt.`,
+    title: `${product.part_number} ${product.availability === "In Stock" ? "In Stock" : ""} | ${product.manufacturer || "Industrial"} | Advanced Systems Egypt`,
+    description: `${product.part_number} industrial automation component. ${product.availability}. Supplier: Advanced Systems Egypt.`,
   }
 }
 
@@ -82,12 +82,19 @@ export default async function ProductPage({ params, searchParams }) {
   const conditionColor =
     conditionColors[product.condition] || "bg-gray-600"
 
-  // SEO Structured Data
+  // ==========================
+  // SEO STRUCTURED DATA
+  // ==========================
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.part_number,
     sku: product.part_number,
+    mpn: product.part_number,
+    brand: {
+      "@type": "Brand",
+      name: product.manufacturer || "Industrial"
+    },
     itemCondition: conditionSchema,
     offers: {
       "@type": "Offer",
@@ -120,7 +127,7 @@ export default async function ProductPage({ params, searchParams }) {
         <div>
 
           <h1 className="text-4xl font-bold mb-4">
-            {product.part_number}
+            {product.part_number} Industrial Automation Spare Part
           </h1>
 
           {/* Manufacturer */}
@@ -141,9 +148,16 @@ export default async function ProductPage({ params, searchParams }) {
           <div className="mb-4">
             <span className={`px-4 py-2 rounded text-white text-sm font-semibold
               ${inStock ? "bg-green-600" : "bg-red-600"}`}>
-              {isExternal ? "External Supplier" : product.availability || "Not in Stock"}
+              {product.availability || "Not in Stock"}
             </span>
           </div>
+
+          {/* IN STOCK SEO MESSAGE */}
+          {inStock && (
+            <div className="bg-green-100 border border-green-400 text-green-800 p-4 rounded mb-6">
+              This item is currently <strong>in stock</strong> and available for immediate supply from Advanced Systems Egypt.
+            </div>
+          )}
 
           {/* Condition */}
           {product.condition && !isExternal && (
@@ -175,39 +189,31 @@ export default async function ProductPage({ params, searchParams }) {
           )}
 
           {/* PRICE OR RFQ */}
-          {!isExternal ? (
+          {inStock ? (
             <>
               <div className="text-3xl font-bold mb-6">
                 {product.price && product.price > 0
                   ? `${product.price} USD`
                   : "Ask for Price"}
               </div>
-
-              {product.rfq_available && (
-                <a
-                  href="mailto:engahmed@advancedsystems-int.com"
-                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold"
-                >
-                  Request Quote
-                </a>
-              )}
             </>
           ) : (
             <div className="bg-gray-100 border rounded-xl p-6 shadow">
               <h2 className="text-xl font-semibold mb-4">
-                Request Quote for External Supplier
+                Request Quote
               </h2>
 
               <p className="mb-4 text-gray-600">
-                This item is available via external supplier.  
-                Submit your request and our team will provide pricing & lead time.
+                This item is not currently in our stock.  
+                Advanced Systems can source this product through our global supplier network.
+                Submit a request and we will provide price and delivery time.
               </p>
 
               <a
                 href={`mailto:engahmed@advancedsystems-int.com?subject=RFQ ${product.part_number}`}
                 className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold"
               >
-                Send RFQ
+                Request Quote
               </a>
             </div>
           )}
