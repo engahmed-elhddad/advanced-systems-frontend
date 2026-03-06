@@ -4,12 +4,17 @@ import ProductImage from "./ProductImage"
 // FETCH
 // ==========================
 async function getProduct(part) {
+
+  const API_BASE =
+    "https://advanced-systems-backend-production.up.railway.app"
+
   const res = await fetch(
-    `http://127.0.0.1:8000/product/${part}`,
+    `${API_BASE}/product/${part}`,
     { cache: "no-store" }
   )
 
   if (!res.ok) return null
+
   return res.json()
 }
 
@@ -133,7 +138,6 @@ export default async function ProductPage({ params, searchParams }) {
             </div>
           )}
 
-          {/* PRICE OR RFQ */}
           {!isExternal ? (
             <>
               <div className="text-3xl font-bold mb-6">
