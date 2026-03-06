@@ -3,9 +3,7 @@ export default async function sitemap() {
     const API_BASE =
       "https://advanced-systems-backend-production.up.railway.app"
   
-    const res = await fetch(`${API_BASE}/all-products`, {
-      cache: "no-store"
-    })
+    const res = await fetch(`${API_BASE}/all-products`)
   
     if (!res.ok) return []
   
