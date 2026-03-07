@@ -14,10 +14,13 @@ export default function HomePage() {
   const router = useRouter()
   const wrapperRef = useRef<HTMLDivElement>(null)
 
-  const API_BASE = "https://advanced-systems-backend-production.up.railway.app"
+  const API_BASE = "https://api.advancedsystems-int.com"
 
+  // highlight search match
   const highlightMatch = (text: string, query: string) => {
+
     if (!query) return text
+
     const regex = new RegExp(`(${query})`, "gi")
     const parts = text.split(regex)
 
@@ -26,22 +29,33 @@ export default function HomePage() {
         ? <span key={i} className="bg-yellow-200 font-semibold">{p}</span>
         : p
     )
+
   }
 
   const getStockColor = (availability: string) => {
+
     if (!availability) return "bg-gray-400"
+
     if (availability.toLowerCase().includes("in stock")) return "bg-green-500"
+
     if (availability.toLowerCase().includes("external")) return "bg-blue-500"
+
     if (availability.toLowerCase().includes("out")) return "bg-red-500"
+
     return "bg-gray-400"
+
   }
 
+  // search API
   useEffect(() => {
 
     if (part.trim().length < 2) {
+
       setResults([])
       setShowDropdown(false)
+
       return
+
     }
 
     const timer = setTimeout(async () => {
@@ -51,17 +65,19 @@ export default function HomePage() {
         setLoading(true)
 
         const res = await fetch(`${API_BASE}/search?part=${part}`)
+
         if (!res.ok) throw new Error("API error")
 
         const data = await res.json()
 
-        setResults(data.results || [])
+        setResults(data?.results || [])
         setShowDropdown(true)
         setSelectedIndex(-1)
 
       } catch (err) {
 
         console.log("Search failed:", err)
+
         setResults([])
         setShowDropdown(false)
 
@@ -77,6 +93,7 @@ export default function HomePage() {
 
   }, [part])
 
+  // close dropdown outside click
   useEffect(() => {
 
     function handleClickOutside(e: any) {
@@ -96,6 +113,8 @@ export default function HomePage() {
   }, [])
 
   const navigateToProduct = (item: any) => {
+
+    if (!item?.part_number) return
 
     const isExternal =
       item.availability?.toLowerCase().includes("external")
@@ -165,6 +184,14 @@ export default function HomePage() {
 
   }
 
+  const handleSearchClick = () => {
+
+    if (!part.trim()) return
+
+    router.push(`/product/${part.trim()}`)
+
+  }
+
   return (
 
     <div className="min-h-screen bg-gray-100 text-gray-900">
@@ -189,14 +216,25 @@ export default function HomePage() {
           className="relative max-w-xl mx-auto z-[9999]"
         >
 
-          <input
-            type="text"
-            placeholder="Enter Part Number (e.g. 315-2AH14-0AB0)"
-            value={part}
-            onChange={(e) => setPart(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-full px-4 py-3 rounded text-black shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+          <div className="flex gap-2">
+
+            <input
+              type="text"
+              placeholder="Enter Part Number (e.g. 315-2AH14-0AB0)"
+              value={part}
+              onChange={(e) => setPart(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full px-4 py-3 rounded text-black shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+
+            <button
+              onClick={handleSearchClick}
+              className="bg-blue-600 px-6 py-3 rounded text-white font-semibold"
+            >
+              Search
+            </button>
+
+          </div>
 
           {showDropdown && (
 
