@@ -20,13 +20,11 @@ async function getProduct(part) {
 
     const data = await res.json()
 
-    // بعض الـ APIs ترجع {product: {...}}
-    if (data.product) return data.product
+    if (!data) return null
 
-    // أو {data: {...}}
+    if (data.product) return data.product
     if (data.data) return data.data
 
-    // أو object مباشر
     return data
 
   } catch (error) {
@@ -59,10 +57,8 @@ export async function generateMetadata({ params }) {
   }
 
   return {
-    title:
-      `${product.part_number} | ${product.brand || "Industrial"} | Advanced Systems`,
-    description:
-      `${product.part_number} industrial automation spare part. Supplier: Advanced Systems Egypt.`
+    title: `${product.part_number} | ${product.brand || "Industrial"} | Advanced Systems`,
+    description: `${product.part_number} industrial automation spare part supplied by Advanced Systems Egypt.`
   }
 
 }
@@ -76,12 +72,14 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
   const product = await getProduct(part)
 
-  if (!product) {
+  if (!product || !product.part_number) {
+
     return (
       <div className="p-20 text-center text-xl">
         Product temporarily unavailable
       </div>
     )
+
   }
 
   const isExternal =
@@ -100,6 +98,11 @@ export default async function ProductPage({ params, searchParams = {} }) {
     product?.description ||
     `${part} industrial automation spare part supplied by Advanced Systems.`
 
+  const image =
+    product?.images && product.images.length > 0
+      ? product.images[0]
+      : null
+
   return (
 
     <div className="max-w-7xl mx-auto px-6 py-16">
@@ -108,9 +111,10 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
         <div className="border rounded-xl p-10 bg-white shadow">
 
-        <ProductImage
-          part={part}
-          apiImage={product?.images?.[0]} />
+          <ProductImage
+            part={part}
+            apiImage={image}
+          />
 
         </div>
 
@@ -132,11 +136,12 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
           <div className="mb-4">
 
-            <span className={`px-4 py-2 rounded text-white text-sm font-semibold
-              ${inStock ? "bg-green-600" : "bg-red-600"}`}>
-
+            <span
+              className={`px-4 py-2 rounded text-white text-sm font-semibold ${
+                inStock ? "bg-green-600" : "bg-red-600"
+              }`}
+            >
               {availability}
-
             </span>
 
           </div>
@@ -152,6 +157,7 @@ export default async function ProductPage({ params, searchParams = {} }) {
               <a
                 href={product.datasheet}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-block bg-gray-800 hover:bg-black text-white px-6 py-3 rounded font-semibold"
               >
 
@@ -182,18 +188,14 @@ export default async function ProductPage({ params, searchParams = {} }) {
               </h2>
 
               <p className="mb-4 text-gray-600">
-
                 Advanced Systems can source this product through our global supplier network.
-
               </p>
 
               <a
                 href={`mailto:eng.ahmed@advancedsystems-int.com?subject=RFQ ${part}`}
                 className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold"
               >
-
                 Request Quote
-
               </a>
 
             </div>
