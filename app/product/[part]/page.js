@@ -18,9 +18,11 @@ async function getProduct(part) {
 
     if (!res.ok) return null
 
-    return res.json()
+    return await res.json()
 
-  } catch {
+  } catch (error) {
+
+    console.error("API error:", error)
 
     return null
 
@@ -38,11 +40,13 @@ export async function generateMetadata({ params }) {
   const product = await getProduct(part)
 
   if (!product) {
+
     return {
       title: `${part} Industrial Automation Part | Advanced Systems`,
       description:
         `${part} industrial automation component available through Advanced Systems supplier network.`
     }
+
   }
 
   return {
@@ -57,13 +61,24 @@ export async function generateMetadata({ params }) {
 // ==========================
 // PAGE
 // ==========================
-export default async function ProductPage({ params, searchParams }) {
+export default async function ProductPage({ params, searchParams = {} }) {
 
   const part = params.part.toUpperCase()
 
   const product = await getProduct(part)
 
-  const isExternal = searchParams?.external === "1"
+  if (!product) {
+
+    return (
+      <div className="p-20 text-center text-xl">
+        Product not found
+      </div>
+    )
+
+  }
+
+  const isExternal =
+    searchParams && searchParams.external === "1"
 
   const availability =
     product?.availability || "Available on Request"
