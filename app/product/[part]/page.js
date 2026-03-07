@@ -5,9 +5,7 @@ import ProductImage from "./Product-Image"
 // ==========================
 async function getProduct(part) {
 
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL ||
-    "https://api.advancedsystems-int.com"
+  const API_BASE = "https://api.advancedsystems-int.com"
 
   try {
 
