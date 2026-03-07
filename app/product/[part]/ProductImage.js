@@ -8,13 +8,13 @@ export default function ProductImage({ part, apiImage }) {
 
   const imageSources = [
 
-    // 🔹 Image from our backend
+    // 🔹 Image from backend
     apiImage,
 
     // 🔹 Local images
     `/products/${normalized}.jpg`,
 
-    // 🔹 Siemens catalog images
+    // 🔹 Siemens catalog
     `https://cache.industry.siemens.com/dl/files/${normalized}.jpg`,
 
     // 🔹 RS Components
@@ -23,18 +23,26 @@ export default function ProductImage({ part, apiImage }) {
     // 🔹 Farnell
     `https://www.element14.com/productimages/standard/en_GB/${normalized}.jpg`,
 
-    // 🔹 placeholder
+    // 🔹 fallback
     `/no-image.png`
-  ]
+
+  ].filter(Boolean) // remove null values
+
 
   const [index, setIndex] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const handleError = () => {
 
-    if (index < imageSources.length - 1) {
-      setIndex(index + 1)
-    }
+    setIndex(prev => {
+
+      if (prev < imageSources.length - 1) {
+        return prev + 1
+      }
+
+      return prev
+
+    })
 
   }
 
@@ -58,4 +66,5 @@ export default function ProductImage({ part, apiImage }) {
     </div>
 
   )
+
 }
