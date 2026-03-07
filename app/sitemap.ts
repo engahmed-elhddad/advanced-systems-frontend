@@ -15,6 +15,14 @@ export default async function sitemap() {
   }))
 
   // =========================
+  // CROSS REFERENCE PAGES
+  // =========================
+  const crossUrls = data.parts.map((p:string)=>({
+    url:`https://advancedsystems-int.com/cross/${p}`,
+    lastModified:new Date()
+  }))
+
+  // =========================
   // BRAND PAGES
   // =========================
   const brands = [
@@ -93,6 +101,7 @@ export default async function sitemap() {
   return [
     ...mainPages,
     ...productUrls,
+    ...crossUrls,
     ...brandUrls,
     ...categoryUrls
   ]
