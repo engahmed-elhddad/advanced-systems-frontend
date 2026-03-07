@@ -1,4 +1,4 @@
-import ProductImage from "../ProductImage"
+import ProductImage from "./Product-Image"
 
 // ==========================
 // FETCH PRODUCT
