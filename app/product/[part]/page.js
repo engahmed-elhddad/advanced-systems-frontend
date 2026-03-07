@@ -1,21 +1,31 @@
 import ProductImage from "./ProductImage"
 
 // ==========================
-// FETCH
+// FETCH PRODUCT
 // ==========================
 async function getProduct(part) {
 
   const API_BASE =
-    "https://advanced-systems-backend-production.up.railway.app"
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://api.advancedsystems-int.com"
 
-  const res = await fetch(
-    `${API_BASE}/product/${part}`,
-    { cache: "no-store" }
-  )
+  try {
 
-  if (!res.ok) return null
+    const res = await fetch(
+      `${API_BASE}/product/${part}`,
+      { cache: "no-store" }
+    )
 
-  return res.json()
+    if (!res.ok) return null
+
+    return res.json()
+
+  } catch {
+
+    return null
+
+  }
+
 }
 
 // ==========================
@@ -23,21 +33,25 @@ async function getProduct(part) {
 // ==========================
 export async function generateMetadata({ params }) {
 
-  const resolvedParams = await params
-  const normalizedPart = resolvedParams.part.toUpperCase()
+  const part = params.part.toUpperCase()
 
-  const product = await getProduct(normalizedPart)
+  const product = await getProduct(part)
 
-  if (!product || !product.part_number) {
+  if (!product) {
     return {
-      title: "Product Not Found | Advanced Systems",
+      title: `${part} Industrial Automation Part | Advanced Systems`,
+      description:
+        `${part} industrial automation component available through Advanced Systems supplier network.`
     }
   }
 
   return {
-    title: `${product.part_number} ${product.availability === "In Stock" ? "In Stock" : ""} | ${product.manufacturer || "Industrial"} | Advanced Systems Egypt`,
-    description: `${product.part_number} industrial automation component. ${product.availability}. Supplier: Advanced Systems Egypt.`,
+    title:
+      `${product.part_number} | ${product.manufacturer || "Industrial"} | Advanced Systems`,
+    description:
+      `${product.part_number} industrial automation spare part. Supplier: Advanced Systems Egypt.`
   }
+
 }
 
 // ==========================
@@ -45,181 +59,132 @@ export async function generateMetadata({ params }) {
 // ==========================
 export default async function ProductPage({ params, searchParams }) {
 
-  const resolvedParams = await params
-  const normalizedPart = resolvedParams.part.toUpperCase()
+  const part = params.part.toUpperCase()
 
-  const product = await getProduct(normalizedPart)
-
-  if (!product || !product.part_number) {
-    return (
-      <div className="p-20 text-center text-2xl">
-        Product not found
-      </div>
-    )
-  }
+  const product = await getProduct(part)
 
   const isExternal = searchParams?.external === "1"
 
-  const inStock = product.availability === "In Stock" && !isExternal
+  const availability =
+    product?.availability || "Available on Request"
 
-  const conditionMap = {
-    "New": "https://schema.org/NewCondition",
-    "Refurbished": "https://schema.org/RefurbishedCondition",
-    "Used Like New": "https://schema.org/UsedCondition",
-    "Used": "https://schema.org/UsedCondition"
-  }
+  const inStock =
+    availability === "In Stock" && !isExternal
 
-  const conditionColors = {
-    "New": "bg-green-600",
-    "Refurbished": "bg-blue-600",
-    "Used Like New": "bg-purple-600",
-    "Used": "bg-orange-600"
-  }
+  const manufacturer =
+    product?.manufacturer || "Industrial"
 
-  const conditionSchema =
-    conditionMap[product.condition] || "https://schema.org/UsedCondition"
-
-  const conditionColor =
-    conditionColors[product.condition] || "bg-gray-600"
-
-  // ==========================
-  // SEO STRUCTURED DATA
-  // ==========================
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.part_number,
-    sku: product.part_number,
-    mpn: product.part_number,
-    brand: {
-      "@type": "Brand",
-      name: product.manufacturer || "Industrial"
-    },
-    itemCondition: conditionSchema,
-    offers: {
-      "@type": "Offer",
-      availability: inStock
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      priceCurrency: "USD",
-      ...(product.price && product.price > 0 && !isExternal
-        ? { price: product.price }
-        : {})
-    }
-  }
+  const description =
+    product?.description ||
+    `${part} industrial automation spare part supplied by Advanced Systems.`
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-16">
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData)
-        }}
-      />
+    <div className="max-w-7xl mx-auto px-6 py-16">
 
       <div className="grid md:grid-cols-2 gap-12">
 
         <div className="border rounded-xl p-10 bg-white shadow">
-          <ProductImage part={product.part_number} apilmage={product.image} />
+
+          <ProductImage
+            part={part}
+            apilmage={product?.image}
+          />
+
         </div>
 
         <div>
 
           <h1 className="text-4xl font-bold mb-4">
-            {product.part_number} Industrial Automation Spare Part
+            {part} Industrial Automation Spare Part
           </h1>
 
-          {/* Manufacturer */}
-          {product.manufacturer && (
-            <div className="text-gray-600 mb-2">
-              Manufacturer: <strong>{product.manufacturer}</strong>
-            </div>
-          )}
+          <div className="text-gray-600 mb-2">
+            Manufacturer: <strong>{manufacturer}</strong>
+          </div>
 
-          {/* Category */}
-          {product.category && (
+          {product?.category && (
             <div className="text-gray-600 mb-4">
               Category: {product.category}
             </div>
           )}
 
-          {/* Availability */}
           <div className="mb-4">
+
             <span className={`px-4 py-2 rounded text-white text-sm font-semibold
               ${inStock ? "bg-green-600" : "bg-red-600"}`}>
-              {product.availability || "Not in Stock"}
+
+              {availability}
+
             </span>
+
           </div>
 
-          {/* IN STOCK SEO MESSAGE */}
-          {inStock && (
-            <div className="bg-green-100 border border-green-400 text-green-800 p-4 rounded mb-6">
-              This item is currently <strong>in stock</strong> and available for immediate supply from Advanced Systems Egypt.
-            </div>
-          )}
+          <p className="text-gray-700 mb-6">
+            {description}
+          </p>
 
-          {/* Condition */}
-          {product.condition && !isExternal && (
+          {product?.datasheet && (
+
             <div className="mb-6">
-              <span className={`px-4 py-2 rounded text-white text-sm font-semibold ${conditionColor}`}>
-                {product.condition}
-              </span>
-            </div>
-          )}
 
-          {/* Description */}
-          {product.description && (
-            <p className="text-gray-700 mb-6">
-              {product.description}
-            </p>
-          )}
-
-          {/* DATASHEET BUTTON */}
-          {product.datasheet && (
-            <div className="mb-6">
               <a
                 href={product.datasheet}
                 target="_blank"
                 className="inline-block bg-gray-800 hover:bg-black text-white px-6 py-3 rounded font-semibold"
               >
+
                 View Datasheet
+
               </a>
+
             </div>
+
           )}
 
-          {/* PRICE OR RFQ */}
           {inStock ? (
-            <>
-              <div className="text-3xl font-bold mb-6">
-                {product.price && product.price > 0
-                  ? `${product.price} USD`
-                  : "Ask for Price"}
-              </div>
-            </>
+
+            <div className="text-3xl font-bold mb-6">
+
+              {product?.price
+                ? `${product.price} USD`
+                : "Ask for Price"}
+
+            </div>
+
           ) : (
+
             <div className="bg-gray-100 border rounded-xl p-6 shadow">
+
               <h2 className="text-xl font-semibold mb-4">
                 Request Quote
               </h2>
 
               <p className="mb-4 text-gray-600">
-                This item is not currently in our stock.  
+
                 Advanced Systems can source this product through our global supplier network.
-                Submit a request and we will provide price and delivery time.
+
               </p>
 
               <a
-                href={`mailto:eng.ahmed@advancedsystems-int.com?subject=RFQ ${product.part_number}`}
+                href={`mailto:eng.ahmed@advancedsystems-int.com?subject=RFQ ${part}`}
                 className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold"
               >
+
                 Request Quote
+
               </a>
+
             </div>
+
           )}
 
         </div>
+
       </div>
+
     </div>
+
   )
+
 }
