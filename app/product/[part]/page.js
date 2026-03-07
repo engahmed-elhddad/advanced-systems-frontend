@@ -121,7 +121,7 @@ export default async function ProductPage({ params, searchParams }) {
       <div className="grid md:grid-cols-2 gap-12">
 
         <div className="border rounded-xl p-10 bg-white shadow">
-          <ProductImage part={product.part_number} />
+          <ProductImage part={product.part_number} apilmage={product.image} />
         </div>
 
         <div>

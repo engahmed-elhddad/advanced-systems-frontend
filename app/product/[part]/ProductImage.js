@@ -2,25 +2,28 @@
 
 import { useState } from "react"
 
-export default function ProductImage({ part }) {
+export default function ProductImage({ part, apiImage }) {
 
-  const normalized = part?.toUpperCase()
+  const normalized = part ? part.toUpperCase() : ""
 
   const imageSources = [
+
+    // 🔹 Image from our backend
+    apiImage,
 
     // 🔹 Local images
     `/products/${normalized}.jpg`,
 
-    // 🔹 Siemens typical product images
+    // 🔹 Siemens catalog images
     `https://cache.industry.siemens.com/dl/files/${normalized}.jpg`,
 
     // 🔹 RS Components
     `https://media.rs-online.com/t_large/${normalized}.jpg`,
 
-    // 🔹 Farnell / Element14
+    // 🔹 Farnell
     `https://www.element14.com/productimages/standard/en_GB/${normalized}.jpg`,
 
-    // 🔹 fallback placeholder
+    // 🔹 placeholder
     `/no-image.png`
   ]
 
@@ -28,12 +31,15 @@ export default function ProductImage({ part }) {
   const [loading, setLoading] = useState(true)
 
   const handleError = () => {
+
     if (index < imageSources.length - 1) {
       setIndex(index + 1)
     }
+
   }
 
   return (
+
     <div className="flex items-center justify-center h-96">
 
       {loading && (
@@ -43,11 +49,13 @@ export default function ProductImage({ part }) {
       <img
         src={imageSources[index]}
         alt={normalized}
+        loading="lazy"
         className={`h-96 object-contain mx-auto ${loading ? "hidden" : "block"}`}
         onLoad={() => setLoading(false)}
         onError={handleError}
       />
 
     </div>
+
   )
 }
