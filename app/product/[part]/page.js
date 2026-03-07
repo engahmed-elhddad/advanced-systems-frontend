@@ -45,6 +45,8 @@ export async function generateMetadata({ params }) {
   const part = params?.part ? params.part.toUpperCase() : ""
 
   const product = await getProduct(part)
+  console.log("PART:", part)
+  console.log("PRODUCT RESPONSE:", product)
 
   if (!product) {
 
@@ -71,6 +73,8 @@ export default async function ProductPage({ params, searchParams = {} }) {
   const part = params?.part ? params.part.toUpperCase() : ""
 
   const product = await getProduct(part)
+  console.log("PART:", part)
+  console.log("PRODUCT RESPONSE:", product)
 
   if (!product || !product.part_number) {
 
