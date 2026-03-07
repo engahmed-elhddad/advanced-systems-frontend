@@ -218,6 +218,50 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
 
 {/* ==========================
+   INDUSTRIAL PART NAVIGATION
+========================== */}
+
+<div className="mt-10">
+
+<h2 className="text-xl font-bold mb-4">
+Industrial Part Navigation
+</h2>
+
+<ul className="space-y-2">
+
+<li>
+<a
+href={`/cross/${part}`}
+className="text-blue-600 hover:underline"
+>
+Cross Reference for {part}
+</a>
+</li>
+
+<li>
+<a
+href={`/replacement/${part}`}
+className="text-blue-600 hover:underline"
+>
+Replacement Parts for {part}
+</a>
+</li>
+
+<li>
+<a
+href={`/compatible/${part}`}
+className="text-blue-600 hover:underline"
+>
+Compatible Modules for {part}
+</a>
+</li>
+
+</ul>
+
+</div>
+
+
+{/* ==========================
    RELATED PARTS
 ========================== */}
 
@@ -249,9 +293,9 @@ className="text-blue-600 hover:underline"
 )}
 
 
-{/* ==========================
+/* ==========================
    CROSS REFERENCE
-========================== */}
+========================== */
 
 {product?.cross_reference?.length > 0 && (
 
