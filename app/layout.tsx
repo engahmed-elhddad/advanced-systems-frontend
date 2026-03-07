@@ -1,5 +1,7 @@
 import "./globals.css"
 import Link from "next/link"
+import SearchBar from "@/components/SearchBar"
+
 
 export const metadata = {
   title: "Advanced Systems | Industrial Automation Supplier Egypt",
@@ -25,6 +27,7 @@ export default function RootLayout({
           <Link href="/" className="text-2xl font-bold tracking-wide">
             Advanced Systems
           </Link>
+          <SearchBar />
 
           <div className="flex gap-8 text-sm items-center">
 

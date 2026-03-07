@@ -20,7 +20,6 @@ async function getProduct(part) {
       }
     )
 
-    // لو API رجع 404 نرجع virtual product
     if (!res.ok) {
 
       console.log("API STATUS ERROR:", res.status)
@@ -37,8 +36,6 @@ async function getProduct(part) {
     }
 
     const data = await res.json()
-
-    console.log("API RESPONSE:", data)
 
     if (data?.part_number) return data
     if (data?.product) return data.product
@@ -89,16 +86,6 @@ export async function generateMetadata({ params }) {
 
   const product = await getProduct(part)
 
-  if (!product) {
-
-    return {
-      title: `${part} Industrial Automation Part | Advanced Systems`,
-      description:
-        `${part} industrial automation component available through Advanced Systems supplier network.`
-    }
-
-  }
-
   return {
     title: `${product.part_number} | ${product.brand || "Industrial"} | Advanced Systems`,
     description:
@@ -119,9 +106,6 @@ export default async function ProductPage({ params, searchParams = {} }) {
   const part = normalizePart(params)
 
   const product = await getProduct(part)
-
-  console.log("PART:", part)
-  console.log("PRODUCT RESPONSE:", product)
 
   const isExternal =
     searchParams && searchParams.external === "1"
@@ -192,9 +176,74 @@ export default async function ProductPage({ params, searchParams = {} }) {
             {description}
           </p>
 
+
+{/* ==========================
+   RELATED PARTS (Dynamic)
+========================== */}
+
+{product?.related_parts?.length > 0 && (
+
+<div className="mt-10">
+
+<h2 className="text-xl font-bold mb-4">
+Related Parts
+</h2>
+
+<ul className="space-y-2">
+
+{product.related_parts.slice(0,5).map((p)=>(
+<li key={p}>
+<a
+href={`/product/${p}`}
+className="text-blue-600 hover:underline"
+>
+{p}
+</a>
+</li>
+))}
+
+</ul>
+
+</div>
+
+)}
+
+
+{/* ==========================
+   CROSS REFERENCE
+========================== */}
+
+{product?.cross_reference?.length > 0 && (
+
+<div className="mt-10">
+
+<h2 className="text-xl font-bold mb-4">
+Cross Reference
+</h2>
+
+<ul className="space-y-2">
+
+{product.cross_reference.slice(0,5).map((p)=>(
+<li key={p}>
+<a
+href={`/product/${p}`}
+className="text-blue-600 hover:underline"
+>
+{p}
+</a>
+</li>
+))}
+
+</ul>
+
+</div>
+
+)}
+
+
           {product?.datasheet && (
 
-            <div className="mb-6">
+            <div className="mt-8">
 
               <a
                 href={product.datasheet}
@@ -211,9 +260,10 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
           )}
 
+
           {inStock ? (
 
-            <div className="text-3xl font-bold mb-6">
+            <div className="text-3xl font-bold mt-6">
 
               {product?.price
                 ? `${product.price} USD`
@@ -223,7 +273,7 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
           ) : (
 
-            <div className="bg-gray-100 border rounded-xl p-6 shadow">
+            <div className="bg-gray-100 border rounded-xl p-6 shadow mt-6">
 
               <h2 className="text-xl font-semibold mb-4">
                 Request Quote
