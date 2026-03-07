@@ -13,6 +13,21 @@ async function getProduct(part_number: string) {
   return res.json();
 }
 
+async function getRelated(part_number: string) {
+  const res = await fetch(
+    `https://api.advancedsystems-int.com/related/${part_number}`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    return [];
+  }
+
+  const data = await res.json();
+
+  return data.results || [];
+}
+
 export async function generateMetadata({ params }: any) {
   const product = await getProduct(params.part_number);
 
@@ -30,6 +45,7 @@ export async function generateMetadata({ params }: any) {
 
 export default async function ProductPage({ params }: any) {
   const product = await getProduct(params.part_number);
+  const related = await getRelated(params.part_number);
 
   if (!product) {
     return <div style={{ padding: "40px" }}>Product not found</div>;
@@ -40,7 +56,7 @@ export default async function ProductPage({ params }: any) {
       
       <div style={{ display: "flex", gap: "40px", flexWrap: "wrap" }}>
 
-        {/* PRODUCT IMAGE */}
+        {/* Product Image */}
 
         <div
           style={{
@@ -79,7 +95,7 @@ export default async function ProductPage({ params }: any) {
 
         </div>
 
-        {/* PRODUCT INFO */}
+        {/* Product Info */}
 
         <div style={{ flex: 1 }}>
 
@@ -158,7 +174,7 @@ export default async function ProductPage({ params }: any) {
             </div>
           )}
 
-          {/* RFQ BOX */}
+          {/* RFQ */}
 
           <div
             style={{
@@ -196,7 +212,43 @@ export default async function ProductPage({ params }: any) {
         </div>
       </div>
 
-      {/* SEO Structured Data */}
+      {/* Related Products */}
+
+      {related.length > 0 && (
+
+        <div style={{ marginTop: "60px" }}>
+
+          <h2>Related Products</h2>
+
+          <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+
+            {related.map((item:any)=>(
+
+              <a
+                key={item.part_number}
+                href={`/product/${item.part_number}`}
+                style={{
+                  border: "1px solid #eee",
+                  padding: "12px",
+                  borderRadius: "6px",
+                  textDecoration: "none",
+                  color:"#111"
+                }}
+              >
+
+                {item.part_number}
+
+              </a>
+
+            ))}
+
+          </div>
+
+        </div>
+
+      )}
+
+      {/* SEO Schema */}
 
       <script
         type="application/ld+json"
