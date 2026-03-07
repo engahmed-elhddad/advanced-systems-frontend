@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function ProductImage({ part, apiImage }) {
 
@@ -8,29 +8,36 @@ export default function ProductImage({ part, apiImage }) {
 
   const imageSources = [
 
-    // 🔹 Image from backend
+    // backend image
     apiImage,
 
-    // 🔹 Local images
+    // local image
     `/products/${normalized}.jpg`,
 
-    // 🔹 Siemens catalog
+    // Siemens catalog
     `https://cache.industry.siemens.com/dl/files/${normalized}.jpg`,
 
-    // 🔹 RS Components
+    // RS Components
     `https://media.rs-online.com/t_large/${normalized}.jpg`,
 
-    // 🔹 Farnell
+    // Farnell
     `https://www.element14.com/productimages/standard/en_GB/${normalized}.jpg`,
 
-    // 🔹 fallback
+    // fallback
     `/no-image.png`
 
-  ].filter(Boolean) // remove null values
-
+  ].filter(Boolean)
 
   const [index, setIndex] = useState(0)
   const [loading, setLoading] = useState(true)
+
+  // reset image when part changes
+  useEffect(() => {
+
+    setIndex(0)
+    setLoading(true)
+
+  }, [part])
 
   const handleError = () => {
 
@@ -55,6 +62,7 @@ export default function ProductImage({ part, apiImage }) {
       )}
 
       <img
+        key={index}
         src={imageSources[index]}
         alt={normalized}
         loading="lazy"
