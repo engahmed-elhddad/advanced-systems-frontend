@@ -68,13 +68,11 @@ export default async function ProductPage({ params, searchParams = {} }) {
   const product = await getProduct(part)
 
   if (!product) {
-
     return (
       <div className="p-20 text-center text-xl">
-        Product not found
+        Product temporarily unavailable
       </div>
     )
-
   }
 
   const isExternal =
@@ -101,10 +99,9 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
         <div className="border rounded-xl p-10 bg-white shadow">
 
-          <ProductImage
-            part={part}
-            apiImage={product?.images?.[0]}
-          />
+        <ProductImage
+          part={part}
+          apiImage={product?.images?.[0]} />
 
         </div>
 
