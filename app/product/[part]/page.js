@@ -210,7 +210,7 @@ export default async function ProductPage({ params, searchParams }) {
               </p>
 
               <a
-                href={`mailto:engahmed@advancedsystems-int.com?subject=RFQ ${product.part_number}`}
+                href={`mailto:eng.ahmed@advancedsystems-int.com?subject=RFQ ${product.part_number}`}
                 className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold"
               >
                 Request Quote

@@ -41,7 +41,7 @@ export default function RootLayout({
             </Link>
 
             <a
-              href="mailto:engahmed@advancedsystems-int.com"
+              href="mailto:eng.ahmed@advancedsystems-int.com"
               className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white"
             >
               RFQ
@@ -80,7 +80,7 @@ export default function RootLayout({
               <h3 className="text-white font-semibold mb-4">
                 Contact
               </h3>
-              <p>Email: engahmed@advancedsystems-int.com</p>
+              <p>Email: eng.ahmed@advancedsystems-int.com</p>
               <p>Phone: 01000629229</p>
               <p>Website: advancedsystems-int.com</p>
             </div>
