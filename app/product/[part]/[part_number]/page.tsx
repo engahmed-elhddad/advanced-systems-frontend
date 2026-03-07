@@ -40,25 +40,46 @@ export default async function ProductPage({ params }: any) {
       
       <div style={{ display: "flex", gap: "40px", flexWrap: "wrap" }}>
 
-        {/* Product Image Placeholder */}
+        {/* PRODUCT IMAGE */}
 
         <div
           style={{
             width: "420px",
-            height: "320px",
+            minHeight: "320px",
             background: "#f5f5f5",
             borderRadius: "8px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#777",
-            fontSize: "14px"
+            overflow: "hidden"
           }}
         >
-          Product Image
+
+          {product.image ? (
+
+            <img
+              src={product.image}
+              alt={product.part_number}
+              style={{
+                width: "100%",
+                objectFit: "contain"
+              }}
+              onError={(e:any)=>{
+                e.target.style.display="none"
+              }}
+            />
+
+          ) : (
+
+            <span style={{ color:"#777" }}>
+              No Image Available
+            </span>
+
+          )}
+
         </div>
 
-        {/* Product Info */}
+        {/* PRODUCT INFO */}
 
         <div style={{ flex: 1 }}>
 
@@ -187,6 +208,7 @@ export default async function ProductPage({ params }: any) {
             brand: product.brand,
             description: product.description,
             sku: product.part_number,
+            image: product.image,
             offers: {
               "@type": "Offer",
               availability: product.availability,
