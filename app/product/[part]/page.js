@@ -9,28 +9,39 @@ async function getProduct(part) {
 
   try {
 
+    const normalized = part
+      .replace(/\s+/g, "")
+      .toUpperCase()
+
     const res = await fetch(
-      `${API_BASE}/product/${encodeURIComponent(part)}`,
+      `${API_BASE}/product/${encodeURIComponent(normalized)}`,
       {
         cache: "no-store"
       }
     )
 
+    // لو API رجع 404 نرجع virtual product
     if (!res.ok) {
+
       console.log("API STATUS ERROR:", res.status)
-      return null
+
+      return {
+        part_number: normalized,
+        brand: "Industrial",
+        category: "Industrial Component",
+        description: `${normalized} industrial automation spare part`,
+        availability: "Available on Request",
+        images: []
+      }
+
     }
 
     const data = await res.json()
 
     console.log("API RESPONSE:", data)
 
-    // API يرجع object مباشر
     if (data?.part_number) return data
-
-    // بعض APIs ترجع nested
     if (data?.product) return data.product
-
     if (data?.data) return data.data
 
     return data
@@ -39,7 +50,14 @@ async function getProduct(part) {
 
     console.error("API ERROR:", error)
 
-    return null
+    return {
+      part_number: part,
+      brand: "Industrial",
+      category: "Industrial Component",
+      description: `${part} industrial automation spare part`,
+      availability: "Available on Request",
+      images: []
+    }
 
   }
 
@@ -104,16 +122,6 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
   console.log("PART:", part)
   console.log("PRODUCT RESPONSE:", product)
-
-  if (!product || !product.part_number) {
-
-    return (
-      <div className="p-20 text-center text-xl">
-        Product temporarily unavailable
-      </div>
-    )
-
-  }
 
   const isExternal =
     searchParams && searchParams.external === "1"
