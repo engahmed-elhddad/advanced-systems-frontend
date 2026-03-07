@@ -5,15 +5,15 @@ import ProductImage from "./Product-Image"
 // ==========================
 async function getProduct(part) {
 
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL ||
-    "https://api.advancedsystems-int.com"
+  const API_BASE = "https://api.advancedsystems-int.com"
 
   try {
 
     const res = await fetch(
-      `${API_BASE}/product/${part}`,
-      { cache: "no-store" }
+      `${API_BASE}/product/${encodeURIComponent(part)}`,
+      {
+        cache: "no-store"
+      }
     )
 
     if (!res.ok) {
@@ -25,10 +25,10 @@ async function getProduct(part) {
 
     console.log("API RESPONSE:", data)
 
-    // لو API رجع object مباشر
+    // API يرجع object مباشر
     if (data?.part_number) return data
 
-    // لو nested
+    // بعض APIs ترجع nested
     if (data?.product) return data.product
 
     if (data?.data) return data.data
@@ -45,16 +45,31 @@ async function getProduct(part) {
 
 }
 
+
+// ==========================
+// NORMALIZE PART
+// ==========================
+function normalizePart(params) {
+
+  if (!params?.part) return ""
+
+  if (Array.isArray(params.part)) {
+    return params.part[0].toUpperCase()
+  }
+
+  return params.part.toUpperCase()
+
+}
+
+
 // ==========================
 // SEO METADATA
 // ==========================
 export async function generateMetadata({ params }) {
 
-  const part = params?.part ? params.part.toUpperCase() : ""
+  const part = normalizePart(params)
 
   const product = await getProduct(part)
-  console.log("PART:", part)
-  console.log("PRODUCT RESPONSE:", product)
 
   if (!product) {
 
@@ -68,19 +83,25 @@ export async function generateMetadata({ params }) {
 
   return {
     title: `${product.part_number} | ${product.brand || "Industrial"} | Advanced Systems`,
-    description: `${product.part_number} industrial automation spare part supplied by Advanced Systems Egypt.`
+    description:
+      `${product.part_number} industrial automation spare part supplied by Advanced Systems Egypt.`,
+    alternates: {
+      canonical: `https://advancedsystems-int.com/product/${part}`
+    }
   }
 
 }
+
 
 // ==========================
 // PAGE
 // ==========================
 export default async function ProductPage({ params, searchParams = {} }) {
 
-  const part = params?.part ? params.part.toUpperCase() : ""
+  const part = normalizePart(params)
 
   const product = await getProduct(part)
+
   console.log("PART:", part)
   console.log("PRODUCT RESPONSE:", product)
 
@@ -114,6 +135,7 @@ export default async function ProductPage({ params, searchParams = {} }) {
     product?.images && product.images.length > 0
       ? product.images[0]
       : null
+
 
   return (
 
