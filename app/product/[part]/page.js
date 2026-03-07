@@ -1,5 +1,6 @@
 import ProductImage from "./Product-Image"
 
+
 // ==========================
 // FETCH PRODUCT
 // ==========================
@@ -22,8 +23,6 @@ async function getProduct(part) {
 
     if (!res.ok) {
 
-      console.log("API STATUS ERROR:", res.status)
-
       return {
         part_number: normalized,
         brand: "Industrial",
@@ -44,8 +43,6 @@ async function getProduct(part) {
     return data
 
   } catch (error) {
-
-    console.error("API ERROR:", error)
 
     return {
       part_number: part,
@@ -86,13 +83,29 @@ export async function generateMetadata({ params }) {
 
   const product = await getProduct(part)
 
+  const title =
+    `${product.part_number} | ${product.brand || "Industrial"} | Advanced Systems`
+
+  const description =
+    `${product.part_number} industrial automation spare part supplied by Advanced Systems Egypt.`
+
   return {
-    title: `${product.part_number} | ${product.brand || "Industrial"} | Advanced Systems`,
-    description:
-      `${product.part_number} industrial automation spare part supplied by Advanced Systems Egypt.`,
+
+    title,
+    description,
+
     alternates: {
       canonical: `https://advancedsystems-int.com/product/${part}`
+    },
+
+    openGraph: {
+      title,
+      description,
+      url: `https://advancedsystems-int.com/product/${part}`,
+      siteName: "Advanced Systems",
+      type: "website"
     }
+
   }
 
 }
@@ -129,9 +142,36 @@ export default async function ProductPage({ params, searchParams = {} }) {
       : null
 
 
+  // ==========================
+  // PRODUCT SCHEMA
+  // ==========================
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: part,
+    brand: manufacturer,
+    description: description,
+    sku: part,
+    offers: {
+      "@type": "Offer",
+      availability: inStock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock"
+    }
+  }
+
+
   return (
 
     <div className="max-w-7xl mx-auto px-6 py-16">
+
+      {/* SEO SCHEMA */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema)
+        }}
+      />
 
       <div className="grid md:grid-cols-2 gap-12">
 
@@ -178,7 +218,7 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
 
 {/* ==========================
-   RELATED PARTS (Dynamic)
+   RELATED PARTS
 ========================== */}
 
 {product?.related_parts?.length > 0 && (

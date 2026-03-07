@@ -5,21 +5,57 @@ import SearchBar from "@/components/SearchBar"
 
 export const metadata = {
   title: "Advanced Systems | Industrial Automation Supplier Egypt",
+
   description:
     "Industrial Trading & Automation Solutions. New, Refurbished & Tested Equipment.",
-    verification:{
-      google:"2gJzgVPjoS0mwS4tHz3w6TmaMWAQFxY_GDZ7pg1Gkog",
-    },
+
+  verification:{
+    google:"2gJzgVPjoS0mwS4tHz3w6TmaMWAQFxY_GDZ7pg1Gkog",
+  },
+
+  openGraph:{
+    title:"Advanced Systems",
+    description:"Industrial Automation Supplier Egypt",
+    url:"https://advancedsystems-int.com",
+    siteName:"Advanced Systems",
+    type:"website"
+  }
+
 }
+
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Advanced Systems",
+  "url": "https://advancedsystems-int.com",
+  "logo": "https://advancedsystems-int.com/logo.png",
+  "email": "eng.ahmed@advancedsystems-int.com",
+  "telephone": "+201000629229",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "EG",
+    "addressLocality": "10th of Ramadan City"
+  }
+}
+
   return (
     <html lang="en">
       <body className="bg-gray-100">
+
+        {/* SEO ORGANIZATION SCHEMA */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema)
+          }}
+        />
 
         {/* 🔷 NAVBAR */}
         <nav className="bg-gray-900 text-white px-8 py-4 flex justify-between items-center shadow-lg">
@@ -27,6 +63,7 @@ export default function RootLayout({
           <Link href="/" className="text-2xl font-bold tracking-wide">
             Advanced Systems
           </Link>
+
           <SearchBar />
 
           <div className="flex gap-8 text-sm items-center">
