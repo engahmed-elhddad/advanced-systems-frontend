@@ -2,14 +2,26 @@ const API = "https://api.advancedsystems-int.com"
 
 export default async function sitemap() {
 
-  const res = await fetch(`${API}/discover/6ES7315-2AH14-0AB0`)
+  let parts:string[] = []
 
-  const data = await res.json()
+  try {
+
+    const res = await fetch(`${API}/discover/6ES7315-2AH14-0AB0`)
+
+    const data = await res.json()
+
+    parts = data.parts || []
+
+  } catch (e) {
+
+    parts = []
+
+  }
 
   // =========================
   // PRODUCT PAGES
   // =========================
-  const productUrls = data.parts.map((p:string)=>({
+  const productUrls = parts.map((p:string)=>({
     url:`https://advancedsystems-int.com/product/${p}`,
     lastModified:new Date()
   }))
@@ -17,7 +29,7 @@ export default async function sitemap() {
   // =========================
   // CROSS REFERENCE PAGES
   // =========================
-  const crossUrls = data.parts.map((p:string)=>({
+  const crossUrls = parts.map((p:string)=>({
     url:`https://advancedsystems-int.com/cross/${p}`,
     lastModified:new Date()
   }))
@@ -89,6 +101,31 @@ export default async function sitemap() {
   }))
 
   // =========================
+  // SERIES PAGES
+  // =========================
+  const series = [
+    "s7-300",
+    "s7-1200",
+    "s7-1500",
+    "logo",
+    "acs550",
+    "acs880",
+    "bmx",
+    "modicon",
+    "pnoz",
+    "e2e",
+    "e3z",
+    "3rt",
+    "3ru",
+    "af-contactor"
+  ]
+
+  const seriesUrls = series.map((s)=>({
+    url:`https://advancedsystems-int.com/series/${s}`,
+    lastModified:new Date()
+  }))
+
+  // =========================
   // MAIN PAGES
   // =========================
   const mainPages = [
@@ -103,7 +140,8 @@ export default async function sitemap() {
     ...productUrls,
     ...crossUrls,
     ...brandUrls,
-    ...categoryUrls
+    ...categoryUrls,
+    ...seriesUrls
   ]
 
 }
