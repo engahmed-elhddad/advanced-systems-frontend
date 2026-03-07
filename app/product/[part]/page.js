@@ -51,7 +51,7 @@ export async function generateMetadata({ params }) {
 
   return {
     title:
-      `${product.part_number} | ${product.manufacturer || "Industrial"} | Advanced Systems`,
+      `${product.part_number} | ${product.brand || "Industrial"} | Advanced Systems`,
     description:
       `${product.part_number} industrial automation spare part. Supplier: Advanced Systems Egypt.`
   }
@@ -87,7 +87,7 @@ export default async function ProductPage({ params, searchParams = {} }) {
     availability === "In Stock" && !isExternal
 
   const manufacturer =
-    product?.manufacturer || "Industrial"
+    product?.brand || "Industrial"
 
   const description =
     product?.description ||
@@ -103,7 +103,7 @@ export default async function ProductPage({ params, searchParams = {} }) {
 
           <ProductImage
             part={part}
-            apilmage={product?.image}
+            apiImage={product?.images?.[0]}
           />
 
         </div>
