@@ -35,7 +35,7 @@ async function getProduct(part) {
 // ==========================
 export async function generateMetadata({ params }) {
 
-  const part = params.part.toUpperCase()
+  const part = params?.part ? params.part.toUpperCase() : ""
 
   const product = await getProduct(part)
 
@@ -63,7 +63,7 @@ export async function generateMetadata({ params }) {
 // ==========================
 export default async function ProductPage({ params, searchParams = {} }) {
 
-  const part = params.part.toUpperCase()
+  const part = params?.part ? params.part.toUpperCase() : ""
 
   const product = await getProduct(part)
 
