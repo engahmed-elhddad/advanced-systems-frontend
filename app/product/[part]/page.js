@@ -16,20 +16,28 @@ async function getProduct(part) {
       { cache: "no-store" }
     )
 
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.log("API STATUS ERROR:", res.status)
+      return null
+    }
 
     const data = await res.json()
 
-    if (!data) return null
+    console.log("API RESPONSE:", data)
 
-    if (data.product) return data.product
-    if (data.data) return data.data
+    // لو رجع مباشرة
+    if (data?.part_number) return data
+
+    // لو nested
+    if (data?.product) return data.product
+
+    if (data?.data) return data.data
 
     return data
 
   } catch (error) {
 
-    console.error("API error:", error)
+    console.error("API ERROR:", error)
 
     return null
 
