@@ -6,29 +6,28 @@ async function getProduct(part_number: string) {
     { cache: "no-store" }
   );
 
-  if (!res.ok) {
-    return null;
-  }
+  if (!res.ok) return null;
 
   return res.json();
 }
 
 async function getRelated(part_number: string) {
+
   const res = await fetch(
     `https://api.advancedsystems-int.com/related/${part_number}`,
     { cache: "no-store" }
   );
 
-  if (!res.ok) {
-    return [];
-  }
+  if (!res.ok) return [];
 
   const data = await res.json();
 
   return data.results || [];
+
 }
 
 export async function generateMetadata({ params }: any) {
+
   const product = await getProduct(params.part_number);
 
   if (!product) {
@@ -41,9 +40,11 @@ export async function generateMetadata({ params }: any) {
     title: product.title,
     description: product.seo_description,
   };
+
 }
 
 export default async function ProductPage({ params }: any) {
+
   const product = await getProduct(params.part_number);
   const related = await getRelated(params.part_number);
 
@@ -53,10 +54,10 @@ export default async function ProductPage({ params }: any) {
 
   return (
     <div style={{ maxWidth: "1100px", margin: "auto", padding: "40px" }}>
-      
+
       <div style={{ display: "flex", gap: "40px", flexWrap: "wrap" }}>
 
-        {/* Product Image */}
+        {/* IMAGE */}
 
         <div
           style={{
@@ -95,7 +96,8 @@ export default async function ProductPage({ params }: any) {
 
         </div>
 
-        {/* Product Info */}
+
+        {/* INFO */}
 
         <div style={{ flex: 1 }}>
 
@@ -210,9 +212,11 @@ export default async function ProductPage({ params }: any) {
           </div>
 
         </div>
+
       </div>
 
-      {/* Related Products */}
+
+      {/* RELATED PRODUCTS */}
 
       {related.length > 0 && (
 
@@ -248,7 +252,8 @@ export default async function ProductPage({ params }: any) {
 
       )}
 
-      {/* SEO Schema */}
+
+      {/* SEO */}
 
       <script
         type="application/ld+json"
