@@ -1,7 +1,7 @@
 export default async function sitemap() {
 
     const API_BASE =
-      "https://advanced-systems-backend-production.up.railway.app"
+    "https://advanced-systems-backend-production.up.railway.app"
   
     const res = await fetch(`${API_BASE}/all-products`)
   
@@ -11,8 +11,8 @@ export default async function sitemap() {
   
     const products = data.results || []
   
-    const urls = products.map((item: any) => ({
-      url: 'https://advancedsystems-int.com/product/${item.part_number}',
+    const urls = products.map((item:any) => ({
+      url: `https://advanced-systems-int.com/product/${item.part_number}`,
       lastModified: new Date(),
     }))
   
