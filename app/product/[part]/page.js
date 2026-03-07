@@ -5,7 +5,9 @@ import ProductImage from "./Product-Image"
 // ==========================
 async function getProduct(part) {
 
-  const API_BASE = "https://api.advancedsystems-int.com"
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://api.advancedsystems-int.com"
 
   try {
 
@@ -23,7 +25,7 @@ async function getProduct(part) {
 
     console.log("API RESPONSE:", data)
 
-    // لو رجع مباشرة
+    // لو API رجع object مباشر
     if (data?.part_number) return data
 
     // لو nested
