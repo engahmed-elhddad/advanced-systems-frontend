@@ -18,7 +18,16 @@ async function getProduct(part) {
 
     if (!res.ok) return null
 
-    return await res.json()
+    const data = await res.json()
+
+    // بعض الـ APIs ترجع {product: {...}}
+    if (data.product) return data.product
+
+    // أو {data: {...}}
+    if (data.data) return data.data
+
+    // أو object مباشر
+    return data
 
   } catch (error) {
 
