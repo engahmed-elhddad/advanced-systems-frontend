@@ -14,17 +14,32 @@ const [availability,setAvailability] = useState("In Stock")
 
 const addProduct = async()=>{
 
-const res = await fetch(`${API}/admin/import-products`,{
+const res = await fetch(`${API}/admin/add-product`,{
 
 method:"POST",
 
 headers:{
+"Content-Type":"application/json",
 "api-key":"ADVANCED_SYSTEMS_ADMIN"
-}
+},
+
+body: JSON.stringify({
+
+part_number: part,
+price: parseFloat(price),
+quantity: parseInt(quantity),
+condition: condition,
+availability: availability
 
 })
 
+})
+
+if(res.ok){
 alert("Product Added")
+}else{
+alert("Error adding product")
+}
 
 }
 
@@ -69,11 +84,24 @@ className="border p-2 mb-3 w-full"
 onChange={(e)=>setCondition(e.target.value)}
 />
 
+<select
+className="border p-2 mb-3 w-full"
+onChange={(e)=>setAvailability(e.target.value)}
+>
+
+<option value="In Stock">In Stock</option>
+<option value="Out of Stock">Out of Stock</option>
+<option value="Available on Request">Available on Request</option>
+
+</select>
+
 <button
 onClick={addProduct}
 className="bg-blue-600 text-white px-4 py-2"
 >
+
 Add Product
+
 </button>
 
 </div>
