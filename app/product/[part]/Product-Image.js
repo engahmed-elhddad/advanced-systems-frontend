@@ -6,12 +6,20 @@ export default function ProductImage({ part, apiImage }) {
 
   const normalized = part ? part.toUpperCase() : ""
 
+  // local images (multiple)
+  const localImages = Array.from({ length: 6 }, (_, i) =>
+    `/products/${normalized}-${i + 1}.jpg`
+  )
+
   const imageSources = [
 
     // backend image
     apiImage,
 
-    // local image
+    // multiple local images
+    ...localImages,
+
+    // single local image fallback
     `/products/${normalized}.jpg`,
 
     // Siemens catalog
