@@ -24,6 +24,23 @@ export const productsApi = {
   related: (id: number) => api.get(`/api/v1/products/${id}/related`),
 };
 
+// Backwards-compatible helpers used by app routes/pages
+export const getProducts = (params?: Record<string, any>) =>
+  productsApi.list(params).then((r) => r.data);
+
+export const getFeaturedProducts = (limit = 8) =>
+  productsApi.featured(limit).then((r) => r.data);
+
+export const getProductByPartNumber = (partNumber: string) =>
+  productsApi.byPartNumber(partNumber).then((r) => r.data);
+
+export const getProductBySlug = (slug: string) =>
+  productsApi.bySlug(slug).then((r) => r.data);
+
+/** Fetch product by part number, or generate SEO page if not in DB */
+export const getProductOrGenerate = (partNumber: string) =>
+  api.get(`/api/v1/products/part/${encodeURIComponent(partNumber)}/or-generate`).then((r) => r.data);
+
 // Search
 export const searchApi = {
   search: (q: string, params?: Record<string, any>) =>
@@ -31,11 +48,17 @@ export const searchApi = {
   autocomplete: (q: string) => api.get("/api/v1/search/autocomplete", { params: { q } }),
 };
 
+export const suggestProducts = (q: string, limit = 8) =>
+  searchApi.autocomplete(q).then((r) => r.data);
+
 // Brands
 export const brandsApi = {
   list: () => api.get("/api/v1/brands/"),
   bySlug: (slug: string) => api.get(`/api/v1/brands/${slug}`),
 };
+
+export const getBrands = () =>
+  brandsApi.list().then((r) => r.data);
 
 // Categories
 export const categoriesApi = {
@@ -43,11 +66,18 @@ export const categoriesApi = {
   bySlug: (slug: string) => api.get(`/api/v1/categories/${slug}`),
 };
 
+// Backwards-compatible helpers used by app routes/pages
+export const getCategories = () =>
+  categoriesApi.list().then((r) => r.data);
+
 // RFQ
 export const rfqApi = {
   submit: (data: any) => api.post("/api/v1/rfq/", data),
   getByRef: (ref: string) => api.get(`/api/v1/rfq/${ref}`),
 };
+
+export const submitRFQ = (data: any) =>
+  rfqApi.submit(data).then((r) => r.data);
 
 // Currency
 export const currencyApi = {

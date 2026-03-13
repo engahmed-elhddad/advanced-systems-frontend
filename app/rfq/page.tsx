@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { submitRFQ } from "@/lib/api"
 
 export default function RFQPage() {
-  const searchParams = useSearchParams()
   const [form, setForm] = useState({
-    part_number: searchParams?.get("part_number") || searchParams?.get("part") || "",
+    part_number: "",
     quantity: "1",
     company: "",
     contact_name: "",
@@ -18,9 +16,11 @@ export default function RFQPage() {
   })
 
   useEffect(() => {
-    const part = searchParams?.get("part_number") || searchParams?.get("part")
+    if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    const part = params.get("part_number") || params.get("part")
     if (part) setForm((f) => ({ ...f, part_number: part }))
-  }, [searchParams])
+  }, [])
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [errorMsg, setErrorMsg] = useState("")
 

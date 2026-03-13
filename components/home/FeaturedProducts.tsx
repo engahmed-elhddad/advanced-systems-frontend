@@ -18,7 +18,7 @@ export async function FeaturedProducts() {
     <section>
       <div className="flex items-center justify-between mb-6">
         <h2 className="section-title">Latest Products</h2>
-        <Link href="/products" className="text-sm text-brand-400 hover:text-brand-300 transition-colors">
+        <Link href="/products" className="text-sm font-medium text-industrial-green-600 hover:text-industrial-green-700 transition-colors">
           View all →
         </Link>
       </div>
@@ -30,7 +30,7 @@ export async function FeaturedProducts() {
             manufacturer={p.brand?.name}
             category={p.category?.name}
             description={p.short_description || p.description}
-            image_url={p.images?.[0]?.url || p.primary_image}
+            image_url={p.images?.[0]?.url || p.primary_image || (p.part_number ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/uploads/products/${p.part_number}.jpg` : undefined)}
             stock_quantity={p.stock_quantity}
             availability={p.availability === 'available' || (p.stock_quantity ?? 0) > 0 ? 'in_stock' : 'on_request'}
             price_usd={p.price_usd}

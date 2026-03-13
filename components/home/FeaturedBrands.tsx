@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { getBrands } from '@/lib/api'
 
 export async function FeaturedBrands() {
-  let brands: { name: string; slug?: string; product_count?: number }[] = []
+  let brands: { name: string; slug?: string; product_count?: number; count?: number }[] = []
   try {
     const data = await getBrands()
     brands = (Array.isArray(data) ? data : data?.brands || []).slice(0, 12)
@@ -14,7 +14,7 @@ export async function FeaturedBrands() {
     <section>
       <div className="flex items-center justify-between mb-6">
         <h2 className="section-title">Featured Brands</h2>
-        <Link href="/brands" className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">
+        <Link href="/brands" className="text-sm font-medium text-industrial-green-600 hover:text-industrial-green-700 transition-colors">
           View all →
         </Link>
       </div>

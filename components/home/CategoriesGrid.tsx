@@ -21,7 +21,7 @@ export async function CategoriesGrid() {
     <section>
       <div className="flex items-center justify-between mb-6">
         <h2 className="section-title">Browse by Category</h2>
-        <Link href="/categories" className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">
+        <Link href="/categories" className="text-sm font-medium text-industrial-green-600 hover:text-industrial-green-700 transition-colors">
           All categories →
         </Link>
       </div>
@@ -35,12 +35,12 @@ export async function CategoriesGrid() {
               href={`/products?category=${encodeURIComponent(cat.name)}`}
               className="card p-5 flex items-center gap-4 group"
             >
-              <div className="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center group-hover:bg-primary-100 transition-colors shrink-0">
-                <Icon className="w-6 h-6 text-primary-600" />
+              <div className="w-12 h-12 rounded-xl bg-industrial-green-50 flex items-center justify-center group-hover:bg-industrial-green-100 transition-colors shrink-0">
+                <Icon className="w-6 h-6 text-industrial-green-600" />
               </div>
               <div>
-                <div className="font-semibold text-sm text-gray-900 group-hover:text-primary-600 transition-colors">{cat.name}</div>
-                <div className="text-xs text-gray-500">{cat.count ?? cat.product_count ?? 0} parts</div>
+                <div className="font-semibold text-sm text-industrial-gray-900 group-hover:text-industrial-green-600 transition-colors">{cat.name}</div>
+                <div className="text-xs text-industrial-gray-500">{cat.count ?? cat.product_count ?? 0} parts</div>
               </div>
             </Link>
           )

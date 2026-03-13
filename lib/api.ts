@@ -21,6 +21,10 @@ export const getFeaturedProducts = (limit = 8) =>
 export const getProductByPartNumber = (partNumber: string) =>
   api.get(`/api/v1/products/part/${encodeURIComponent(partNumber)}`).then((r) => r.data);
 
+/** Fetch product by part number, or generate SEO page if not in DB */
+export const getProductOrGenerate = (partNumber: string) =>
+  api.get(`/api/v1/products/part/${encodeURIComponent(partNumber)}/or-generate`).then((r) => r.data);
+
 export const getProductBySlug = (slug: string) =>
   api.get(`/api/v1/products/slug/${encodeURIComponent(slug)}`).then((r) => r.data);
 

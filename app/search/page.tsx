@@ -58,13 +58,14 @@ function SearchResults() {
         const params = new URLSearchParams({ q, page: String(pageParam), size: "20" })
         if (categorySlug) params.set("category", slugToCategory(categorySlug) ?? categorySlug)
         if (brandParam) params.set("brand", brandParam)
+        if (searchParams.get("series")) params.set("series", searchParams.get("series")!)
 
         const res = await fetch(`${API}/api/v1/search/?${params}`)
         if (!res.ok) throw new Error()
         const data = await res.json()
         const items = data.hits ?? data.items ?? data.products ?? []
         setProducts(items)
-        setTotalPages(data.pages ?? Math.ceil((data.total ?? 0) / 20) || 1)
+        setTotalPages(data.pages ?? (Math.ceil((data.total ?? 0) / 20) || 1))
         setTotalCount(data.total ?? items.length)
         const bSet = new Set<string>()
         for (const p of items) {

@@ -9,7 +9,7 @@ export async function getUserCountry(): Promise<string> {
   try {
     const res = await fetch('https://ipapi.co/json/', { cache: 'force-cache' })
     const data = await res.json()
-    countryCache = data.country_code || 'US'
+    countryCache = (data.country_code as string | null) || 'US'
     return countryCache
   } catch {
     return 'US'
@@ -21,7 +21,7 @@ export async function getUSDtoEGPRate(): Promise<number | null> {
     return rateCache.rate
   }
   try {
-    const data = await getExchangeRate('USD', 'EGP')
+    const data = await getExchangeRate()
     if (data?.rate) {
       rateCache = { rate: data.rate, ts: Date.now() }
       return data.rate

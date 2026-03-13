@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
-import { getProductByPartNumber, getProductBySlug } from '@/lib/api'
+import { getProductByPartNumber, getProductBySlug, getProductOrGenerate } from '@/lib/api'
 import { ProductDetail } from './ProductDetail'
 import type { Metadata } from 'next'
 
@@ -15,7 +15,11 @@ async function fetchProduct(ident: string) {
     try {
       return await getProductBySlug(ident)
     } catch {
-      return null
+      try {
+        return await getProductOrGenerate(ident)
+      } catch {
+        return null
+      }
     }
   }
 }
