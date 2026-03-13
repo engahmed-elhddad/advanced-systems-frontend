@@ -1,0 +1,54 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-industrial-800; }
+  body { @apply bg-industrial-950 text-white; }
+  :root {
+    --header-height: 64px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-500 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-industrial-800 hover:bg-industrial-700 border border-industrial-600 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2;
+  }
+  .btn-outline {
+    @apply border border-primary-500 text-primary-400 hover:bg-primary-600 hover:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200;
+  }
+  .card {
+    @apply bg-industrial-900 border border-industrial-800 rounded-xl overflow-hidden;
+  }
+  .badge-available {
+    @apply bg-green-900/50 text-green-400 border border-green-700 text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+  .badge-limited {
+    @apply bg-yellow-900/50 text-yellow-400 border border-yellow-700 text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+  .badge-unavailable {
+    @apply bg-red-900/50 text-red-400 border border-red-700 text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+  .input-field {
+    @apply bg-industrial-800 border border-industrial-600 rounded-lg px-4 py-3 text-white placeholder-industrial-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all w-full;
+  }
+  .section-title {
+    @apply text-2xl font-bold text-white;
+  }
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-400 to-blue-300 bg-clip-text text-transparent;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme("colors.industrial.600") transparent;
+  }
+  .text-balance { text-wrap: balance; }
+}

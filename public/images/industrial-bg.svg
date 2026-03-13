@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0f1e;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#0d1428;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#060c18;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#0ea5e9;stop-opacity:0"/>
+    </linearGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#1e2d4f" stroke-width="0.5" opacity="0.6"/>
+    </pattern>
+    <pattern id="dots" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="15" cy="15" r="1" fill="#0ea5e9" opacity="0.2"/>
+    </pattern>
+  </defs>
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#bgGrad)"/>
+  <!-- Grid lines (industrial floor) -->
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  <!-- Dot pattern (circuit board) -->
+  <rect width="1920" height="1080" fill="url(#dots)"/>
+  <!-- Central glow -->
+  <ellipse cx="960" cy="200" rx="700" ry="300" fill="url(#glowGrad)" opacity="0.6"/>
+
+  <!-- Industrial machinery silhouettes (simplified) -->
+  <!-- Left industrial equipment -->
+  <g opacity="0.12" fill="#0ea5e9">
+    <!-- Control panel left -->
+    <rect x="80" y="400" width="120" height="200" rx="4"/>
+    <rect x="90" y="420" width="40" height="60" rx="2" fill="#0c4a6e"/>
+    <rect x="140" y="420" width="40" height="60" rx="2" fill="#0c4a6e"/>
+    <circle cx="110" cy="500" r="12"/>
+    <circle cx="160" cy="500" r="12"/>
+    <rect x="90" y="520" width="100" height="8" rx="2"/>
+    <rect x="90" y="535" width="100" height="8" rx="2"/>
+    <rect x="90" y="550" width="100" height="8" rx="2"/>
+    <!-- Pipes left -->
+    <rect x="50" y="480" width="30" height="8" rx="4"/>
+    <rect x="35" y="440" width="8" height="50" rx="4"/>
+  </g>
+
+  <!-- Right industrial equipment -->
+  <g opacity="0.12" fill="#0ea5e9">
+    <!-- Control panel right -->
+    <rect x="1720" y="350" width="140" height="250" rx="4"/>
+    <rect x="1730" y="370" width="50" height="80" rx="2" fill="#0c4a6e"/>
+    <rect x="1790" y="370" width="50" height="80" rx="2" fill="#0c4a6e"/>
+    <circle cx="1755" cy="480" r="15"/>
+    <circle cx="1815" cy="480" r="15"/>
+    <rect x="1730" y="505" width="120" height="10" rx="2"/>
+    <rect x="1730" y="525" width="120" height="10" rx="2"/>
+    <rect x="1730" y="545" width="120" height="10" rx="2"/>
+    <!-- Pipes right -->
+    <rect x="1860" y="460" width="40" height="10" rx="5"/>
+    <rect x="1895" y="420" width="10" height="60" rx="5"/>
+  </g>
+
+  <!-- Circuit board traces -->
+  <g stroke="#0ea5e9" stroke-width="1" fill="none" opacity="0.08">
+    <polyline points="200,100 260,100 260,160 320,160"/>
+    <circle cx="260" cy="100" r="4" fill="#0ea5e9"/>
+    <circle cx="260" cy="160" r="4" fill="#0ea5e9"/>
+    <polyline points="400,200 400,260 480,260 480,320"/>
+    <circle cx="400" cy="260" r="4" fill="#0ea5e9"/>
+    <polyline points="1600,150 1700,150 1700,250"/>
+    <circle cx="1700" cy="150" r="4" fill="#0ea5e9"/>
+    <polyline points="1500,300 1550,300 1550,380 1620,380"/>
+    <circle cx="1550" cy="300" r="4" fill="#0ea5e9"/>
+  </g>
+
+  <!-- Horizontal accent line -->
+  <line x1="0" y1="1079" x2="1920" y2="1079" stroke="#0ea5e9" stroke-width="2" opacity="0.3"/>
+</svg>
