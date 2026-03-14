@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { getProducts } from '@/lib/api'
 import { ProductCard } from '@/components/products/ProductCard'
+import { ProductGridSkeleton } from '@/components/ui/ProductSkeleton'
+import { productToCardProps } from '@/lib/productMappers'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export function ProductsClient() {
@@ -76,11 +78,7 @@ export function ProductsClient() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-80 bg-gray-100 rounded-xl skeleton" />
-          ))}
-        </div>
+        <ProductGridSkeleton count={8} />
       ) : products.length === 0 ? (
         <div className="text-center py-24 text-gray-500 bg-gray-50 rounded-xl border border-gray-200">
           <p className="text-lg font-medium">No products found.</p>
@@ -88,18 +86,8 @@ export function ProductsClient() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {products.map(p => (
-            <ProductCard
-              key={p.part_number}
-              part_number={p.part_number}
-              manufacturer={p.brand?.name ?? p.manufacturer}
-              category={p.category?.name ?? p.category}
-              description={p.short_description ?? p.description}
-              image_url={p.images?.[0]?.url ?? p.primary_image ?? p.image_url}
-              stock_quantity={p.stock_quantity}
-              availability={p.availability === 'available' || (p.stock_quantity ?? 0) > 0 ? 'in_stock' : 'on_request'}
-              price_usd={p.price_usd}
-            />
+          {products.map((p) => (
+            <ProductCard key={p.part_number} {...productToCardProps(p)} />
           ))}
         </div>
       )}

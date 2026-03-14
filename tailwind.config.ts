@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Industrial palette: white, gray, light green
+        // industrial = legacy; prefer primary-* in new code
         industrial: {
           white: "#ffffff",
           gray: {

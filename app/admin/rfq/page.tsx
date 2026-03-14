@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
+const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
 type RFQ = {
   id: number
@@ -33,7 +33,7 @@ export default function AdminRFQPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    fetch(`${API}/admin/rfq`, { headers: { "api-key": "ADVANCED_SYSTEMS_ADMIN" } })
+    fetch(`${API}/admin/rfq`, { headers: { "Content-Type": "application/json", ...getAuthHeaders() } })
       .then(r => r.json())
       .then(d => setRfqs(d.rfqs ?? d ?? []))
       .catch(() => {})
@@ -45,7 +45,7 @@ export default function AdminRFQPage() {
     try {
       await fetch(`${API}/admin/rfq/${rfqId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "api-key": "ADVANCED_SYSTEMS_ADMIN" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           status: response.status,
           response_price: response.price,

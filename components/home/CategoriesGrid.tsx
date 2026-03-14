@@ -1,46 +1,49 @@
 import Link from 'next/link'
 import { getCategories } from '@/lib/api'
-import { Cpu, Zap, Activity, Gauge, Wifi, Settings } from 'lucide-react'
+import { CATEGORIES } from '@/app/lib/constants'
+import { getCategoryIcon } from '@/lib/categoryIcons'
 
-const CATEGORY_ICONS: Record<string, any> = {
-  PLC: Cpu, Drive: Zap, Sensor: Activity,
-  HMI: Gauge, Communication: Wifi, default: Settings,
-}
+type Cat = { name: string; slug?: string; count?: number; product_count?: number }
 
 export async function CategoriesGrid() {
-  let categories: { name: string; count?: number; product_count?: number }[] = []
+  let apiCats: Cat[] = []
   try {
     const data = await getCategories()
     const arr = Array.isArray(data) ? data : data.categories || []
-    categories = arr.slice(0, 8)
+    apiCats = arr.slice(0, 12)
   } catch {}
+  const categories: Cat[] =
+    apiCats.length > 0 ? apiCats : CATEGORIES.map((c) => ({ name: c.name, slug: c.slug }))
 
   if (!categories.length) return null
 
   return (
     <section>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="section-title">Browse by Category</h2>
-        <Link href="/categories" className="text-sm font-medium text-industrial-green-600 hover:text-industrial-green-700 transition-colors">
-          All categories →
+        <h2 className="section-title">Parts by Category</h2>
+        <Link href="/categories" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+          View all categories →
         </Link>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {categories.map(cat => {
-          const iconKey = Object.keys(CATEGORY_ICONS).find(k => (cat.name || '').includes(k)) || 'default'
-          const Icon = CATEGORY_ICONS[iconKey]
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
+        {categories.map((cat) => {
+          const Icon = getCategoryIcon(cat.name)
+          const href = cat.slug ? `/category/${cat.slug}` : `/search?category=${encodeURIComponent(cat.name)}`
+          const count = cat.count ?? cat.product_count ?? 0
           return (
             <Link
               key={cat.name}
-              href={`/products?category=${encodeURIComponent(cat.name)}`}
-              className="card p-5 flex items-center gap-4 group"
+              href={href}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 bg-white hover:border-primary-300 hover:bg-primary-50/50 transition-colors group"
             >
-              <div className="w-12 h-12 rounded-xl bg-industrial-green-50 flex items-center justify-center group-hover:bg-industrial-green-100 transition-colors shrink-0">
-                <Icon className="w-6 h-6 text-industrial-green-600" />
+              <div className="w-10 h-10 rounded-lg bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center shrink-0">
+                <Icon className="w-5 h-5 text-slate-600 group-hover:text-primary-600" />
               </div>
-              <div>
-                <div className="font-semibold text-sm text-industrial-gray-900 group-hover:text-industrial-green-600 transition-colors">{cat.name}</div>
-                <div className="text-xs text-industrial-gray-500">{cat.count ?? cat.product_count ?? 0} parts</div>
+              <div className="min-w-0">
+                <div className="font-medium text-slate-900 text-sm truncate">{cat.name}</div>
+                {count > 0 && (
+                  <div className="text-xs text-slate-500">{count} parts</div>
+                )}
               </div>
             </Link>
           )

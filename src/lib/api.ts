@@ -79,6 +79,18 @@ export const rfqApi = {
 export const submitRFQ = (data: any) =>
   rfqApi.submit(data).then((r) => r.data);
 
+// BOM Analyzer
+export const analyzeBom = (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api
+    .post("/api/bom/analyze", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 120000,
+    })
+    .then((r) => r.data);
+};
+
 // Currency
 export const currencyApi = {
   detect: () => api.get("/api/currency/detect"),

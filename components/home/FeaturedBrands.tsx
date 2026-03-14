@@ -1,5 +1,8 @@
 import Link from 'next/link'
 import { getBrands } from '@/lib/api'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { getBrandHref } from '@/lib/brandUtils'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 
 export async function FeaturedBrands() {
   let brands: { name: string; slug?: string; product_count?: number; count?: number }[] = []
@@ -12,23 +15,21 @@ export async function FeaturedBrands() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="section-title">Featured Brands</h2>
-        <Link href="/brands" className="text-sm font-medium text-industrial-green-600 hover:text-industrial-green-700 transition-colors">
-          View all →
-        </Link>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {brands.map(brand => (
+      <SectionHeader title="Parts by Manufacturer" viewAllHref="/brands" viewAllLabel="View all manufacturers" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {brands.map((brand) => (
           <Link
             key={brand.name}
-            href={brand.slug ? `/brand/${encodeURIComponent(brand.slug)}` : `/brands`}
-            className="card p-5 text-center group"
+            href={getBrandHref(brand)}
+            className="flex flex-col items-center gap-2 px-4 py-4 rounded-lg border border-slate-200 bg-white hover:border-primary-300 hover:bg-primary-50/30 transition-colors group"
           >
-            <div className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+            <BrandLogo brand={brand.name} logoClassName="h-8 max-w-[80px] object-contain" />
+            <span className="font-medium text-slate-900 text-sm group-hover:text-primary-600 truncate w-full text-center">
               {brand.name}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">{(brand.product_count ?? brand.count ?? 0)} products</div>
+            </span>
+            {(brand.product_count ?? brand.count ?? 0) > 0 && (
+              <span className="text-xs text-slate-500">{(brand.product_count ?? brand.count)} products</span>
+            )}
           </Link>
         ))}
       </div>

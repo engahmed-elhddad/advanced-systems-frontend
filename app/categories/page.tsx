@@ -1,11 +1,6 @@
-import Link from 'next/link'
 import { getCategories } from '@/lib/api'
-import { Cpu, Zap, Activity, Gauge, Wifi, Settings } from 'lucide-react'
-
-const CATEGORY_ICONS: Record<string, any> = {
-  PLC: Cpu, Drive: Zap, Sensor: Activity,
-  HMI: Gauge, Communication: Wifi, default: Settings,
-}
+import { CATEGORIES } from '@/app/lib/constants'
+import { CategoryCard } from '@/components/ui/CategoryCard'
 
 export const metadata = {
   title: 'Product Categories | Advanced Systems',
@@ -13,11 +8,15 @@ export const metadata = {
 }
 
 export default async function CategoriesPage() {
-  let categories: { name: string; slug?: string; product_count?: number }[] = []
+  let apiCategories: { name: string; slug?: string; product_count?: number }[] = []
   try {
     const data = await getCategories()
-    categories = Array.isArray(data) ? data : data?.categories || []
+    apiCategories = Array.isArray(data) ? data : data?.categories || []
   } catch {}
+  const categories =
+    apiCategories.length > 0
+      ? apiCategories
+      : CATEGORIES.map((c) => ({ name: c.name, slug: c.slug, product_count: 0 }))
 
   return (
     <div className="min-h-screen bg-white">
@@ -34,26 +33,14 @@ export default async function CategoriesPage() {
 
       <div className="page-container py-12">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {categories.map(cat => {
-            const iconKey = Object.keys(CATEGORY_ICONS).find(k => (cat.name || '').includes(k)) || 'default'
-            const Icon = CATEGORY_ICONS[iconKey]
-            const slug = cat.slug ?? (cat.name || '').toLowerCase().replace(/\s+/g, '-')
-            return (
-              <Link
-                key={cat.name}
-                href={`/products?category=${encodeURIComponent(cat.name)}`}
-                className="card p-5 flex items-center gap-4 group"
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center group-hover:bg-primary-100 transition-colors shrink-0">
-                  <Icon className="w-6 h-6 text-primary-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">{cat.name}</div>
-                  <div className="text-xs text-gray-500">{cat.product_count ?? 0} parts</div>
-                </div>
-              </Link>
-            )
-          })}
+          {categories.map((cat) => (
+            <CategoryCard
+              key={cat.name}
+              name={cat.name}
+              slug={cat.slug}
+              product_count={cat.product_count}
+            />
+          ))}
         </div>
       </div>
     </div>

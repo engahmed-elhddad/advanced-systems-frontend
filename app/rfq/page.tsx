@@ -58,9 +58,12 @@ export default function RFQPage() {
             Request For Quote
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Get a Fast Quote</h1>
-          <p className="text-gray-600 max-w-xl mx-auto">
+          <p className="text-gray-600 max-w-xl mx-auto mb-4">
             Can&apos;t find pricing? Need a specific quantity? Submit your RFQ and our team will respond within 24 hours with pricing and availability.
           </p>
+          <Link href="/rfq/instant" className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700">
+            <span>⚡</span> Quick quote — 3 fields only
+          </Link>
         </div>
       </div>
 

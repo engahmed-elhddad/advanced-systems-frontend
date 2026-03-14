@@ -3,6 +3,10 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   "http://localhost:8000"
 
+/** Cloudflare CDN for R2 media (images, datasheets) */
+export const CDN_BASE_URL =
+  process.env.NEXT_PUBLIC_CDN_URL || "https://cdn.advancedsystems-int.com"
+
 export const CONTACT_EMAIL = "eng.ahmed@advancedsystems-int.com"
 
 export const WHATSAPP_NUMBER = "201000629229"
@@ -44,6 +48,30 @@ export function categoryToSlug(name: string): string {
     ?? lower.replace(/\s+/g, "-")
 }
 
+/** Convert series name to URL slug, e.g. "TeSys" → "tesys", "LC1D" → "lc1d" */
+export function seriesToSlug(series: string): string {
+  if (!series) return ""
+  return series.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/gi, "")
+}
+
+/** Convert spec key-value to URL slug, e.g. { key: "current", value: "9A" } → "current-9a" */
+export function specToSlug(key: string, value: string): string {
+  if (!key) return ""
+  const k = key.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/gi, "")
+  const v = (value || "").toString().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/gi, "")
+  return v ? `${k}-${v}` : k
+}
+
+/** Parse spec slug to key/value, e.g. "current-9a" → { key: "current", value: "9a" } */
+export function slugToSpec(slug: string): { key: string; value: string } {
+  if (!slug) return { key: "", value: "" }
+  const parts = slug.split("-")
+  if (parts.length < 2) return { key: slug, value: "" }
+  const value = parts.pop() || ""
+  const key = parts.join("-")
+  return { key, value }
+}
+
 /** Normalize a part number by removing spaces and dashes for consistent search/navigation.
  *  e.g. "6GK7443 1EX11" and "6GK7443-1EX11" both become "6GK74431EX11". */
 export function normalizePartNumber(part: string): string {
@@ -65,11 +93,11 @@ export function normalizePartNumber(part: string): string {
  *  • bare filename  → treat as uploads/products/<filename>
  */
 export function resolveProductImageUrl(
-  p: { part_number?: string; images?: string[]; image?: string },
+  p: { part_number?: string; images?: string[]; image?: string; image_url?: string },
   api: string
 ): string {
   const rawImg: string | null =
-    (p.images && p.images.length > 0 ? p.images[0] : null) ?? p.image ?? null
+    (p.images && p.images.length > 0 ? p.images[0] : null) ?? p.image_url ?? p.image ?? null
   if (typeof rawImg === "string" && rawImg) {
     if (rawImg.startsWith("http")) return rawImg
     if (rawImg.startsWith("/uploads/")) return `${api}${rawImg}`

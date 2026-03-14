@@ -1,12 +1,20 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import React, { useEffect, useState, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { API_BASE_URL, CATEGORIES, rfqMailtoHref, slugToCategory, resolveProductImageUrl } from "@/app/lib/constants"
-import { MailIcon } from "@/components/ui/MailIcon"
-import { BrandLogo } from "@/components/ui/BrandLogo"
+import { Search, SlidersHorizontal } from "lucide-react"
+import { API_BASE_URL, CATEGORIES, slugToCategory } from "@/app/lib/constants"
 import { ProductCard } from "@/components/products/ProductCard"
+import {
+  ProductGridSkeleton,
+  EmptyState,
+  Pagination,
+  FilterChip,
+  Select,
+  Spinner,
+} from "@/components/ui"
+import { productToCardProps } from "@/lib/productMappers"
 
 function SearchIcon() {
   return (
@@ -16,27 +24,27 @@ function SearchIcon() {
   )
 }
 
-function ProductSkeleton() {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-      <div className="aspect-square bg-gray-100 skeleton" />
-      <div className="p-4 space-y-2">
-        <div className="h-3 w-16 bg-gray-100 rounded skeleton" />
-        <div className="h-4 w-28 bg-gray-100 rounded skeleton" />
-        <div className="h-3 w-full bg-gray-100 rounded skeleton" />
-        <div className="h-8 w-full bg-gray-100 rounded mt-2 skeleton" />
-      </div>
-    </div>
-  )
-}
+const POPULAR_QUERIES = [
+  { label: "3RT1015", q: "3RT1015" },
+  { label: "Siemens PLC", q: "Siemens PLC" },
+  { label: "contactor 9A 24V", q: "contactor 9A 24V" },
+  { label: "ABB Drive", q: "ABB Drive" },
+  { label: "Omron Sensor", q: "Omron Sensor" },
+  { label: "SICK photoelectric", q: "SICK photoelectric" },
+]
 
 function SearchResults() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const q = searchParams.get("q") ?? ""
   const categorySlug = searchParams.get("category") ?? ""
   const brandParam = searchParams.get("brand") ?? ""
+  const seriesParam = searchParams.get("series") ?? ""
+  const voltageParam = searchParams.get("voltage") ?? ""
+  const currentParam = searchParams.get("current") ?? ""
+  const mountingParam = searchParams.get("mounting_type") ?? ""
   const pageParam = Number(searchParams.get("page")) || 1
 
   const [query, setQuery] = useState(q)
@@ -45,42 +53,105 @@ function SearchResults() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [brands, setBrands] = useState<string[]>([])
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [activeSuggestion, setActiveSuggestion] = useState(-1)
+  const [sort, setSort] = useState<'relevance' | 'price_low' | 'price_high'>('relevance')
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [alternatives, setAlternatives] = useState<any[]>([])
+  const [filterOptions, setFilterOptions] = useState<{
+    brands?: string[]
+    categories?: string[]
+    series?: string[]
+    voltage?: string[]
+    current?: string[]
+    mounting_type?: string[]
+  }>({})
+  const suggestDebounceRef = useRef<NodeJS.Timeout>()
 
   const API = API_BASE_URL
 
+  const sortedProducts = [...products]
+  if (sort === 'price_low') sortedProducts.sort((a, b) => (a.price_usd ?? 999999) - (b.price_usd ?? 999999))
+  else if (sort === 'price_high') sortedProducts.sort((a, b) => (b.price_usd ?? 0) - (a.price_usd ?? 0))
+
   useEffect(() => { setQuery(q) }, [q])
+
+  // Auto-focus input when landing with no query
+  useEffect(() => {
+    if (!q && inputRef.current) inputRef.current.focus()
+  }, [])
+
+  // Live autocomplete
+  useEffect(() => {
+    const term = query.trim()
+    if (term.length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+    clearTimeout(suggestDebounceRef.current)
+    suggestDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API}/search/suggest?q=${encodeURIComponent(term)}&limit=8`)
+        const data = await res.json()
+        const items = data.suggestions ?? []
+        setSuggestions(items)
+        setShowSuggestions(items.length > 0)
+        setActiveSuggestion(-1)
+      } catch {
+        setSuggestions([])
+      }
+    }, 250)
+    return () => clearTimeout(suggestDebounceRef.current)
+  }, [query, API])
+
+  useEffect(() => {
+    fetch(`${API}/search/filter-options`)
+      .then((r) => r.json())
+      .then((d) => setFilterOptions(d))
+      .catch(() => {})
+  }, [API])
 
   useEffect(() => {
     if (!q) return
     async function load() {
       setLoading(true)
       try {
-        const params = new URLSearchParams({ q, page: String(pageParam), size: "20" })
+        const params = new URLSearchParams({ q, limit: "30" })
         if (categorySlug) params.set("category", slugToCategory(categorySlug) ?? categorySlug)
         if (brandParam) params.set("brand", brandParam)
-        if (searchParams.get("series")) params.set("series", searchParams.get("series")!)
+        if (seriesParam) params.set("series", seriesParam)
+        if (voltageParam) params.set("voltage", voltageParam)
+        if (currentParam) params.set("current", currentParam)
+        if (mountingParam) params.set("mounting_type", mountingParam)
 
-        const res = await fetch(`${API}/api/v1/search/?${params}`)
+        const res = await fetch(`${API}/search?${params}`)
         if (!res.ok) throw new Error()
         const data = await res.json()
-        const items = data.hits ?? data.items ?? data.products ?? []
+        const items = data.results ?? data.hits ?? data.items ?? data.products ?? []
         setProducts(items)
-        setTotalPages(data.pages ?? (Math.ceil((data.total ?? 0) / 20) || 1))
-        setTotalCount(data.total ?? items.length)
-        const bSet = new Set<string>()
+        setTotalCount(data.count ?? items.length)
+        setTotalPages(1)
+        setBrands(data.brands ?? [])
+        const bSet = new Set<string>(data.brands ?? [])
         for (const p of items) {
-          const b = p.brand?.name ?? p.manufacturer ?? p.brand_name
+          const b = p.brand ?? p.manufacturer ?? p.brand_name
           if (b) bSet.add(b)
         }
-        if (bSet.size) setBrands([...bSet].sort())
+        if (bSet.size && !data.brands?.length) setBrands([...bSet].sort())
+        setAlternatives(data.alternatives ?? [])
       } catch {
         setProducts([])
+        setAlternatives([])
       } finally {
         setLoading(false)
       }
     }
     load()
-  }, [q, categorySlug, brandParam, pageParam, API])
+  }, [q, categorySlug, brandParam, seriesParam, voltageParam, currentParam, mountingParam, API])
+
+  const hasFilters = !!(categorySlug || brandParam || seriesParam || voltageParam || currentParam || mountingParam)
 
   function navigate(updates: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -94,25 +165,217 @@ function SearchResults() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
+    setShowSuggestions(false)
     navigate({ q: query, category: null, brand: null })
   }
 
+  function selectSuggestion(s: { part_number: string }) {
+    setShowSuggestions(false)
+    router.push(`/part-number/${encodeURIComponent(s.part_number)}`)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!showSuggestions || suggestions.length === 0) return
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setActiveSuggestion((i) => (i < suggestions.length - 1 ? i + 1 : 0))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setActiveSuggestion((i) => (i > 0 ? i - 1 : suggestions.length - 1))
+    } else if (e.key === "Enter" && activeSuggestion >= 0 && suggestions[activeSuggestion]) {
+      e.preventDefault()
+      selectSuggestion(suggestions[activeSuggestion])
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false)
+      setActiveSuggestion(-1)
+    }
+  }
+
+  const allBrands = (filterOptions.brands?.length ? filterOptions.brands : brands).slice(0, 12)
+
+  const FilterSidebar = () => (
+    <>
+      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Category</h3>
+        <ul className="space-y-1">
+          <li>
+            <button
+              onClick={() => { navigate({ category: null }); setMobileFiltersOpen(false) }}
+              className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${!categorySlug ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+            >
+              All Categories
+            </button>
+          </li>
+          {(filterOptions.categories?.length ? filterOptions.categories : CATEGORIES.map((c) => c.name)).map((cat: string) => {
+            const slug = CATEGORIES.find((c) => c.name === cat)?.slug ?? cat.toLowerCase().replace(/\s+/g, "-")
+            return (
+              <li key={cat}>
+                <button
+                  onClick={() => { navigate({ category: slug }); setMobileFiltersOpen(false) }}
+                  className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${categorySlug === slug ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                >
+                  {cat}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Brand</h3>
+        <ul className="space-y-1 max-h-40 overflow-y-auto">
+          <li>
+            <button
+              onClick={() => { navigate({ brand: null }); setMobileFiltersOpen(false) }}
+              className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${!brandParam ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+            >
+              All Brands
+            </button>
+          </li>
+          {allBrands.map((b) => (
+            <li key={b}>
+              <button
+                onClick={() => { navigate({ brand: b }); setMobileFiltersOpen(false) }}
+                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${brandParam === b ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+              >
+                {b}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {((filterOptions.series?.length ?? 0) > 0 || (filterOptions.voltage?.length ?? 0) > 0 || (filterOptions.current?.length ?? 0) > 0 || (filterOptions.mounting_type?.length ?? 0) > 0) && (
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Specifications</h3>
+          <div className="space-y-3">
+            {filterOptions.series?.length ? (
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Series</label>
+                <select
+                  value={seriesParam}
+                  onChange={(e) => { navigate({ series: e.target.value || null }); setMobileFiltersOpen(false) }}
+                  className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">Any</option>
+                  {filterOptions.series.slice(0, 15).map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+            {filterOptions.voltage?.length ? (
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Voltage</label>
+                <select
+                  value={voltageParam}
+                  onChange={(e) => { navigate({ voltage: e.target.value || null }); setMobileFiltersOpen(false) }}
+                  className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">Any</option>
+                  {filterOptions.voltage.slice(0, 12).map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+            {filterOptions.current?.length ? (
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Current</label>
+                <select
+                  value={currentParam}
+                  onChange={(e) => { navigate({ current: e.target.value || null }); setMobileFiltersOpen(false) }}
+                  className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">Any</option>
+                  {filterOptions.current.slice(0, 12).map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+            {filterOptions.mounting_type?.length ? (
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Mounting</label>
+                <select
+                  value={mountingParam}
+                  onChange={(e) => { navigate({ mounting_type: e.target.value || null }); setMobileFiltersOpen(false) }}
+                  className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">Any</option>
+                  {filterOptions.mounting_type.slice(0, 10).map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
+    </>
+  )
+
   return (
     <div className="min-h-screen bg-white">
-      <div className="sticky top-16 z-10 border-b border-gray-200 bg-white/95 backdrop-blur py-4 px-4">
+      {/* Sticky search bar */}
+      <div className="sticky top-16 z-20 border-b border-gray-200 bg-white/98 backdrop-blur py-4 px-4 shadow-sm">
         <div className="max-w-7xl mx-auto">
           <form onSubmit={handleSearch} className="flex gap-3">
             <div className="flex-1 relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
                 <SearchIcon />
               </span>
               <input
+                ref={inputRef}
                 type="text"
                 value={query}
-                onChange={e => setQuery(e.target.value)}
+                onChange={e => { setQuery(e.target.value); setShowSuggestions(true) }}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                onKeyDown={handleKeyDown}
                 placeholder="Search part number, brand, or description…"
-                className="w-full pl-11 pr-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:bg-white transition text-sm"
+                className="w-full pl-11 pr-10 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:bg-white transition text-sm"
+                autoComplete="off"
+                aria-label="Search industrial parts"
+                aria-expanded={showSuggestions && suggestions.length > 0}
+                aria-autocomplete="list"
               />
+              {loading && (
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Spinner size="sm" />
+                </span>
+              )}
+              {showSuggestions && suggestions.length > 0 && (
+                <div
+                  className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden"
+                  role="listbox"
+                >
+                  {suggestions.map((s: any, i: number) => (
+                    <div
+                      key={s.part_number || i}
+                      role="option"
+                      aria-selected={activeSuggestion === i}
+                      onMouseDown={(e) => { e.preventDefault(); selectSuggestion(s) }}
+                      onMouseEnter={() => setActiveSuggestion(i)}
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-100 last:border-0 ${activeSuggestion === i ? "bg-primary-50" : "hover:bg-gray-50"}`}
+                    >
+                      <span className="font-mono text-primary-600 text-sm font-medium">{s.part_number}</span>
+                      {s.brand && <span className="text-xs text-gray-500">{s.brand}</span>}
+                      {s.category && <span className="text-xs text-gray-400">{s.category}</span>}
+                    </div>
+                  ))}
+                  <Link
+                    href={`/search?q=${encodeURIComponent(query.trim())}`}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setShowSuggestions(false)}
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-primary-600 font-medium hover:bg-primary-50 border-t border-gray-100 transition-colors"
+                  >
+                    <SearchIcon />
+                    View all results for &quot;{query.trim()}&quot;
+                  </Link>
+                </div>
+              )}
             </div>
             <button type="submit" className="btn-primary px-5 py-2.5 whitespace-nowrap">
               Search
@@ -122,149 +385,183 @@ function SearchResults() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8 flex gap-8">
+        {/* Desktop filters */}
         <aside className="hidden lg:block w-56 shrink-0 space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Category</h3>
-            <ul className="space-y-1">
-              <li>
-                <button
-                  onClick={() => navigate({ category: null })}
-                  className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${!categorySlug ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
-                >
-                  All Categories
-                </button>
-              </li>
-              {CATEGORIES.map(cat => (
-                <li key={cat.slug}>
-                  <button
-                    onClick={() => navigate({ category: cat.slug })}
-                    className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${categorySlug === cat.slug ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
-                  >
-                    {cat.icon} {cat.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {brands.length > 0 && (
-            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Brand</h3>
-              <ul className="space-y-1">
-                <li>
-                  <button
-                    onClick={() => navigate({ brand: null })}
-                    className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${!brandParam ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
-                  >
-                    All Brands
-                  </button>
-                </li>
-                {brands.slice(0, 10).map(b => (
-                  <li key={b}>
-                    <button
-                      onClick={() => navigate({ brand: b })}
-                      className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${brandParam === b ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
-                    >
-                      {b}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <FilterSidebar />
         </aside>
 
+        {/* Mobile filter overlay */}
+        {mobileFiltersOpen && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/30 z-30 lg:hidden"
+              onClick={() => setMobileFiltersOpen(false)}
+              aria-hidden
+            />
+            <aside className="fixed top-[5.5rem] left-0 right-0 bottom-0 z-40 overflow-y-auto bg-white p-4 lg:hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+                <button
+                  type="button"
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 p-2"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="space-y-6">
+                <FilterSidebar />
+              </div>
+            </aside>
+          </>
+        )}
+
         <main className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-5">
-            <div className="text-sm text-gray-500">
-              {q ? (
-                <>
-                  <span className="font-semibold text-gray-900">{totalCount || products.length}</span> results for{" "}
-                  <span className="text-primary-600 font-medium">&quot;{q}&quot;</span>
-                  {categorySlug && <span className="ml-2">in <span className="text-primary-600">{slugToCategory(categorySlug) ?? categorySlug}</span></span>}
-                  {brandParam && <span className="ml-2">by <span className="text-primary-600">{brandParam}</span></span>}
-                </>
-              ) : (
-                <span>Enter a search term to find parts</span>
+          {/* Results header + filters + sort */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(true)}
+                className="lg:hidden inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+              </button>
+              <div className="text-sm text-gray-600">
+                {q ? (
+                  <>
+                    <span className="font-bold text-gray-900">{totalCount || products.length}</span> Products found for{" "}
+                    <span className="text-primary-600 font-medium">&quot;{q}&quot;</span>
+                    {categorySlug && (
+                      <span className="ml-2">
+                        in <span className="text-primary-600">{slugToCategory(categorySlug) ?? categorySlug}</span>
+                      </span>
+                    )}
+                    {brandParam && (
+                      <span className="ml-2">
+                        by <span className="text-primary-600">{brandParam}</span>
+                      </span>
+                    )}
+                    {(seriesParam || voltageParam || currentParam || mountingParam) && (
+                      <span className="ml-2 text-gray-500">
+                        {[seriesParam, voltageParam, currentParam, mountingParam].filter(Boolean).join(" · ")}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span>Enter a search term to find parts</span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              {(categorySlug || brandParam || seriesParam || voltageParam || currentParam || mountingParam) && (
+                <div className="flex gap-2 flex-wrap">
+                  {categorySlug && (
+                    <FilterChip
+                      label="Category"
+                      value={slugToCategory(categorySlug) ?? categorySlug}
+                      onRemove={() => navigate({ category: null })}
+                    />
+                  )}
+                  {brandParam && (
+                    <FilterChip label="Brand" value={brandParam} onRemove={() => navigate({ brand: null })} />
+                  )}
+                  {seriesParam && (
+                    <FilterChip label="Series" value={seriesParam} onRemove={() => navigate({ series: null })} />
+                  )}
+                  {voltageParam && (
+                    <FilterChip label="Voltage" value={voltageParam} onRemove={() => navigate({ voltage: null })} />
+                  )}
+                  {currentParam && (
+                    <FilterChip label="Current" value={currentParam} onRemove={() => navigate({ current: null })} />
+                  )}
+                  {mountingParam && (
+                    <FilterChip label="Mounting" value={mountingParam} onRemove={() => navigate({ mounting_type: null })} />
+                  )}
+                </div>
+              )}
+              {q && products.length > 0 && (
+                <Select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as 'relevance' | 'price_low' | 'price_high')}
+                  className="w-auto min-w-[160px] text-sm py-2"
+                >
+                  <option value="relevance">Sort: Relevance</option>
+                  <option value="price_low">Price: Low to High</option>
+                  <option value="price_high">Price: High to Low</option>
+                </Select>
               )}
             </div>
-            {(categorySlug || brandParam) && (
-              <button
-                onClick={() => navigate({ category: null, brand: null })}
-                className="text-xs text-gray-500 hover:text-primary-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:border-primary-300 transition"
-              >
-                Clear filters ×
-              </button>
-            )}
           </div>
 
+          {/* Empty state - no query */}
           {!q && (
             <div className="text-center py-20">
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-50 flex items-center justify-center">
-                <SearchIcon />
+                <Search className="w-8 h-8 text-primary-600" />
               </div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">Search Industrial Parts</h2>
               <p className="text-gray-600 mb-6">Enter a part number, brand, or description to find components</p>
               <div className="flex flex-wrap gap-2 justify-center">
-                {["Siemens", "ABB", "Omron", "SICK", "Pilz"].map(b => (
-                  <Link key={b} href={`/brand/${b.toLowerCase()}`} className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition">
-                    {b}
+                {POPULAR_QUERIES.map(({ label, q: queryParam }) => (
+                  <Link
+                    key={label}
+                    href={`/search?q=${encodeURIComponent(queryParam)}`}
+                    className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition"
+                  >
+                    {label}
                   </Link>
                 ))}
               </div>
             </div>
           )}
 
-          {q && loading && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)}
-            </div>
-          )}
+          {/* Loading */}
+          {q && loading && <ProductGridSkeleton count={8} />}
 
+          {/* No results */}
           {q && !loading && products.length === 0 && (
-            <div className="text-center py-20 bg-gray-50 rounded-xl border border-gray-200">
-              <div className="text-4xl mb-4">🔍</div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">No results found</h2>
-              <p className="text-gray-600 mb-6">Try a different search term or submit an RFQ for sourcing</p>
-              <Link href={`/rfq?part=${encodeURIComponent(q)}`} className="btn-primary">
-                Submit RFQ for &quot;{q}&quot; →
-              </Link>
-            </div>
+            <EmptyState
+              icon="🔍"
+              title="No results found"
+              description="Try a different search term or broaden your filters. We can also help source parts via RFQ."
+              action={
+                <Link href={`/rfq?part=${encodeURIComponent(q)}`} className="btn-primary">
+                  Submit RFQ for &quot;{q}&quot; →
+                </Link>
+              }
+            />
           )}
 
+          {/* Results */}
           {!loading && products.length > 0 && (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {products.map((p: any) => (
-                  <ProductCard
-                    key={p.part_number}
-                    part_number={p.part_number}
-                    manufacturer={p.brand?.name ?? p.manufacturer}
-                    category={p.category?.name ?? p.category}
-                    description={p.description}
-                    image_url={p.images?.[0]?.url ?? resolveProductImageUrl(p, API)}
-                    stock_quantity={p.stock_quantity}
-                    availability={p.availability === 'in_stock' || (p.stock_quantity ?? 0) > 0 ? 'in_stock' : 'on_request'}
-                    price_usd={p.price_usd}
-                  />
+                {sortedProducts.map((p: any) => (
+                  <ProductCard key={p.part_number} {...productToCardProps(p)} />
                 ))}
               </div>
 
-              {totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center gap-2">
-                  {pageParam > 1 && (
-                    <button onClick={() => navigate({ page: String(pageParam - 1) })} className="btn-secondary px-4 py-2">
-                      ← Prev
-                    </button>
-                  )}
-                  <span className="text-sm text-gray-500">Page {pageParam} of {totalPages}</span>
-                  {pageParam < totalPages && (
-                    <button onClick={() => navigate({ page: String(pageParam + 1) })} className="btn-secondary px-4 py-2">
-                      Next →
-                    </button>
-                  )}
+              {/* Compatible alternatives (when search returns part-number results) */}
+              {alternatives.length > 0 && (
+                <div className="mt-10 pt-8 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Compatible Alternatives</h3>
+                  <p className="text-sm text-gray-500 mb-4">Equivalent parts from other brands for &quot;{q}&quot;</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {alternatives.slice(0, 8).map((a: any) => (
+                      <ProductCard key={a.part_number} {...productToCardProps(a)} />
+                    ))}
+                  </div>
                 </div>
               )}
+
+              <Pagination
+                page={pageParam}
+                totalPages={totalPages}
+                onPageChange={(p) => navigate({ page: String(p) })}
+                className="mt-8"
+              />
             </>
           )}
         </main>
@@ -275,7 +572,13 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center text-gray-500">Loading search…</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center text-gray-500">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
       <SearchResults />
     </Suspense>
   )

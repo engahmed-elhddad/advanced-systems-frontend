@@ -3,21 +3,19 @@
 @tailwind utilities;
 
 :root {
+  /* Design tokens – synced with lib/ui/tokens.ts & Tailwind */
   --background: #ffffff;
   --surface: #ffffff;
-  --card: #ffffff;
-  --card-border: #e5e7eb;
   --foreground: #111827;
   --muted: #6b7280;
   --primary: #16a34a;
   --primary-hover: #15803d;
-  --primary-muted: rgba(34, 197, 94, 0.12);
   --border: #e5e7eb;
   --radius: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
   --transition: 200ms ease;
 }
 
@@ -84,7 +82,7 @@
            bg-amber-50 text-amber-700 border border-amber-200;
   }
   .section-title {
-    @apply text-2xl font-bold text-gray-900 tracking-tight;
+    @apply text-xl font-bold text-slate-900 tracking-tight;
   }
   .page-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;

@@ -15,14 +15,14 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <div className="page-container space-y-20 py-16">
-        <Suspense fallback={<div className="h-32 skeleton rounded-xl" />}>
-          <FeaturedBrands />
-        </Suspense>
+      <div className="page-container space-y-16 py-12 sm:py-16 bg-white">
         <Suspense fallback={<div className="h-48 skeleton rounded-xl" />}>
           <CategoriesGrid />
         </Suspense>
-        <Suspense fallback={<div className="h-96 skeleton rounded-xl" />}>
+        <Suspense fallback={<div className="h-32 skeleton rounded-xl" />}>
+          <FeaturedBrands />
+        </Suspense>
+        <Suspense fallback={<div className="h-80 skeleton rounded-xl" />}>
           <FeaturedProducts />
         </Suspense>
         <WhyUs />
