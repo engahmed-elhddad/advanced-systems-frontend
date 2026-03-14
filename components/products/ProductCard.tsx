@@ -7,6 +7,8 @@ import { motion } from 'framer-motion'
 import { RFQButton } from '@/components/RFQButton'
 import { useCurrency } from '@/lib/hooks/useCurrency'
 
+const PLACEHOLDER_IMAGE = '/products/no-product-image.jpg'
+
 export interface ProductCardProps {
   part_number: string
   manufacturer?: string
@@ -54,14 +56,24 @@ function ProductCardInner({
         href={`${productBasePath}/${encodeURIComponent(part_number)}`}
         className={`block relative bg-slate-50 overflow-hidden ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
       >
-        <Image
-          src={image_url || "/products/no-product-image.jpg"}
-          alt={`${manufacturer || ''} ${part_number}`}
-          fill
-          className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-          loading="lazy"
-        />
+        {image_url && image_url !== PLACEHOLDER_IMAGE ? (
+          <Image
+            src={image_url}
+            alt={`${manufacturer || ''} ${part_number}`}
+            fill
+            className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            loading="lazy"
+          />
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={PLACEHOLDER_IMAGE}
+            alt="No product image"
+            className="absolute inset-0 w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+        )}
         <div className="absolute top-2 right-2">
           {inStock ? (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent-50 text-accent-700 border border-accent-200">
