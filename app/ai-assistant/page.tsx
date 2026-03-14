@@ -153,7 +153,15 @@ export default function AIAssistantPage() {
           engineer_mode: false,
         }),
       })
-      const data = await res.json()
+      let data: any = {}
+      try {
+        data = await res.json()
+      } catch {
+        data = { text: 'Invalid response from server.' }
+      }
+      if (!res.ok) {
+        data = { ...data, text: data?.detail || 'Backend error. Please try again.' }
+      }
 
       const assistantMsg: Message = {
         role: 'assistant',
@@ -165,10 +173,11 @@ export default function AIAssistantPage() {
         rfqParts: data.rfq_parts || [],
       }
       setMessages((m) => [...m, assistantMsg])
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Network error'
       setMessages((m) => [
         ...m,
-        { role: 'assistant', content: 'Sorry, I could not connect. Please try again or check your network.' },
+        { role: 'assistant', content: `Sorry, I could not connect. (${msg}) Please ensure the API is reachable and try again.` },
       ])
     } finally {
       setLoading(false)

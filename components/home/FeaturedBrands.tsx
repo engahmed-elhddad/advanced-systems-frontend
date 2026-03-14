@@ -15,7 +15,7 @@ export async function FeaturedBrands() {
 
   return (
     <section>
-      <SectionHeader title="Parts by Manufacturer" viewAllHref="/brands" viewAllLabel="View all manufacturers" />
+      <SectionHeader title="Top Manufacturers" viewAllHref="/brands" viewAllLabel="View all manufacturers" />
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {brands.map((brand) => (
           <Link

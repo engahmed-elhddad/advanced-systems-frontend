@@ -3,6 +3,8 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { FeaturedBrands } from '@/components/home/FeaturedBrands'
 import { CategoriesGrid } from '@/components/home/CategoriesGrid'
 import { FeaturedProducts } from '@/components/home/FeaturedProducts'
+import { EngineeringToolsSection } from '@/components/home/EngineeringToolsSection'
+import { IndustrialNewsSection } from '@/components/home/IndustrialNewsSection'
 import { WhyUs } from '@/components/home/WhyUs'
 import type { Metadata } from 'next'
 
@@ -24,6 +26,12 @@ export default function HomePage() {
         </Suspense>
         <Suspense fallback={<div className="h-80 skeleton rounded-xl" />}>
           <FeaturedProducts />
+        </Suspense>
+        <Suspense fallback={<div className="h-32 skeleton rounded-xl" />}>
+          <EngineeringToolsSection />
+        </Suspense>
+        <Suspense fallback={<div className="h-24 skeleton rounded-xl" />}>
+          <IndustrialNewsSection />
         </Suspense>
         <WhyUs />
       </div>

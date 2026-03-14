@@ -20,7 +20,7 @@ export async function CategoriesGrid() {
   return (
     <section>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="section-title">Parts by Category</h2>
+        <h2 className="section-title">Featured Categories</h2>
         <Link href="/categories" className="text-sm font-medium text-primary-600 hover:text-primary-700">
           View all categories →
         </Link>

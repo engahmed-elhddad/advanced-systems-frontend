@@ -12,7 +12,7 @@ import clsx from 'clsx'
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [megaOpen, setMegaOpen] = useState<'brands' | 'products' | 'categories' | null>(null)
+  const [megaOpen, setMegaOpen] = useState<'brands' | 'products' | 'categories' | 'manufacturers' | 'tools' | 'resources' | null>(null)
   const [brands, setBrands] = useState<{ name: string; slug?: string }[]>([])
   const [categories, setCategories] = useState<{ name: string; slug?: string }[]>([])
   const [popularProducts, setPopularProducts] = useState<any[]>([])
@@ -43,15 +43,10 @@ export function Navbar() {
   }, [])
 
   const navItems = [
-    { id: 'brands', label: 'Manufacturers', href: '/brands' },
     { id: 'products', label: 'Products', href: '/products' },
-    { id: 'categories', label: 'Categories', href: '/categories' },
-    { href: '/tools', label: 'Tools', hrefOnly: true },
-    { href: '/en/news', label: 'News', hrefOnly: true },
-    { href: '/product-finder', label: 'Find by Specs', hrefOnly: true },
-    { href: '/panel-builder', label: 'Panel Builder', hrefOnly: true },
-    { href: '/ai-assistant', label: 'AI Assistant', hrefOnly: true },
-    { href: '/knowledge', label: 'Knowledge Hub', hrefOnly: true },
+    { id: 'manufacturers', label: 'Manufacturers', href: '/brands' },
+    { id: 'tools', label: 'Engineering Tools', href: '/tools' },
+    { id: 'resources', label: 'Resources', href: '/knowledge' },
     { href: '/rfq', label: 'Request Quote', cta: true },
   ]
 
@@ -85,7 +80,7 @@ export function Navbar() {
                 ) : (
                   <>
                 <button
-                  onMouseEnter={() => setMegaOpen(item.id as 'brands' | 'products' | 'categories')}
+                  onMouseEnter={() => setMegaOpen(item.id as 'brands' | 'products' | 'categories' | 'manufacturers' | 'tools' | 'resources')}
                   className="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-slate-50 transition-all"
                 >
                   {item.label}
@@ -97,7 +92,7 @@ export function Navbar() {
                     className="absolute left-0 top-full pt-1 -translate-x-1/2 ml-6"
                   >
                     <div className="w-[560px] max-h-[380px] overflow-auto bg-white border border-slate-200 rounded-lg shadow-lg p-5 grid grid-cols-3 gap-5">
-                      {item.id === 'brands' && (
+                      {(item.id === 'brands' || item.id === 'manufacturers') && (
                         <>
                           <div>
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Manufacturers</h4>
@@ -136,6 +131,13 @@ export function Navbar() {
                       {item.id === 'products' && (
                         <>
                           <div className="col-span-2">
+                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Categories</h4>
+                            <div className="grid grid-cols-2 gap-1.5 mb-4">
+                              <Link href="/search?q=PLC" className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700">PLC</Link>
+                              <Link href="/search?q=Contactor" className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700">Contactors</Link>
+                              <Link href="/search?q=Sensor" className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700">Sensors</Link>
+                              <Link href="/search?q=Drive" className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700">Drives</Link>
+                            </div>
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Popular parts</h4>
                             <div className="grid grid-cols-2 gap-2">
                               {popularProducts.slice(0, 4).map((p: any) => (
@@ -158,8 +160,43 @@ export function Navbar() {
                               <li><Link href="/bom-analyzer" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">BOM Analyzer</Link></li>
                               <li><Link href="/product-finder" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">Product Finder</Link></li>
                               <li><Link href="/panel-builder" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">Panel Builder</Link></li>
-                              <li><Link href="/ai-assistant" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">AI Engineering Assistant</Link></li>
                             </ul>
+                          </div>
+                        </>
+                      )}
+                      {item.id === 'tools' && (
+                        <>
+                          <div className="col-span-3">
+                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Engineering Tools</h4>
+                            <div className="grid grid-cols-3 gap-2">
+                              <Link href="/panel-builder" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                                <span className="font-medium text-slate-900">Panel Builder</span>
+                              </Link>
+                              <Link href="/ai-assistant" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                                <span className="font-medium text-slate-900">AI Assistant</span>
+                              </Link>
+                              <Link href="/product-finder" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                                <span className="font-medium text-slate-900">Find by Specs</span>
+                              </Link>
+                              <Link href="/bom-analyzer" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                                <span className="font-medium text-slate-900">BOM Analyzer</span>
+                              </Link>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {item.id === 'resources' && (
+                        <>
+                          <div className="col-span-3">
+                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Resources</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Link href="/en/news" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                                <span className="font-medium text-slate-900">News</span>
+                              </Link>
+                              <Link href="/knowledge" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                                <span className="font-medium text-slate-900">Knowledge Hub</span>
+                              </Link>
+                            </div>
                           </div>
                         </>
                       )}
