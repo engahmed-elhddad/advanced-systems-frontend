@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 const API =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
+  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
 
 export default function ImportCSV(){
 
@@ -15,15 +16,15 @@ const form = new FormData()
 
 form.append("file",file)
 
+const { "Content-Type": _, ...authHeaders } = getAuthHeaders()
+
 await fetch(`${API}/admin/import-products`,{
 
 method:"POST",
 
-headers:{
-"api-key":"ADVANCED_SYSTEMS_ADMIN"
-},
+headers: authHeaders,
 
-body:form
+body: form
 
 })
 

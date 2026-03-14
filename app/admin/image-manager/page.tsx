@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Upload, Trash2, Star, RefreshCw, ImagePlus, Package } from "lucide-react"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
-const ADMIN_KEY = "ADVANCED_SYSTEMS_ADMIN"
 
 type ProductImage = { filename: string; url: string; is_primary: boolean }
 
@@ -18,7 +18,7 @@ export default function ImageManagerPage() {
   const [error, setError] = useState("")
   const [replaceTarget, setReplaceTarget] = useState<string | null>(null)
 
-  const headers = { "api-key": ADMIN_KEY }
+  const headers = getAuthHeaders()
 
   async function loadImages() {
     if (!partNumber.trim()) return
@@ -52,7 +52,7 @@ export default function ImageManagerPage() {
         : `${API}/admin/products/${encodeURIComponent(partNumber.trim())}/images`
       const res = await fetch(url, {
         method: replaceFilename ? "PUT" : "POST",
-        headers: { "api-key": ADMIN_KEY },
+        headers: getAuthHeaders(),
         body: form,
       })
       const data = await res.json()

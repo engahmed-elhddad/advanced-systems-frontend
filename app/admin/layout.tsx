@@ -2,22 +2,31 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { isAdminAuthenticated, clearAdminAuth, getAdminUser } from "@/lib/admin-auth"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [authChecked, setAuthChecked] = useState(false)
   const isLogin = pathname === "/admin/login"
 
-  // Optional: redirect to login when no token. Kept off for backward compat with api-key.
-  // useEffect(() => {
-  //   if (!isLogin && !isAdminAuthenticated() && !process.env.NEXT_PUBLIC_ADMIN_API_KEY) {
-  //     router.replace("/admin/login")
-  //   }
-  // }, [pathname, isLogin, router])
+  useEffect(() => {
+    if (isLogin) {
+      setAuthChecked(true)
+      return
+    }
+    if (typeof window === "undefined") return
+    const token = localStorage.getItem("admin_token")
+    if (!token) {
+      router.replace("/admin/login")
+      return
+    }
+    setAuthChecked(true)
+  }, [pathname, isLogin, router])
 
   if (isLogin) return <>{children}</>
+  if (!authChecked) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-500">Loading…</div>
 
   const user = getAdminUser()
 
