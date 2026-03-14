@@ -6,21 +6,16 @@ import { productToCardProps } from '@/lib/productMappers'
 export async function FeaturedProducts() {
   let products: any[] = []
   try {
-    products = await getFeaturedProducts(8)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[FeaturedProducts] /api/v1/featured response:', products?.length ?? 0, 'products')
-    }
+    products = await getFeaturedProducts(12)
     if (!products?.length) {
-      const data = await getProducts({ size: 8, page: 1 })
-      products = data?.items ?? data?.products ?? []
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[FeaturedProducts] fallback getProducts:', products?.length ?? 0, 'products')
-      }
+      const data = await getProducts({ size: 12, page: 1 })
+      products = data?.products ?? data?.items ?? []
     }
-  } catch (e) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[FeaturedProducts] Error loading featured:', e)
-    }
+  } catch {
+    try {
+      const data = await getProducts({ size: 12, page: 1 })
+      products = data?.products ?? data?.items ?? []
+    } catch {}
   }
 
   if (!products.length) return null

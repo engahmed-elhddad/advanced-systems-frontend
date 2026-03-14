@@ -5,29 +5,43 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   "http://localhost:8000";
 
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  console.log("[API] baseURL:", API_BASE);
+}
+
 export const api = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
   headers: { "Content-Type": "application/json" },
 });
 
-// Products (uses /api/products - flat schema with part_number, manufacturer, brand, category)
+// Products (uses /api/products - flat schema) - normalizes to { products, total, ... }
 export const getProducts = (params: Record<string, unknown> = {}) => {
   const { size, page, search, ...rest } = params
   const q: Record<string, unknown> = { ...rest, page: page ?? 1, size: size ?? 30 }
   if (search) q.search = search
-  return api.get("/api/products", { params: q }).then((r) => r.data)
+  return api.get("/api/products", { params: q }).then((r) => {
+    const d = r.data
+    const products = d?.products ?? d?.items ?? d?.results ?? (Array.isArray(d) ? d : [])
+    if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+      console.log("[API] getProducts:", products.length, "products")
+    }
+    return { products, items: products, total: d?.total ?? products.length, page: d?.page ?? 1, pages: d?.pages ?? 1 }
+  })
 }
 
-/** GET /api/v1/featured?limit=N - returns array, or { products } or { items } */
-export const getFeaturedProducts = (limit = 8) =>
-  api.get(`/api/v1/featured`, { params: { limit } }).then((r) => {
+/** GET /api/products?limit=N - uses working products endpoint (replaces /api/v1/featured) */
+export const getFeaturedProducts = async (limit = 12): Promise<any[]> => {
+  try {
+    const r = await api.get(`/api/products`, { params: { limit, page: 1 } })
     const data = r.data
-    if (Array.isArray(data)) return data
-    if (data?.products && Array.isArray(data.products)) return data.products
-    if (data?.items && Array.isArray(data.items)) return data.items
-    return []
-  })
+    const products = data?.products ?? data?.items ?? (Array.isArray(data) ? data : [])
+    return Array.isArray(products) ? products : []
+  } catch {
+    const data = await getProducts({ size: limit, page: 1 })
+    return data?.products ?? data?.items ?? []
+  }
+}
 
 export const getProductByPartNumber = (partNumber: string) =>
   api.get(`/api/v1/products/part/${encodeURIComponent(partNumber)}`).then((r) => r.data);

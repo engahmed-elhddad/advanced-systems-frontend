@@ -44,11 +44,6 @@ export function ProductCard({ product, onRFQ }: Props) {
           className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
-        {product.is_featured && (
-          <span className="absolute top-2 left-2 bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-            Featured
-          </span>
-        )}
       </Link>
 
       {/* Content */}
