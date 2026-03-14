@@ -15,7 +15,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { brand: brandSlug } = await params
   const brand = BRAND_MAP[brandSlug.toLowerCase()] ?? decodeURIComponent(brandSlug).replace(/\b\w/g, (l) => l.toUpperCase())
-  const url = `https://advancedsystems-int.com/brand/${brandSlug}`
+  const url = `${SITE_URL}/brand/${brandSlug}`
   return {
     title: `${brand} Industrial Automation Parts | Advanced Systems`,
     description: `Buy ${brand} industrial automation spare parts including PLC modules, sensors, drives and control system components.`,

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { submitRFQ } from "@/lib/api"
-import { CONTACT_EMAIL } from "@/app/lib/constants"
+import { CONTACT_EMAIL, WHATSAPP_NUMBER } from "@/app/lib/constants"
 
 export default function RFQPage() {
   const [form, setForm] = useState({
@@ -172,7 +172,7 @@ export default function RFQPage() {
               Or contact us via{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary-600 hover:underline font-medium">email</a>
               {" "}or{" "}
-              <a href="https://wa.me/201000629229" target="_blank" rel="noreferrer" className="text-primary-600 hover:underline font-medium">WhatsApp</a>
+              <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline font-medium">WhatsApp</a>
             </p>
           </form>
         )}

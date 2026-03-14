@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { SITE_URL } from "@/app/lib/constants"
 
 export const metadata = {
   title: "Suppliers | Advanced Systems – Industrial Automation",
@@ -11,7 +12,7 @@ const SUPPLIERS = [
     country: "Egypt",
     flag: "🇪🇬",
     specialties: ["Siemens", "ABB", "Schneider Electric", "Omron"],
-    website: "https://advancedsystems-int.com",
+    website: SITE_URL,
     verified: true,
     description: "Leading industrial automation distributor in Egypt and the Middle East region.",
   },
