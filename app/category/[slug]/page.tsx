@@ -88,8 +88,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         {results.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {results.map((p) => (
-                <ProductCard key={p.part_number} {...productToCardProps(p)} productBasePath="/product" />
+              {results.map((p: Record<string, unknown>) => (
+                <ProductCard key={String(p.part_number ?? '')} {...productToCardProps(p as never)} productBasePath="/product" />
               ))}
             </div>
             {count > 24 && (

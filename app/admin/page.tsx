@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Package, FileText, Image, Users, Tag, FolderTree, BarChart3, Zap, Settings } from "lucide-react"
-import { getAuthHeaders } from "@/app/lib/admin-auth"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 

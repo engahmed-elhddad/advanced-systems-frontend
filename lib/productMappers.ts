@@ -53,7 +53,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
 
   const quickSpecs =
     (p.series || p.voltage || p.current)
-      ? { series: p.series, voltage: p.voltage, current: p.current }
+      ? { series: String(p.series ?? ''), voltage: String(p.voltage ?? ''), current: String(p.current ?? '') }
       : undefined
 
   return {

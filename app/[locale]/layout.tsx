@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 
-export const LOCALES = ['en', 'ar'] as const
+const LOCALES = ['en', 'ar'] as const
 export type Locale = (typeof LOCALES)[number]
 
 export function generateStaticParams() {

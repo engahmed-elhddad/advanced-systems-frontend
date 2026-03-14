@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { getAuthHeaders } from "@/app/lib/admin-auth"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
@@ -34,7 +34,7 @@ export default function AdminSystemPage() {
       })
       if (res.ok) {
         setParams((prev) => prev.map((p) => (p.key === key ? { ...p, value } : p)))
-        setEditing((e) => ({ ...e, [key]: undefined }))
+        setEditing((e) => { const next = { ...e }; delete next[key]; return next; })
       }
     } catch {
       alert("Failed to save")
@@ -96,7 +96,7 @@ export default function AdminSystemPage() {
                               Save
                             </button>
                             <button
-                              onClick={() => setEditing((x) => ({ ...x, [p.key]: undefined }))}
+                              onClick={() => setEditing((x) => { const next = { ...x }; delete next[p.key]; return next; })}
                               className="px-3 py-1.5 rounded border border-gray-200 text-sm"
                             >
                               Cancel

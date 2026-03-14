@@ -309,6 +309,7 @@ export default function PanelBuilderPage() {
                 </p>
               </>
             )}
+          </div>
         </div>
       </div>
 

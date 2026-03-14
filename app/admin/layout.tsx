@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { isAdminAuthenticated, clearAdminAuth, getAdminUser } from "@/app/lib/admin-auth"
+import { isAdminAuthenticated, clearAdminAuth, getAdminUser } from "@/lib/admin-auth"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

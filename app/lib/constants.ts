@@ -7,9 +7,11 @@ export const API_BASE_URL =
 export const CDN_BASE_URL =
   process.env.NEXT_PUBLIC_CDN_URL || "https://cdn.advancedsystems-int.com"
 
-export const CONTACT_EMAIL = "eng.ahmed@advancedsystems-int.com"
+export const CONTACT_EMAIL =
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL || "eng.ahmed@advancedsystems-int.com"
 
-export const WHATSAPP_NUMBER = "201000629229"
+export const WHATSAPP_NUMBER =
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201000629229"
 
 export function rfqMailtoHref(partNumber: string): string {
   return `mailto:${CONTACT_EMAIL}?subject=RFQ%20${encodeURIComponent(partNumber)}`

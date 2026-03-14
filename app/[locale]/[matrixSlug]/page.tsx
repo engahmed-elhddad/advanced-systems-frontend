@@ -71,7 +71,7 @@ export default async function MatrixPage({ params }: Props) {
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {(data.products || []).map((p: Record<string, unknown>) => (
+          {((data?.products && Array.isArray(data.products) ? data.products : []) as Record<string, unknown>[]).map((p) => (
             <ProductCard key={String(p.part_number)} {...productToCardProps(p as never)} productBasePath="/product" />
           ))}
         </div>
@@ -80,10 +80,10 @@ export default async function MatrixPage({ params }: Props) {
           <section className="mt-12 pt-10 border-t border-slate-200">
             <h2 className="text-xl font-semibold text-slate-900 mb-4">{t.news}: {data.brand} {data.category}</h2>
             <ul className="space-y-3">
-              {(data.related_news || []).map((n: Record<string, unknown>) => (
+              {((data.related_news && Array.isArray(data.related_news) ? data.related_news : []) as Record<string, unknown>[]).map((n) => (
                 <li key={String(n.slug)}>
                   <Link href={`/${locale}/news/${n.slug}`} className="text-primary-600 hover:underline font-medium">
-                    {(locale === 'ar' ? n.title_ar : n.title_en) || n.title_en}
+                    {String((locale === 'ar' ? n.title_ar : n.title_en) || n.title_en || '')}
                   </Link>
                 </li>
               ))}

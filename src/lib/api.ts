@@ -79,6 +79,62 @@ export const rfqApi = {
 export const submitRFQ = (data: any) =>
   rfqApi.submit(data).then((r) => r.data);
 
+/** Instant RFQ */
+export const submitInstantRFQ = (data: {
+  part_number: string
+  quantity?: number
+  email: string
+  company?: string
+  message?: string
+}) =>
+  api.post("/api/rfq/instant", {
+    part_number: data.part_number,
+    quantity: data.quantity ?? 1,
+    email: data.email,
+    company: data.company || undefined,
+    message: data.message || undefined,
+  }).then((r) => r.data)
+
+export const getMyRfqs = (email: string) =>
+  api.get("/api/rfq/my", { params: { email } }).then((r) => r.data)
+
+/** Vision AI: detect part number from image */
+export const detectProductFromImage = (file: File) => {
+  const fd = new FormData()
+  fd.append("file", file)
+  return api.post("/api/product-detect", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 30000,
+  }).then((r) => r.data)
+}
+
+/** BOM RFQ */
+export const submitBomRfq = (data: {
+  items: Array<{ part_number: string; quantity?: number }>
+  email: string
+  company?: string
+  contact_name?: string
+  country?: string
+  message?: string
+}) => api.post("/api/bom/rfq", data).then((r) => r.data)
+
+/** Panel Builder */
+export const generatePanelBom = (params: {
+  application?: string
+  motor_power_kw?: number
+  voltage?: string
+  control_type?: string
+}) =>
+  api.post("/api/panel-builder/generate", {
+    application: params.application ?? "motor_control",
+    motor_power_kw: params.motor_power_kw ?? 5.5,
+    voltage: params.voltage ?? "400V AC",
+    control_type: params.control_type ?? "direct_on_line",
+  }).then((r) => r.data)
+
+export const getPanelBuilderOptions = () =>
+  api.get("/api/panel-builder/options").then((r) => r.data)
+
 // BOM Analyzer
 export const analyzeBom = (file: File) => {
   const formData = new FormData();
