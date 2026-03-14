@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
 // Products
 export const productsApi = {
   list: (params?: Record<string, any>) => api.get("/api/v1/products/", { params }),
-  featured: (limit = 8) => api.get("/api/v1/products/featured", { params: { limit } }),
+  featured: (limit = 8) => api.get("/api/v1/featured", { params: { limit } }),
   bySlug: (slug: string) => api.get(`/api/v1/products/slug/${slug}`),
   byPartNumber: (pn: string) => api.get(`/api/v1/products/part/${encodeURIComponent(pn)}`),
   related: (id: number) => api.get(`/api/v1/products/${id}/related`),
@@ -28,8 +28,15 @@ export const productsApi = {
 export const getProducts = (params?: Record<string, any>) =>
   productsApi.list(params).then((r) => r.data);
 
+/** GET /api/v1/featured?limit=N - normalizes array | { products } | { items } */
 export const getFeaturedProducts = (limit = 8) =>
-  productsApi.featured(limit).then((r) => r.data);
+  productsApi.featured(limit).then((r) => {
+    const data = r.data
+    if (Array.isArray(data)) return data
+    if (data?.products && Array.isArray(data.products)) return data.products
+    if (data?.items && Array.isArray(data.items)) return data.items
+    return []
+  })
 
 export const getProductByPartNumber = (partNumber: string) =>
   productsApi.byPartNumber(partNumber).then((r) => r.data);

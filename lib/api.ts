@@ -19,8 +19,15 @@ export const getProducts = (params: Record<string, unknown> = {}) => {
   return api.get("/api/products", { params: q }).then((r) => r.data)
 }
 
+/** GET /api/v1/featured?limit=N - returns array, or { products } or { items } */
 export const getFeaturedProducts = (limit = 8) =>
-  api.get(`/api/v1/products/featured`, { params: { limit } }).then((r) => r.data);
+  api.get(`/api/v1/featured`, { params: { limit } }).then((r) => {
+    const data = r.data
+    if (Array.isArray(data)) return data
+    if (data?.products && Array.isArray(data.products)) return data.products
+    if (data?.items && Array.isArray(data.items)) return data.items
+    return []
+  })
 
 export const getProductByPartNumber = (partNumber: string) =>
   api.get(`/api/v1/products/part/${encodeURIComponent(partNumber)}`).then((r) => r.data);

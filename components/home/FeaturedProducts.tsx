@@ -7,11 +7,21 @@ export async function FeaturedProducts() {
   let products: any[] = []
   try {
     products = await getFeaturedProducts(8)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[FeaturedProducts] /api/v1/featured response:', products?.length ?? 0, 'products')
+    }
     if (!products?.length) {
       const data = await getProducts({ size: 8, page: 1 })
-      products = data?.items || []
+      products = data?.items ?? data?.products ?? []
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[FeaturedProducts] fallback getProducts:', products?.length ?? 0, 'products')
+      }
     }
-  } catch {}
+  } catch (e) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[FeaturedProducts] Error loading featured:', e)
+    }
+  }
 
   if (!products.length) return null
 
