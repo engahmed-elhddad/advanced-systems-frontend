@@ -1,10 +1,5 @@
-import { resolveProductImageUrl } from '@/app/lib/constants'
+import { API_BASE_URL, resolveProductImageUrl } from '@/app/lib/constants'
 import type { ProductCardProps } from '@/components/products/ProductCard'
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'http://localhost:8000'
 
 /** Flexible product shape from API (various backend responses) */
 export interface ApiProduct {
@@ -43,7 +38,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
       image: p.primary_image ?? p.image,
       image_url: p.image_url,
     },
-    API_BASE
+    API_BASE_URL
   )
   const stock = p.stock_quantity ?? 0
   const isAvailable =

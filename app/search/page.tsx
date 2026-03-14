@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, Suspense, useRef } from "react"
+import React, { useEffect, useState, Suspense, useRef, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Search, SlidersHorizontal } from "lucide-react"
@@ -71,9 +71,12 @@ function SearchResults() {
 
   const API = API_BASE_URL
 
-  const sortedProducts = [...products]
-  if (sort === 'price_low') sortedProducts.sort((a, b) => (a.price_usd ?? 999999) - (b.price_usd ?? 999999))
-  else if (sort === 'price_high') sortedProducts.sort((a, b) => (b.price_usd ?? 0) - (a.price_usd ?? 0))
+  const sortedProducts = useMemo(() => {
+    const copy = [...products]
+    if (sort === "price_low") copy.sort((a, b) => (a.price_usd ?? 999999) - (b.price_usd ?? 999999))
+    else if (sort === "price_high") copy.sort((a, b) => (b.price_usd ?? 0) - (a.price_usd ?? 0))
+    return copy
+  }, [products, sort])
 
   useEffect(() => { setQuery(q) }, [q])
 

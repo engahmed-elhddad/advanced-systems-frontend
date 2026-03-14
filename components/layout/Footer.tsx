@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Zap, Mail, Search, FileText } from 'lucide-react'
+import { CONTACT_EMAIL } from '@/app/lib/constants'
 import { Container } from '@/components/ui/Container'
 
 export function Footer() {
@@ -57,7 +58,7 @@ export function Footer() {
               <li><Link href="/ai-assistant" className="hover:text-primary-600">AI Assistant</Link></li>
               <li><Link href="/knowledge" className="hover:text-primary-600">Knowledge Hub</Link></li>
               <li><Link href="/suppliers" className="hover:text-primary-600">Suppliers</Link></li>
-              <li><a href="mailto:info@advancedsystems-int.com" className="hover:text-primary-600 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> Contact</a></li>
+              <li><a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-primary-600 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> Contact</a></li>
             </ul>
           </div>
         </div>

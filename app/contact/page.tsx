@@ -1,3 +1,5 @@
+import { CONTACT_EMAIL, WHATSAPP_NUMBER } from "@/app/lib/constants"
+
 export default function ContactPage() {
   return (
     <div className="min-h-[60vh] bg-[var(--background)]">
@@ -15,7 +17,7 @@ export default function ContactPage() {
 
         <div className="space-y-6">
           <a
-            href="mailto:eng.ahmed@advancedsystems-int.com"
+            href={`mailto:${CONTACT_EMAIL}`}
             className="flex items-start gap-4 p-5 rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-teal-200 transition group"
           >
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-600 group-hover:bg-teal-500 group-hover:text-white transition">
@@ -26,13 +28,13 @@ export default function ContactPage() {
             <div>
               <span className="block font-semibold text-slate-900 mb-0.5">Email</span>
               <span className="text-teal-600 font-medium group-hover:underline">
-                eng.ahmed@advancedsystems-int.com
+                {CONTACT_EMAIL}
               </span>
             </div>
           </a>
 
           <a
-            href="tel:+201000629229"
+            href={`tel:${WHATSAPP_NUMBER}`}
             className="flex items-start gap-4 p-5 rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-teal-200 transition group"
           >
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-600 group-hover:bg-teal-500 group-hover:text-white transition">
@@ -43,7 +45,7 @@ export default function ContactPage() {
             <div>
               <span className="block font-semibold text-slate-900 mb-0.5">Phone</span>
               <span className="text-teal-600 font-medium group-hover:underline">
-                +201000629229
+                {WHATSAPP_NUMBER}
               </span>
             </div>
           </a>

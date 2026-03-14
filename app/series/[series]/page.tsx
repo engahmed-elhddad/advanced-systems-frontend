@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import Link from "next/link"
-import { API_BASE_URL, rfqMailtoHref, categoryToSlug, resolveProductImageUrl } from "@/app/lib/constants"
+import { API_BASE_URL, SITE_URL, rfqMailtoHref, categoryToSlug, resolveProductImageUrl } from "@/app/lib/constants"
 import { MailIcon } from "@/components/ui/MailIcon"
 import { BrandLogo } from "@/components/ui/BrandLogo"
 import { ProductImageWithFallback } from "@/components/ui/ProductImageWithFallback"
@@ -23,7 +23,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { series: seriesSlug } = await params
   const series = slugToSeries(seriesSlug)
-  const url = `https://advancedsystems-int.com/series/${seriesSlug}`
+  const url = `${SITE_URL}/series/${seriesSlug}`
   return {
     title: `${series} Series – Industrial Automation Parts | Advanced Systems`,
     description: `Buy ${series} series industrial automation components including PLCs, drives, sensors and control systems.`,
@@ -64,9 +64,9 @@ export default async function SeriesPage({ params, searchParams }: Props) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://advancedsystems-int.com" },
-      { "@type": "ListItem", position: 2, name: "Products", item: "https://advancedsystems-int.com/products" },
-      { "@type": "ListItem", position: 3, name: `${series} Series`, item: `https://advancedsystems-int.com/series/${seriesSlug}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Products", item: `${SITE_URL}/products` },
+      { "@type": "ListItem", position: 3, name: `${series} Series`, item: `${SITE_URL}/series/${seriesSlug}` },
     ],
   }
 

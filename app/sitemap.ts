@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
-import { CATEGORIES } from "@/app/lib/constants"
+import { CATEGORIES, SITE_URL } from "@/app/lib/constants"
 
-const base = "https://advancedsystems-int.com"
+const base = SITE_URL
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||

@@ -13,6 +13,10 @@ export const CONTACT_EMAIL =
 export const WHATSAPP_NUMBER =
   process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201000629229"
 
+/** Site base URL for SEO canonical, OpenGraph, sitemap */
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://advancedsystems-int.com"
+
 export function rfqMailtoHref(partNumber: string): string {
   return `mailto:${CONTACT_EMAIL}?subject=RFQ%20${encodeURIComponent(partNumber)}`
 }

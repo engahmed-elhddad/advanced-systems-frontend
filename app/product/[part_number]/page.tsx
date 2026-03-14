@@ -1,11 +1,9 @@
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { getProductByPartNumber, getProductBySlug, getProductOrGenerate } from '@/lib/api'
+import { SITE_URL, API_BASE_URL } from '@/app/lib/constants'
 import { ProductDetail } from './ProductDetail'
 import type { Metadata } from 'next'
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://advancedsystems-int.com'
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
 interface Props {
   params: Promise<{ part_number: string }>
@@ -37,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const desc = `Find specifications, datasheet and availability for ${brandName} ${product.part_number}. Advanced Systems supplies hard-to-find industrial automation components and obsolete parts.`.slice(0, 160)
   const images = product.images || []
   const imgUrl = images[0]?.url || product.image_url
-  const fullImgUrl = imgUrl ? (imgUrl.startsWith('http') ? imgUrl : `${API_BASE}${imgUrl}`) : undefined
+  const fullImgUrl = imgUrl ? (imgUrl.startsWith('http') ? imgUrl : `${API_BASE_URL}${imgUrl}`) : undefined
   const canonical = `${SITE_URL}/product/${encodeURIComponent(product.part_number)}`
   const keywords = [product.part_number, brandName, categoryName, 'datasheet', 'specifications', 'availability', 'industrial automation', 'RFQ'].filter(Boolean).join(', ')
   return {

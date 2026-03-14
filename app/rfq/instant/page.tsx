@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { submitInstantRFQ, submitBomRfq } from '@/lib/api'
+import { CONTACT_EMAIL } from '@/app/lib/constants'
 import { Plus, Trash2, Send } from 'lucide-react'
 
 type LineItem = { part_number: string; quantity: string }
@@ -76,7 +77,7 @@ export default function InstantRFQPage() {
       setMessage('')
     } catch {
       setStatus('error')
-      setErrorMsg('Submission failed. Please try again or email us at eng.ahmed@advancedsystems-int.com')
+      setErrorMsg(`Submission failed. Please try again or email us at ${CONTACT_EMAIL}`)
     }
   }
 

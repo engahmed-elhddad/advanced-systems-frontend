@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { submitRFQ } from "@/lib/api"
+import { CONTACT_EMAIL } from "@/app/lib/constants"
 
 export default function RFQPage() {
   const [form, setForm] = useState({
@@ -46,7 +47,7 @@ export default function RFQPage() {
       setForm({ part_number: "", quantity: "1", company: "", contact_name: "", email: "", country: "", message: "" })
     } catch {
       setStatus("error")
-      setErrorMsg("Failed to submit. Please email us at eng.ahmed@advancedsystems-int.com")
+      setErrorMsg(`Failed to submit. Please email us at ${CONTACT_EMAIL}`)
     }
   }
 
@@ -169,7 +170,7 @@ export default function RFQPage() {
 
             <p className="text-center text-xs text-gray-500">
               Or contact us via{" "}
-              <a href="mailto:eng.ahmed@advancedsystems-int.com" className="text-primary-600 hover:underline font-medium">email</a>
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary-600 hover:underline font-medium">email</a>
               {" "}or{" "}
               <a href="https://wa.me/201000629229" target="_blank" rel="noreferrer" className="text-primary-600 hover:underline font-medium">WhatsApp</a>
             </p>

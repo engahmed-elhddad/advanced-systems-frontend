@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import Link from "next/link"
-import { API_BASE_URL, rfqMailtoHref, categoryToSlug, slugToSpec, resolveProductImageUrl } from "@/app/lib/constants"
+import { API_BASE_URL, SITE_URL, rfqMailtoHref, categoryToSlug, slugToSpec, resolveProductImageUrl } from "@/app/lib/constants"
 import { MailIcon } from "@/components/ui/MailIcon"
 import { BrandLogo } from "@/components/ui/BrandLogo"
 import { ProductImageWithFallback } from "@/components/ui/ProductImageWithFallback"
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props) {
   const { spec: specSlug } = await params
   const { key, value } = slugToSpec(specSlug)
   const label = value ? `${key}: ${value}` : key
-  const url = `https://advancedsystems-int.com/spec/${specSlug}`
+  const url = `${SITE_URL}/spec/${specSlug}`
   return {
     title: `${label} – Industrial Parts | Advanced Systems`,
     description: `Industrial automation components with specification ${label}.`,
@@ -60,9 +60,9 @@ export default async function SpecPage({ params, searchParams }: Props) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://advancedsystems-int.com" },
-      { "@type": "ListItem", position: 2, name: "Products", item: "https://advancedsystems-int.com/products" },
-      { "@type": "ListItem", position: 3, name: displayLabel, item: `https://advancedsystems-int.com/spec/${specSlug}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Products", item: `${SITE_URL}/products` },
+      { "@type": "ListItem", position: 3, name: displayLabel, item: `${SITE_URL}/spec/${specSlug}` },
     ],
   }
 

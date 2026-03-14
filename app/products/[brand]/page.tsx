@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import Link from "next/link"
-import { API_BASE_URL, rfqMailtoHref, resolveProductImageUrl } from "@/app/lib/constants"
+import { API_BASE_URL, SITE_URL, rfqMailtoHref, resolveProductImageUrl } from "@/app/lib/constants"
 import { MailIcon } from "@/components/ui/MailIcon"
 
 /* =========================
@@ -63,7 +63,7 @@ export default async function BrandPage({ params }: { params: Promise<{ brand: s
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `${brand} Industrial Automation Parts`,
-    url: `https://advancedsystems-int.com/brand/${brandSlug}`,
+    url: `${SITE_URL}/brand/${brandSlug}`,
     about: { "@type": "Brand", name: brand },
   }
 

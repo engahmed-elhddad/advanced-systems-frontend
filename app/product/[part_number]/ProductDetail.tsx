@@ -11,14 +11,12 @@ import { EngineeringComparisonTable } from '@/components/product/EngineeringComp
 import { ComponentIntelligence } from '@/components/product/ComponentIntelligence'
 import { RfqForm } from '@/components/rfq/RfqForm'
 import { getBrandHref } from '@/lib/brandUtils'
-import { API_BASE_URL, CONTACT_EMAIL, WHATSAPP_NUMBER, categoryToSlug, seriesToSlug, specToSlug } from '@/app/lib/constants'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || API_BASE_URL
+import { API_BASE_URL, CONTACT_EMAIL, SITE_URL, WHATSAPP_NUMBER, categoryToSlug, seriesToSlug, specToSlug } from '@/app/lib/constants'
 
 function imageUrl(url: string) {
   if (!url) return ''
   if (url.startsWith('http')) return url
-  return `${API_BASE}${url}`
+  return `${API_BASE_URL}${url}`
 }
 
 function whatsappQuoteHref(partNumber: string) {
@@ -47,7 +45,7 @@ export function ProductDetail({ product, productBasePath = '/part-number' }: { p
   useEffect(() => {
     const pn = product.part_number
     if (!pn) return
-    fetch(`${API_BASE}/product/${encodeURIComponent(pn)}/cross-references?limit=6`)
+    fetch(`${API_BASE_URL}/product/${encodeURIComponent(pn)}/cross-references?limit=6`)
       .then(r => r.json())
       .then(data => setCrossRefs(data))
       .catch(() => {})
@@ -56,7 +54,7 @@ export function ProductDetail({ product, productBasePath = '/part-number' }: { p
   const nextImage = () => setSelectedImageIndex((i: number) => (i + 1) % images.length)
   const prevImage = () => setSelectedImageIndex((i: number) => (i - 1 + images.length) % images.length)
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location?.origin : '') || 'https://advancedsystems-int.com'
+  const baseUrl = SITE_URL
   const productUrl = `${baseUrl}${productBasePath}/${encodeURIComponent(product.part_number)}`
   const imgList = images.map((img: any) => imageUrl(typeof img === 'string' ? img : img?.url)).filter(Boolean)
   const jsonLd = {
@@ -256,7 +254,7 @@ export function ProductDetail({ product, productBasePath = '/part-number' }: { p
             {/* Predictive Component Intelligence */}
             <ComponentIntelligence
               partNumber={product.part_number}
-              apiBase={API_BASE}
+              apiBase={API_BASE_URL}
               productBasePath={productBasePath}
             />
           </div>
@@ -274,7 +272,7 @@ export function ProductDetail({ product, productBasePath = '/part-number' }: { p
           relatedProducts={similarProducts}
           crossRefs={crossRefs}
           imageUrl={imageUrl}
-          apiBase={API_BASE}
+          apiBase={API_BASE_URL}
           productBasePath={productBasePath}
         />
 

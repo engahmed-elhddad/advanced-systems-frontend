@@ -1,11 +1,12 @@
 import Link from "next/link"
 import { BRAND_MAP, BRAND_DESCRIPTIONS } from "@/app/lib/brands"
+import { SITE_URL } from "@/app/lib/constants"
 
 export const metadata = {
   title: "All Brands | Advanced Systems – Industrial Automation",
   description:
     "Browse all industrial automation brands available at Advanced Systems including Siemens, ABB, Schneider Electric, Omron, and more.",
-  alternates: { canonical: "https://advancedsystems-int.com/brands" },
+  alternates: { canonical: `${SITE_URL}/brands` },
 }
 
 const BRAND_CATEGORIES: Record<string, string[]> = {
