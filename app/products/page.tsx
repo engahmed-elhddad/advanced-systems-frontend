@@ -35,8 +35,8 @@ export default async function ProductsPage({
       getBrands().catch(() => []),
     ])
 
-    const res = productsRes as { items?: unknown[]; results?: unknown[]; total?: number; count?: number }
-    products = res?.items ?? res?.results ?? (Array.isArray(productsRes) ? productsRes : [])
+    const res = productsRes as { items?: unknown[]; results?: unknown[]; products?: unknown[]; total?: number; count?: number }
+    products = res?.items ?? res?.results ?? res?.products ?? (Array.isArray(productsRes) ? productsRes : [])
     totalCount = res?.total ?? res?.count ?? (products as unknown[]).length
     brands = Array.isArray(brandsRes)
       ? brandsRes.slice(0, 12)

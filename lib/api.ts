@@ -11,9 +11,13 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Products
-export const getProducts = (params: Record<string, unknown> = {}) =>
-  api.get("/api/v1/products/", { params }).then((r) => r.data);
+// Products (uses /api/products - flat schema with part_number, manufacturer, brand, category)
+export const getProducts = (params: Record<string, unknown> = {}) => {
+  const { size, page, search, ...rest } = params
+  const q: Record<string, unknown> = { ...rest, page: page ?? 1, size: size ?? 30 }
+  if (search) q.search = search
+  return api.get("/api/products", { params: q }).then((r) => r.data)
+}
 
 export const getFeaturedProducts = (limit = 8) =>
   api.get(`/api/v1/products/featured`, { params: { limit } }).then((r) => r.data);
