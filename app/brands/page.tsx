@@ -30,14 +30,14 @@ function BrandCard({ brand }: { brand: string }) {
       href={`/brand/${slug}`}
       className="card group p-6 flex flex-col items-center text-center"
     >
-      <div className="w-16 h-16 mb-3 flex items-center justify-center rounded-xl bg-primary-50 text-2xl font-bold text-primary-600 group-hover:bg-primary-100 transition-colors">
+      <div className="w-16 h-16 mb-3 flex items-center justify-center rounded-xl bg-accent-50 text-2xl font-bold text-accent-600 group-hover:bg-accent-100 transition-colors">
         {brand.charAt(0)}
       </div>
-      <span className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">{brand}</span>
+      <span className="font-semibold text-gray-900 group-hover:text-accent-600 transition-colors">{brand}</span>
       {desc && (
         <p className="text-xs text-gray-500 mt-1.5 line-clamp-2 leading-tight">{desc.slice(0, 80)}…</p>
       )}
-      <span className="mt-3 text-xs font-medium text-primary-600 group-hover:underline">View Parts →</span>
+      <span className="mt-3 text-xs font-medium text-accent-600 group-hover:underline">View Parts →</span>
     </Link>
   )
 }
@@ -47,7 +47,7 @@ export default function BrandsPage() {
     <div className="min-h-screen bg-white">
       <div className="border-b border-gray-200 bg-gray-50 py-14 px-4">
         <div className="max-w-6xl mx-auto">
-          <span className="inline-flex items-center gap-2 text-primary-600 text-sm font-semibold uppercase tracking-widest mb-4">
+          <span className="inline-flex items-center gap-2 text-accent-600 text-sm font-semibold uppercase tracking-widest mb-4">
             Industrial Manufacturers
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
@@ -68,7 +68,7 @@ export default function BrandsPage() {
             { label: "Years Experience", value: "15+" },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-soft">
-              <div className="text-2xl font-bold text-primary-600 mb-0.5">{s.value}</div>
+              <div className="text-2xl font-bold text-accent-600 mb-0.5">{s.value}</div>
               <div className="text-xs text-gray-500">{s.label}</div>
             </div>
           ))}
@@ -100,7 +100,7 @@ export default function BrandsPage() {
               <Link
                 key={brand}
                 href={`/brand/${slugOf(brand)}`}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-all text-center truncate"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:border-accent-300 hover:bg-accent-50 hover:text-accent-700 transition-all text-center truncate"
               >
                 {brand}
               </Link>
@@ -115,7 +115,7 @@ export default function BrandsPage() {
           </p>
           <Link
             href="/rfq"
-            className="btn-primary"
+            className="inline-flex items-center px-5 py-2.5 rounded-lg bg-accent-600 hover:bg-accent-700 text-white font-semibold text-sm transition-colors"
           >
             Submit RFQ →
           </Link>

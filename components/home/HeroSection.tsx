@@ -28,14 +28,14 @@ export function HeroSection() {
 
       <div className="relative page-container py-16 sm:py-20">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-medium uppercase tracking-wider mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-500/10 border border-accent-500/20 text-accent-300 text-xs font-medium uppercase tracking-wider mb-6">
             <Cpu className="w-4 h-4" />
             Industrial Automation Platform
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight mb-4 leading-tight">
             The Industrial Parts
             <br />
-            <span className="text-primary-400">Search Engine</span>
+            <span className="text-accent-400">Search Engine</span>
           </h1>
           <p className="text-slate-300 text-lg sm:text-xl max-w-2xl mx-auto mb-10">
             Search part numbers, manufacturers and specifications. PLCs, drives, sensors — from 500+ brands.
@@ -57,7 +57,7 @@ export function HeroSection() {
                 <button
                   type="button"
                   onClick={() => router.push(`/search?q=${encodeURIComponent(ex.q)}`)}
-                  className="text-primary-400 hover:text-primary-300 font-medium transition-colors"
+                  className="text-accent-400 hover:text-accent-300 font-medium transition-colors"
                 >
                   {ex.q}
                 </button>
@@ -69,15 +69,15 @@ export function HeroSection() {
           {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-6 sm:gap-10 text-slate-400 text-sm">
             <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary-500" />
+              <Zap className="w-5 h-5 text-accent-400" />
               <span>Fast quotes</span>
             </div>
             <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-primary-500" />
+              <Shield className="w-5 h-5 text-accent-400" />
               <span>Verified suppliers</span>
             </div>
             <div className="flex items-center gap-2">
-              <Truck className="w-5 h-5 text-primary-500" />
+              <Truck className="w-5 h-5 text-accent-400" />
               <span>Global shipping</span>
             </div>
           </div>
@@ -85,13 +85,13 @@ export function HeroSection() {
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
               href="/product-finder"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-slate-600 text-slate-300 hover:border-primary-500/50 hover:text-primary-400 hover:bg-primary-500/5 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-slate-600 text-slate-300 hover:border-accent-500/50 hover:text-accent-400 hover:bg-accent-500/5 transition-colors text-sm font-medium"
             >
               Find by specs
             </Link>
             <Link
               href="/rfq/instant"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent-600 hover:bg-accent-500 text-white text-sm font-semibold transition-colors"
             >
               Instant RFQ
             </Link>

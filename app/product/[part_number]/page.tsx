@@ -30,14 +30,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await fetchProduct(decodeURIComponent(part_number))
   if (!product) return { title: 'Product Not Found' }
   const brandName = product.brand?.name || product.manufacturer || 'Industrial'
-  const categoryName = product.category?.name || product.category || 'Industrial Automation'
-  const title = `${brandName} ${product.part_number} Datasheet, Specifications and Availability | Industrial Automation Supplier`
-  const desc = `Find specifications, datasheet and availability for ${brandName} ${product.part_number}. Advanced Systems supplies hard-to-find industrial automation components and obsolete parts.`.slice(0, 160)
+  const title = product.part_number
+  const desc = `${brandName} ${product.part_number} - Industrial automation component. Specifications, datasheet and RFQ.`
   const images = product.images || []
   const imgUrl = images[0]?.url || product.image_url
   const fullImgUrl = imgUrl ? (imgUrl.startsWith('http') ? imgUrl : `${API_BASE_URL}${imgUrl}`) : undefined
   const canonical = `${SITE_URL}/product/${encodeURIComponent(product.part_number)}`
-  const keywords = [product.part_number, brandName, categoryName, 'datasheet', 'specifications', 'availability', 'industrial automation', 'RFQ'].filter(Boolean).join(', ')
+  const keywords = [product.part_number, brandName, 'datasheet', 'specifications', 'industrial automation', 'RFQ'].filter(Boolean).join(', ')
   return {
     title,
     description: desc,

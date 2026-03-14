@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Search, SlidersHorizontal } from "lucide-react"
 import { API_BASE_URL, CATEGORIES, slugToCategory } from "@/app/lib/constants"
-import { ProductCard } from "@/components/products/ProductCard"
+import { ProductGrid } from "@/components/products/ProductGrid"
 import {
   ProductGridSkeleton,
   EmptyState,
@@ -14,7 +14,6 @@ import {
   Select,
   Spinner,
 } from "@/components/ui"
-import { productToCardProps } from "@/lib/productMappers"
 
 function SearchIcon() {
   return (
@@ -540,22 +539,20 @@ function SearchResults() {
           {/* Results */}
           {!loading && products.length > 0 && (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {sortedProducts.map((p: any) => (
-                  <ProductCard key={p.part_number} {...productToCardProps(p)} />
-                ))}
-              </div>
+              <ProductGrid
+                products={sortedProducts}
+                productBasePath="/product"
+              />
 
               {/* Compatible alternatives (when search returns part-number results) */}
               {alternatives.length > 0 && (
                 <div className="mt-10 pt-8 border-t border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Compatible Alternatives</h3>
                   <p className="text-sm text-gray-500 mb-4">Equivalent parts from other brands for &quot;{q}&quot;</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {alternatives.slice(0, 8).map((a: any) => (
-                      <ProductCard key={a.part_number} {...productToCardProps(a)} />
-                    ))}
-                  </div>
+                  <ProductGrid
+                    products={alternatives.slice(0, 8)}
+                    productBasePath="/product"
+                  />
                 </div>
               )}
 

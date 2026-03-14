@@ -113,7 +113,7 @@ export function resolveProductImageUrl(
     return `${api}/uploads/products/${rawImg}`
   }
   if (p.part_number) {
-    return `${api}/uploads/products/${p.part_number}.jpg`
+    return `${api}/uploads/products/${p.part_number}.webp`
   }
   return "/products/no-product-image.jpg"
 }

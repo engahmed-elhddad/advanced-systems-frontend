@@ -5,6 +5,7 @@ import './globals.css'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { CurrencyProvider } from '@/lib/providers/CurrencyProvider'
+import { QueryProvider } from '@/components/providers/QueryProvider'
 
 const IndustrialAssistant = dynamic(
   () => import('@/components/assistant/IndustrialAssistant').then((m) => ({ default: m.IndustrialAssistant })),
@@ -35,13 +36,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
       </head>
-      <body className={`${inter.className} bg-white text-gray-900 antialiased`}>
+      <body className={`${inter.className} bg-white text-slate-900 antialiased`}>
+        <QueryProvider>
         <CurrencyProvider>
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <Footer />
           <IndustrialAssistant />
         </CurrencyProvider>
+        </QueryProvider>
       </body>
     </html>
   )

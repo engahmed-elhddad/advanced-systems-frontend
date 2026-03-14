@@ -44,10 +44,9 @@ export function Navbar() {
 
   const navItems = [
     { id: 'products', label: 'Products', href: '/products' },
-    { id: 'manufacturers', label: 'Manufacturers', href: '/brands' },
-    { id: 'tools', label: 'Engineering Tools', href: '/tools' },
-    { id: 'resources', label: 'Resources', href: '/knowledge' },
-    { href: '/rfq', label: 'Request Quote', cta: true },
+    { id: 'brands', label: 'Brands', href: '/brands' },
+    { id: 'suppliers', label: 'Suppliers', href: '/suppliers', hrefOnly: true },
+    { href: '/rfq', label: 'RFQ', cta: true },
   ]
 
   return (
@@ -55,25 +54,25 @@ export function Navbar() {
       <div className="page-container">
         <div className="flex items-center h-14 gap-4">
           <Link href="/" className="flex items-center gap-2 shrink-0 group">
-            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center group-hover:bg-primary-700 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-accent-600 flex items-center justify-center group-hover:bg-accent-700 transition-colors">
               <Zap className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-slate-900 text-base hidden sm:block">
-              Advanced<span className="text-primary-600">Systems</span>
+              Advanced<span className="text-accent-600">Systems</span>
             </span>
           </Link>
 
           <div className="flex-1 relative max-w-xl mx-auto">
-            <SearchBar placeholder="Search part number, brand..." size="sm" showSuggestions />
+            <SearchBar placeholder="Search by part number (e.g. 6ES7400-1PB00-0AA0)" size="sm" showSuggestions debounceMs={300} />
           </div>
 
           <div className="hidden md:flex items-center gap-1">
-            {navItems.filter(n => !n.cta).map(item => (
+            {navItems.filter(n => !(n as { cta?: boolean }).cta).map(item => (
               <div key={item.id || item.href} className="relative group/nav">
                 {(item as { hrefOnly?: boolean }).hrefOnly ? (
                   <Link
                     href={item.href}
-                    className="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-slate-50 transition-all"
+                    className="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium text-slate-600 hover:text-accent-600 hover:bg-slate-50 transition-all"
                   >
                     {item.label}
                   </Link>
@@ -81,7 +80,7 @@ export function Navbar() {
                   <>
                 <button
                   onMouseEnter={() => setMegaOpen(item.id as 'brands' | 'products' | 'categories' | 'manufacturers' | 'tools' | 'resources')}
-                  className="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium text-slate-600 hover:text-primary-600 hover:bg-slate-50 transition-all"
+                  className="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium text-slate-600 hover:text-accent-600 hover:bg-slate-50 transition-all"
                 >
                   {item.label}
                   <ChevronDown className="w-4 h-4" />
@@ -98,7 +97,7 @@ export function Navbar() {
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Manufacturers</h4>
                             <div className="grid grid-cols-2 gap-1.5">
                               {brands.slice(0, 8).map(b => (
-                                <Link key={b.name} href={getBrandHref(b)} className="flex items-center gap-2 px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                                <Link key={b.name} href={getBrandHref(b)} className="flex items-center gap-2 px-3 py-2 rounded border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 transition-colors">
                                   <BrandLogo brand={b.name} logoClassName="h-5 max-w-[48px] object-contain" badgeClassName="hidden" />
                                   <span className="text-sm text-slate-700 truncate">{b.name}</span>
                                 </Link>
@@ -110,7 +109,7 @@ export function Navbar() {
                             <ul className="space-y-0.5">
                               {brands.slice(8, 14).map(b => (
                                 <li key={b.name}>
-                                  <Link href={getBrandHref(b)} className="block px-3 py-2 rounded text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600">
+                                  <Link href={getBrandHref(b)} className="block px-3 py-2 rounded text-sm text-slate-700 hover:bg-slate-50 hover:text-accent-600">
                                     {b.name}
                                   </Link>
                                 </li>
@@ -120,7 +119,7 @@ export function Navbar() {
                           <div>
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Browse</h4>
                             <ul className="space-y-0.5">
-                              <li><Link href="/brands" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">All manufacturers →</Link></li>
+                              <li><Link href="/brands" className="block px-3 py-2 rounded text-sm font-medium text-accent-600 hover:bg-slate-50">All manufacturers →</Link></li>
                               <li><Link href="/search?q=Siemens" className="block px-3 py-2 rounded text-sm text-slate-700 hover:bg-slate-50">Siemens</Link></li>
                               <li><Link href="/search?q=ABB" className="block px-3 py-2 rounded text-sm text-slate-700 hover:bg-slate-50">ABB</Link></li>
                               <li><Link href="/search?q=Omron" className="block px-3 py-2 rounded text-sm text-slate-700 hover:bg-slate-50">Omron</Link></li>
@@ -133,15 +132,15 @@ export function Navbar() {
                           <div className="col-span-2">
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Categories</h4>
                             <div className="grid grid-cols-2 gap-1.5 mb-4">
-                              <Link href="/search?q=PLC" className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700">PLC</Link>
-                              <Link href="/search?q=Contactor" className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700">Contactors</Link>
-                              <Link href="/search?q=Sensor" className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700">Sensors</Link>
-                              <Link href="/search?q=Drive" className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700">Drives</Link>
+                              <Link href="/search?q=PLC" className="px-3 py-2 rounded border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 text-sm text-slate-700">PLC</Link>
+                              <Link href="/search?q=Contactor" className="px-3 py-2 rounded border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 text-sm text-slate-700">Contactors</Link>
+                              <Link href="/search?q=Sensor" className="px-3 py-2 rounded border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 text-sm text-slate-700">Sensors</Link>
+                              <Link href="/search?q=Drive" className="px-3 py-2 rounded border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 text-sm text-slate-700">Drives</Link>
                             </div>
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Popular parts</h4>
                             <div className="grid grid-cols-2 gap-2">
                               {popularProducts.slice(0, 4).map((p: any) => (
-                                <Link key={p.part_number || p.id} href={`/product/${encodeURIComponent(p.part_number || p.slug || p.id)}`} className="flex gap-3 p-2.5 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                                <Link key={p.part_number || p.id} href={`/product/${encodeURIComponent(p.part_number || p.slug || p.id)}`} className="flex gap-3 p-2.5 rounded border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 transition-colors">
                                   <div className="w-10 h-10 rounded bg-slate-100 shrink-0" />
                                   <div className="min-w-0">
                                     <span className="font-mono text-sm font-semibold text-slate-900">{p.part_number}</span>
@@ -154,12 +153,12 @@ export function Navbar() {
                           <div>
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Browse</h4>
                             <ul className="space-y-0.5">
-                              <li><Link href="/products" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">All products →</Link></li>
+                              <li><Link href="/products" className="block px-3 py-2 rounded text-sm font-medium text-accent-600 hover:bg-slate-50">All products →</Link></li>
                               <li><Link href="/search?q=PLC" className="block px-3 py-2 rounded text-sm text-slate-700 hover:bg-slate-50">PLCs</Link></li>
                               <li><Link href="/search?q=Drive" className="block px-3 py-2 rounded text-sm text-slate-700 hover:bg-slate-50">Drives</Link></li>
-                              <li><Link href="/bom-analyzer" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">BOM Analyzer</Link></li>
-                              <li><Link href="/product-finder" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">Product Finder</Link></li>
-                              <li><Link href="/panel-builder" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">Panel Builder</Link></li>
+                              <li><Link href="/bom-analyzer" className="block px-3 py-2 rounded text-sm font-medium text-accent-600 hover:bg-slate-50">BOM Analyzer</Link></li>
+                              <li><Link href="/product-finder" className="block px-3 py-2 rounded text-sm font-medium text-accent-600 hover:bg-slate-50">Product Finder</Link></li>
+                              <li><Link href="/panel-builder" className="block px-3 py-2 rounded text-sm font-medium text-accent-600 hover:bg-slate-50">Panel Builder</Link></li>
                             </ul>
                           </div>
                         </>
@@ -169,16 +168,16 @@ export function Navbar() {
                           <div className="col-span-3">
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Engineering Tools</h4>
                             <div className="grid grid-cols-3 gap-2">
-                              <Link href="/panel-builder" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                              <Link href="/panel-builder" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 transition-colors">
                                 <span className="font-medium text-slate-900">Panel Builder</span>
                               </Link>
-                              <Link href="/ai-assistant" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                              <Link href="/ai-assistant" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 transition-colors">
                                 <span className="font-medium text-slate-900">AI Assistant</span>
                               </Link>
-                              <Link href="/product-finder" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                              <Link href="/product-finder" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 transition-colors">
                                 <span className="font-medium text-slate-900">Find by Specs</span>
                               </Link>
-                              <Link href="/bom-analyzer" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                              <Link href="/bom-analyzer" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 transition-colors">
                                 <span className="font-medium text-slate-900">BOM Analyzer</span>
                               </Link>
                             </div>
@@ -190,10 +189,10 @@ export function Navbar() {
                           <div className="col-span-3">
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Resources</h4>
                             <div className="grid grid-cols-2 gap-2">
-                              <Link href="/en/news" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                              <Link href="/en/news" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 transition-colors">
                                 <span className="font-medium text-slate-900">News</span>
                               </Link>
-                              <Link href="/knowledge" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-colors">
+                              <Link href="/knowledge" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 transition-colors">
                                 <span className="font-medium text-slate-900">Knowledge Hub</span>
                               </Link>
                             </div>
@@ -206,7 +205,7 @@ export function Navbar() {
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Categories</h4>
                             <div className="grid grid-cols-3 gap-1.5">
                               {categories.slice(0, 9).map(c => (
-                                <Link key={c.name} href={c.slug ? `/category/${c.slug}` : `/search?category=${encodeURIComponent(c.name)}`} className="px-3 py-2 rounded border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 text-sm text-slate-700 font-medium">
+                                <Link key={c.name} href={c.slug ? `/category/${c.slug}` : `/search?category=${encodeURIComponent(c.name)}`} className="px-3 py-2 rounded border border-slate-100 hover:border-accent-200 hover:bg-accent-50/50 text-sm text-slate-700 font-medium">
                                   {c.name}
                                 </Link>
                               ))}
@@ -215,7 +214,7 @@ export function Navbar() {
                           <div>
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Browse</h4>
                             <ul className="space-y-0.5">
-                              <li><Link href="/categories" className="block px-3 py-2 rounded text-sm font-medium text-primary-600 hover:bg-slate-50">All categories →</Link></li>
+                              <li><Link href="/categories" className="block px-3 py-2 rounded text-sm font-medium text-accent-600 hover:bg-slate-50">All categories →</Link></li>
                             </ul>
                           </div>
                         </>
@@ -229,7 +228,7 @@ export function Navbar() {
             ))}
             <Link
               href="/rfq"
-              className="inline-flex items-center px-4 py-2 rounded text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+              className="inline-flex items-center px-4 py-2 rounded text-sm font-semibold bg-accent-600 hover:bg-accent-700 text-white transition-colors"
             >
               Request Quote
             </Link>
@@ -243,7 +242,7 @@ export function Navbar() {
         {mobileOpen && (
           <div className="md:hidden py-3 border-t border-slate-100 space-y-0.5">
             {navItems.map(l => (
-              <Link key={l.href} href={l.href} onClick={() => setMobileOpen(false)} className={clsx("block px-4 py-2.5 rounded text-sm font-medium", l.cta ? "bg-primary-50 text-primary-600" : "text-slate-600 hover:bg-slate-50")}>
+              <Link key={l.href} href={l.href} onClick={() => setMobileOpen(false)} className={clsx("block px-4 py-2.5 rounded text-sm font-medium", l.cta ? "bg-accent-50 text-accent-600" : "text-slate-600 hover:bg-slate-50")}>
                 {l.label}
               </Link>
             ))}
