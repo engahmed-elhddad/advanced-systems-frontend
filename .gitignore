@@ -40,10 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Python
+# Python (if any .py scripts in repo)
 __pycache__/
 *.pyc
 *.pyo
-backend/.env
-backend/**/__pycache__/
-backend/uploads/
