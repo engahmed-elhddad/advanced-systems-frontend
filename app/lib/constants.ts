@@ -87,16 +87,12 @@ export function normalizePartNumber(part: string): string {
 /**
  * Resolve the best available image URL for a product.
  *
- * Priority order:
- *  1. p.images[0]  – first image in the images array (legacy / enriched data)
- *  2. p.image      – singular image field written by the image-enrichment service
- *  3. Constructed path: <api>/uploads/products/<part_number>.jpg
+ * Product images are served from R2 CDN at {CDN_BASE_URL}/products/{part_number}.webp
  *
- * For relative paths the function handles all storage conventions:
- *  • "/uploads/…"   → prepend api base
- *  • "uploads/…"    → prepend api base + "/"
- *  • "/products/…"  → keep as-is (public folder)
- *  • bare filename  → treat as uploads/products/<filename>
+ * Priority order:
+ *  1. p.images[0] / p.image_url / p.image – full URL (http/https) → use as-is
+ *  2. Relative paths – legacy; prepend api base
+ *  3. part_number – build CDN URL: {CDN_BASE_URL}/products/{part_number}.webp
  */
 export function resolveProductImageUrl(
   p: { part_number?: string; images?: string[]; image?: string; image_url?: string },
@@ -109,11 +105,10 @@ export function resolveProductImageUrl(
     if (rawImg.startsWith("/uploads/")) return `${api}${rawImg}`
     if (rawImg.startsWith("uploads/")) return `${api}/${rawImg}`
     if (rawImg.startsWith("/products/")) return rawImg
-    // Bare filename (e.g. "PART.jpg") stored by image-enrichment service
     return `${api}/uploads/products/${rawImg}`
   }
   if (p.part_number) {
-    return `${api}/uploads/products/${p.part_number}.webp`
+    return `${CDN_BASE_URL}/products/${p.part_number}.webp`
   }
   return "/products/no-product-image.jpg"
 }
