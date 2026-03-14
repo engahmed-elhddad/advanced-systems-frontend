@@ -4,7 +4,6 @@ import { memo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Package } from 'lucide-react'
 import { RFQButton } from '@/components/RFQButton'
 import { useCurrency } from '@/lib/hooks/useCurrency'
 
@@ -55,20 +54,14 @@ function ProductCardInner({
         href={`${productBasePath}/${encodeURIComponent(part_number)}`}
         className={`block relative bg-slate-50 overflow-hidden ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
       >
-        {image_url ? (
-          <Image
-            src={image_url}
-            alt={`${manufacturer || ''} ${part_number}`}
-            fill
-            className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <Package className="w-16 h-16 text-slate-300" />
-          </div>
-        )}
+        <Image
+          src={image_url || "/products/no-product-image.jpg"}
+          alt={`${manufacturer || ''} ${part_number}`}
+          fill
+          className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          loading="lazy"
+        />
         <div className="absolute top-2 right-2">
           {inStock ? (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent-50 text-accent-700 border border-accent-200">

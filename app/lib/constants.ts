@@ -87,12 +87,12 @@ export function normalizePartNumber(part: string): string {
 /**
  * Resolve the best available image URL for a product.
  *
- * Product images are served from R2 CDN at {CDN_BASE_URL}/products/{part_number}.webp
+ * Rule: If image_url is null/empty, do NOT generate any image URL; use placeholder.
+ * Product images from R2 CDN: {R2_PUBLIC_URL}/products/{part_number}/image.webp
  *
- * Priority order:
- *  1. p.images[0] / p.image_url / p.image – full URL (http/https) → use as-is
- *  2. Relative paths – legacy; prepend api base
- *  3. part_number – build CDN URL: {CDN_BASE_URL}/products/{part_number}.webp
+ * Priority:
+ *  1. p.images[0] / p.image_url / p.image – use when present (full URL or relative)
+ *  2. Otherwise → placeholder: /products/no-product-image.jpg
  */
 export function resolveProductImageUrl(
   p: { part_number?: string; images?: string[]; image?: string; image_url?: string },
@@ -106,9 +106,6 @@ export function resolveProductImageUrl(
     if (rawImg.startsWith("uploads/")) return `${api}/${rawImg}`
     if (rawImg.startsWith("/products/")) return rawImg
     return `${api}/uploads/products/${rawImg}`
-  }
-  if (p.part_number) {
-    return `${CDN_BASE_URL}/products/${p.part_number}.webp`
   }
   return "/products/no-product-image.jpg"
 }
