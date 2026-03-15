@@ -1,18 +1,14 @@
-import { getFeaturedFromApi, getFeaturedProducts } from '@/lib/api'
+import { getFeaturedProducts } from '@/lib/api'
 import { ProductCard } from '@/components/products/ProductCard'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { productToCardProps } from '@/lib/productMappers'
 
-/** Fetches from /api/v1/featured; displays product cards (image, part number, brand). */
+/** Fetches featured products from API; displays product cards (image, part number, brand). */
 export async function FeaturedProducts() {
   let products: any[] = []
   try {
-    products = await getFeaturedFromApi(12)
-  } catch {
-    try {
-      products = await getFeaturedProducts(12)
-    } catch {}
-  }
+    products = await getFeaturedProducts(12)
+  } catch {}
 
   if (!products.length) return null
 
