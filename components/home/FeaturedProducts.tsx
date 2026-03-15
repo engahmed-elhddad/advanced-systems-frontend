@@ -22,7 +22,7 @@ export async function FeaturedProducts() {
 
   return (
     <section>
-      <SectionHeader title="Trending Products" viewAllHref="/products" viewAllLabel="View all products" />
+      <SectionHeader title="Featured Products" viewAllHref="/products" viewAllLabel="View all products" />
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
         {products.map((p: any) => (
           <ProductCard key={p.id || p.part_number} {...productToCardProps(p)} variant="compact" />

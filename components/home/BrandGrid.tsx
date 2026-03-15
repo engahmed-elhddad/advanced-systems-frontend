@@ -34,15 +34,15 @@ export function BrandGrid({
   return (
     <section className="bg-white">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+        <h2 className="section-title">
           {title}
         </h2>
         {viewAllHref && (
           <Link
             href={viewAllHref}
-            className="text-sm font-medium text-accent-600 hover:text-accent-700 transition-colors"
+            className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
           >
-            View all
+            View all →
           </Link>
         )}
       </div>
@@ -56,7 +56,7 @@ export function BrandGrid({
           <motion.div key={brand.name} variants={item}>
             <Link
               href={getBrandHref(brand)}
-              className="flex flex-col items-center gap-2.5 p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:border-accent-300 hover:bg-accent-50/30 transition-all duration-200 group"
+              className="flex flex-col items-center gap-2.5 p-5 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all duration-200 group"
             >
               <div className="h-12 flex items-center justify-center">
                 <BrandLogo
@@ -65,7 +65,7 @@ export function BrandGrid({
                   badgeClassName="hidden"
                 />
               </div>
-              <span className="font-medium text-slate-800 text-sm group-hover:text-accent-700 truncate w-full text-center transition-colors">
+              <span className="font-medium text-slate-800 text-sm group-hover:text-blue-700 truncate w-full text-center transition-colors">
                 {brand.name}
               </span>
               {(brand.product_count ?? brand.count ?? 0) > 0 && (

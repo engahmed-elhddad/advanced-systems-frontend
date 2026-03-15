@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense, useRef, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Search, SlidersHorizontal } from "lucide-react"
-import { API_BASE_URL, CATEGORIES, slugToCategory } from "@/app/lib/constants"
+import { API_BASE_URL, slugToCategory, categoryToSlug } from "@/app/lib/constants"
 import { ProductGrid } from "@/components/products/ProductGrid"
 import {
   ProductGridSkeleton,
@@ -40,6 +40,7 @@ function SearchResults() {
   const q = searchParams.get("q") ?? ""
   const categorySlug = searchParams.get("category") ?? ""
   const brandParam = searchParams.get("brand") ?? ""
+  const manufacturerParam = searchParams.get("manufacturer") ?? ""
   const seriesParam = searchParams.get("series") ?? ""
   const voltageParam = searchParams.get("voltage") ?? ""
   const currentParam = searchParams.get("current") ?? ""
@@ -65,6 +66,11 @@ function SearchResults() {
     voltage?: string[]
     current?: string[]
     mounting_type?: string[]
+  }>({})
+  const [filtersWithCounts, setFiltersWithCounts] = useState<{
+    brands?: { name: string; count: number }[]
+    categories?: { name: string; count: number }[]
+    manufacturers?: { name: string; count: number }[]
   }>({})
   const suggestDebounceRef = useRef<NodeJS.Timeout>()
 
@@ -108,6 +114,15 @@ function SearchResults() {
     return () => clearTimeout(suggestDebounceRef.current)
   }, [query, API])
 
+  // Dynamic filters from /filters (brands, categories, manufacturers with counts)
+  useEffect(() => {
+    fetch(`${API}/filters`)
+      .then((r) => r.json())
+      .then((d) => setFiltersWithCounts(d))
+      .catch(() => {})
+  }, [API])
+
+  // Legacy filter-options for series, voltage, current, mounting (if needed)
   useEffect(() => {
     fetch(`${API}/search/filter-options`)
       .then((r) => r.json())
@@ -115,14 +130,25 @@ function SearchResults() {
       .catch(() => {})
   }, [API])
 
+  const limit = 30
+  const hasSearchOrFilters = !!(q || categorySlug || brandParam || manufacturerParam || seriesParam || voltageParam || currentParam || mountingParam)
   useEffect(() => {
-    if (!q) return
+    if (!hasSearchOrFilters) {
+      setProducts([])
+      setTotalCount(0)
+      setTotalPages(1)
+      return
+    }
     async function load() {
       setLoading(true)
       try {
-        const params = new URLSearchParams({ q, limit: "30" })
+        const params = new URLSearchParams()
+        if (q) params.set("q", q)
+        params.set("limit", String(limit))
+        params.set("page", String(pageParam))
         if (categorySlug) params.set("category", slugToCategory(categorySlug) ?? categorySlug)
         if (brandParam) params.set("brand", brandParam)
+        if (manufacturerParam) params.set("manufacturer", manufacturerParam)
         if (seriesParam) params.set("series", seriesParam)
         if (voltageParam) params.set("voltage", voltageParam)
         if (currentParam) params.set("current", currentParam)
@@ -133,8 +159,9 @@ function SearchResults() {
         const data = await res.json()
         const items = data.results ?? data.hits ?? data.items ?? data.products ?? []
         setProducts(items)
-        setTotalCount(data.count ?? items.length)
-        setTotalPages(1)
+        const total = data.total ?? data.count ?? items.length
+        setTotalCount(total)
+        setTotalPages(Math.max(1, Math.ceil(total / limit)))
         setBrands(data.brands ?? [])
         const bSet = new Set<string>(data.brands ?? [])
         for (const p of items) {
@@ -151,11 +178,11 @@ function SearchResults() {
       }
     }
     load()
-  }, [q, categorySlug, brandParam, seriesParam, voltageParam, currentParam, mountingParam, API])
+  }, [hasSearchOrFilters, q, categorySlug, brandParam, manufacturerParam, seriesParam, voltageParam, currentParam, mountingParam, pageParam, API])
 
-  const hasFilters = !!(categorySlug || brandParam || seriesParam || voltageParam || currentParam || mountingParam)
+  const hasFilters = !!(categorySlug || brandParam || manufacturerParam || seriesParam || voltageParam || currentParam || mountingParam)
 
-  function navigate(updates: Record<string, string | null>) {
+  function navigate(updates: Record<string, string | null | undefined>) {
     const params = new URLSearchParams(searchParams.toString())
     for (const [k, v] of Object.entries(updates)) {
       if (v != null && v !== "") params.set(k, v)
@@ -193,13 +220,16 @@ function SearchResults() {
     }
   }
 
-  const allBrands = (filterOptions.brands?.length ? filterOptions.brands : brands).slice(0, 12)
+  const allBrands = filtersWithCounts.brands?.map((b) => b.name) ?? filterOptions.brands ?? brands
+  const allBrandsSlice = allBrands.slice(0, 100)
+  const allCategories = filtersWithCounts.categories ?? filterOptions.categories ?? []
+  const allManufacturers = filtersWithCounts.manufacturers ?? []
 
   const FilterSidebar = () => (
     <>
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Category</h3>
-        <ul className="space-y-1">
+        <ul className="space-y-1 max-h-60 overflow-y-auto">
           <li>
             <button
               onClick={() => { navigate({ category: null }); setMobileFiltersOpen(false) }}
@@ -208,8 +238,21 @@ function SearchResults() {
               All Categories
             </button>
           </li>
-          {(filterOptions.categories?.length ? filterOptions.categories : CATEGORIES.map((c) => c.name)).map((cat: string) => {
-            const slug = CATEGORIES.find((c) => c.name === cat)?.slug ?? cat.toLowerCase().replace(/\s+/g, "-")
+          {(filtersWithCounts.categories ?? []).map((item) => {
+            const slug = categoryToSlug(item.name)
+            return (
+              <li key={item.name}>
+                <button
+                  onClick={() => { navigate({ category: slug }); setMobileFiltersOpen(false) }}
+                  className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${categorySlug === slug ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                >
+                  {item.name}{item.count != null ? ` (${item.count})` : ""}
+                </button>
+              </li>
+            )
+          })}
+          {allCategories.length === 0 && (filterOptions.categories ?? []).map((cat: string) => {
+            const slug = categoryToSlug(cat)
             return (
               <li key={cat}>
                 <button
@@ -226,7 +269,7 @@ function SearchResults() {
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Brand</h3>
-        <ul className="space-y-1 max-h-40 overflow-y-auto">
+        <ul className="space-y-1 max-h-60 overflow-y-auto">
           <li>
             <button
               onClick={() => { navigate({ brand: null }); setMobileFiltersOpen(false) }}
@@ -235,7 +278,17 @@ function SearchResults() {
               All Brands
             </button>
           </li>
-          {allBrands.map((b) => (
+          {(filtersWithCounts.brands ?? []).map((item) => (
+            <li key={item.name}>
+              <button
+                onClick={() => { navigate({ brand: item.name }); setMobileFiltersOpen(false) }}
+                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${brandParam === item.name ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+              >
+                {item.name}{item.count != null ? ` (${item.count})` : ""}
+              </button>
+            </li>
+          ))}
+          {(!filtersWithCounts.brands?.length) && allBrandsSlice.map((b) => (
             <li key={b}>
               <button
                 onClick={() => { navigate({ brand: b }); setMobileFiltersOpen(false) }}
@@ -247,6 +300,32 @@ function SearchResults() {
           ))}
         </ul>
       </div>
+
+      {allManufacturers.length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Manufacturer</h3>
+          <ul className="space-y-1 max-h-60 overflow-y-auto">
+            <li>
+              <button
+                onClick={() => { navigate({ manufacturer: null }); setMobileFiltersOpen(false) }}
+                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${!manufacturerParam ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+              >
+                All Manufacturers
+              </button>
+            </li>
+            {allManufacturers.map((item) => (
+              <li key={item.name}>
+                <button
+                  onClick={() => { navigate({ manufacturer: item.name }); setMobileFiltersOpen(false) }}
+                  className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${manufacturerParam === item.name ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                >
+                  {item.name}{item.count != null ? ` (${item.count})` : ""}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {((filterOptions.series?.length ?? 0) > 0 || (filterOptions.voltage?.length ?? 0) > 0 || (filterOptions.current?.length ?? 0) > 0 || (filterOptions.mounting_type?.length ?? 0) > 0) && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
@@ -457,7 +536,7 @@ function SearchResults() {
               </div>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
-              {(categorySlug || brandParam || seriesParam || voltageParam || currentParam || mountingParam) && (
+              {(categorySlug || brandParam || manufacturerParam || seriesParam || voltageParam || currentParam || mountingParam) && (
                 <div className="flex gap-2 flex-wrap">
                   {categorySlug && (
                     <FilterChip
@@ -468,6 +547,9 @@ function SearchResults() {
                   )}
                   {brandParam && (
                     <FilterChip label="Brand" value={brandParam} onRemove={() => navigate({ brand: null })} />
+                  )}
+                  {manufacturerParam && (
+                    <FilterChip label="Manufacturer" value={manufacturerParam} onRemove={() => navigate({ manufacturer: null })} />
                   )}
                   {seriesParam && (
                     <FilterChip label="Series" value={seriesParam} onRemove={() => navigate({ series: null })} />

@@ -13,7 +13,7 @@ export function SectionHeader({ title, viewAllHref, viewAllLabel = 'View all' }:
       {viewAllHref && (
         <Link
           href={viewAllHref}
-          className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+          className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
         >
           {viewAllLabel} →
         </Link>

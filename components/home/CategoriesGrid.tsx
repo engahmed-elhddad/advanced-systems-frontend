@@ -20,12 +20,12 @@ export async function CategoriesGrid() {
   return (
     <section>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="section-title">Featured Categories</h2>
-        <Link href="/categories" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+        <h2 className="section-title">Popular Categories</h2>
+        <Link href="/categories" className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
           View all categories →
         </Link>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
         {categories.map((cat) => {
           const Icon = getCategoryIcon(cat.name)
           const href = cat.slug ? `/category/${cat.slug}` : `/search?category=${encodeURIComponent(cat.name)}`
@@ -34,10 +34,10 @@ export async function CategoriesGrid() {
             <Link
               key={cat.name}
               href={href}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 bg-white hover:border-primary-300 hover:bg-primary-50/50 transition-colors group"
+              className="flex items-center gap-3 px-5 py-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all duration-200 group"
             >
-              <div className="w-10 h-10 rounded-lg bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center shrink-0">
-                <Icon className="w-5 h-5 text-slate-600 group-hover:text-primary-600" />
+              <div className="w-11 h-11 rounded-xl bg-slate-100 group-hover:bg-blue-50 flex items-center justify-center shrink-0">
+                <Icon className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
               </div>
               <div className="min-w-0">
                 <div className="font-medium text-slate-900 text-sm truncate">{cat.name}</div>

@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { HeroSearch } from '@/components/HeroSearch'
+import { HeroSection } from '@/components/HeroSection'
 import { FeaturedBrands } from '@/components/home/FeaturedBrands'
 import { CategoriesGrid } from '@/components/home/CategoriesGrid'
 import { FeaturedProducts } from '@/components/home/FeaturedProducts'
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      <HeroSearch />
+      <HeroSection />
       <div className="page-container space-y-16 py-12 sm:py-16 bg-white">
         <Suspense fallback={<div className="h-48 skeleton rounded-xl" />}>
           <CategoriesGrid />

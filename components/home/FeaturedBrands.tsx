@@ -8,5 +8,5 @@ export async function FeaturedBrands() {
     brands = (Array.isArray(data) ? data : (data as { brands?: typeof brands })?.brands || []).slice(0, 12)
   } catch {}
 
-  return <BrandGrid brands={brands} title="Top Manufacturers" viewAllHref="/brands" />
+  return <BrandGrid brands={brands} title="Featured Brands" viewAllHref="/brands" />
 }

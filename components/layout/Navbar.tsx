@@ -46,7 +46,8 @@ export function Navbar() {
     { id: 'products', label: 'Products', href: '/products' },
     { id: 'brands', label: 'Brands', href: '/brands' },
     { id: 'suppliers', label: 'Suppliers', href: '/suppliers', hrefOnly: true },
-    { href: '/rfq', label: 'RFQ', cta: true },
+    { id: 'categories', label: 'Categories', href: '/categories' },
+    { href: '/rfq', label: 'Request Quote', cta: true },
   ]
 
   return (
@@ -228,7 +229,7 @@ export function Navbar() {
             ))}
             <Link
               href="/rfq"
-              className="inline-flex items-center px-4 py-2 rounded text-sm font-semibold bg-accent-600 hover:bg-accent-700 text-white transition-colors"
+              className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-md"
             >
               Request Quote
             </Link>
