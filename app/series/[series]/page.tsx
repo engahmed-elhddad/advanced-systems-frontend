@@ -44,14 +44,17 @@ export default async function SeriesPage({ params, searchParams }: Props) {
   let fetchError = false
 
   try {
-    const res = await fetch(
-      `${API}/api/products?series=${encodeURIComponent(series)}&page=${page}&limit=${size}`,
-      { cache: "no-store" }
-    )
+    const params = new URLSearchParams({
+      q: "",
+      series: series,
+      page: page.toString(),
+      limit: String(size),
+    })
+    const res = await fetch(`${API}/search?${params}`, { cache: "no-store" })
     if (res.ok) {
       const data = await res.json()
-      products = data?.products ?? data?.results ?? []
-      const total = data?.total ?? products.length
+      products = data?.results ?? data?.products ?? []
+      const total = data?.total ?? data?.count ?? products.length
       totalPages = Math.max(1, Math.ceil(total / size))
     } else {
       fetchError = true

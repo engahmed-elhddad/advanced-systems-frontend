@@ -15,30 +15,42 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Products (uses /api/products - flat schema) - normalizes to { products, total, ... }
+// Products – uses unified /search endpoint (same as search page)
 export const getProducts = (params: Record<string, unknown> = {}) => {
-  const { size, page, search, ...rest } = params
-  const q: Record<string, unknown> = { ...rest, page: page ?? 1, size: size ?? 30 }
-  if (search) q.search = search
-  return api.get("/api/products", { params: q }).then((r) => {
+  const { size, page, search, limit = size ?? 30, brand, category, series, q: qParam, ...rest } = params
+  const pageNum = Number(page ?? 1)
+  const paramsObj: Record<string, string> = {
+    q: String(search ?? qParam ?? ""),
+    page: String(pageNum),
+    limit: String(Number(limit ?? 30)),
+  }
+  if (brand) paramsObj.brand = String(brand)
+  if (category) paramsObj.category = String(category)
+  if (series) paramsObj.series = String(series)
+  const searchParams = new URLSearchParams(paramsObj)
+  return api.get(`/search?${searchParams}`).then((r) => {
     const d = r.data
-    const products = d?.products ?? d?.items ?? d?.results ?? (Array.isArray(d) ? d : [])
+    const products = d?.results ?? d?.products ?? d?.items ?? (Array.isArray(d) ? d : [])
+    const total = d?.total ?? d?.count ?? (Array.isArray(products) ? products.length : 0)
+    const limitNum = Number(limit ?? 30)
+    const pages = Math.max(1, Math.ceil(total / limitNum))
     if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-      console.log("[API] getProducts:", products.length, "products")
+      console.log("[API] getProducts (/search):", products.length, "products, total:", total)
     }
-    return { products, items: products, total: d?.total ?? products.length, page: d?.page ?? 1, pages: d?.pages ?? 1 }
+    return { products, items: products, total, page: pageNum, pages }
   })
 }
 
-/** GET /api/products?limit=N - uses working products endpoint (replaces /api/v1/featured) */
+/** Featured products – uses unified /search endpoint with limit, no filters */
 export const getFeaturedProducts = async (limit = 12): Promise<any[]> => {
   try {
-    const r = await api.get(`/api/products`, { params: { limit, page: 1 } })
+    const params = new URLSearchParams({ q: "", page: "1", limit: String(limit) })
+    const r = await api.get(`/search?${params}`)
     const data = r.data
-    const products = data?.products ?? data?.items ?? (Array.isArray(data) ? data : [])
+    const products = data?.results ?? data?.products ?? data?.items ?? (Array.isArray(data) ? data : [])
     return Array.isArray(products) ? products : []
   } catch {
-    const data = await getProducts({ size: limit, page: 1 })
+    const data = await getProducts({ limit, page: 1 })
     return data?.products ?? data?.items ?? []
   }
 }

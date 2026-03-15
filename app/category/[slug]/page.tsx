@@ -40,18 +40,20 @@ export const revalidate = 3600
 
 async function fetchProducts(category: string, page: number = 1, brand?: string) {
   try {
-    const params = new URLSearchParams()
-    params.set('q', category)
-    params.set('category', category)
-    params.set('limit', '24')
-    if (page > 1) params.set('page', String(page))
+    const params = new URLSearchParams({
+      q: '',
+      category: category,
+      limit: '24',
+      page: String(page),
+    })
     if (brand) params.set('brand', brand)
     const res = await fetch(`${API_BASE}/search?${params}`, { next: { revalidate: 3600 } })
     if (!res.ok) return { results: [], count: 0 }
     const data = await res.json()
+    const results = data.results ?? data.products ?? []
     return {
-      results: data.results || [],
-      count: data.count ?? data.results?.length ?? 0,
+      results,
+      count: data.total ?? data.count ?? results.length,
     }
   } catch {
     return { results: [], count: 0 }

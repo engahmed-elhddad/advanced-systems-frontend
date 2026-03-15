@@ -48,13 +48,19 @@ export default async function BrandPage({ params, searchParams }: Props) {
   let fetchError = false
 
   try {
-    let url = `${API}/api/v1/products/?brand=${encodeURIComponent(brandSlug.toLowerCase())}&page=${page}&size=20`
-    if (category) url += `&category=${encodeURIComponent(category)}`
-    const res = await fetch(url, { cache: "no-store" })
+    const params = new URLSearchParams({
+      q: "",
+      brand: brand,
+      page: page.toString(),
+      limit: "20",
+    })
+    if (category) params.set("category", category)
+    const res = await fetch(`${API}/search?${params}`, { cache: "no-store" })
     if (res.ok) {
       const data = await res.json()
-      products = data?.items ?? []
-      totalPages = data?.pages ?? 1
+      products = data?.results ?? data?.products ?? []
+      const total = data?.total ?? data?.count ?? products.length
+      totalPages = Math.max(1, Math.ceil(total / 20))
     } else {
       fetchError = true
     }

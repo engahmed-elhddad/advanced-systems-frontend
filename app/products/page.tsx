@@ -36,7 +36,7 @@ export default async function ProductsPage({
     ])
 
     const res = productsRes as { items?: unknown[]; results?: unknown[]; products?: unknown[]; total?: number; count?: number }
-    products = res?.items ?? res?.results ?? res?.products ?? (Array.isArray(productsRes) ? productsRes : [])
+    products = res?.results ?? res?.products ?? res?.items ?? (Array.isArray(productsRes) ? productsRes : [])
     totalCount = res?.total ?? res?.count ?? (products as unknown[]).length
     brands = Array.isArray(brandsRes)
       ? brandsRes.slice(0, 12)

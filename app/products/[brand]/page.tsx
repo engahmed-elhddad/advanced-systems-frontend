@@ -40,13 +40,16 @@ export default async function BrandPage({ params }: { params: Promise<{ brand: s
   let fetchError = false
 
   try {
-    const res = await fetch(
-      `${API}/brand/${encodeURIComponent(brand)}?page=1`,
-      { cache: "no-store" }
-    )
+    const params = new URLSearchParams({
+      q: "",
+      brand: brand,
+      page: "1",
+      limit: "20",
+    })
+    const res = await fetch(`${API}/search?${params}`, { cache: "no-store" })
     if (res.ok) {
       const data = await res.json()
-      products = data?.results ?? []
+      products = data?.results ?? data?.products ?? []
     } else {
       fetchError = true
     }

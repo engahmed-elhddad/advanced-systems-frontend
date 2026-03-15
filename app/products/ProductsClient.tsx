@@ -25,10 +25,13 @@ export function ProductsClient() {
     setLoading(true)
     try {
       const data = await getProducts({ page, limit: 24, category, brand, sort })
-      setProducts(data.items || [])
-      setTotal(data.total || 0)
-      setPages(data.pages || 1)
-    } catch {}
+      const list = data.results ?? data.products ?? data.items ?? []
+      setProducts(Array.isArray(list) ? list : [])
+      setTotal(data.total ?? 0)
+      setPages(data.pages ?? 1)
+    } catch {
+      setProducts([])
+    }
     setLoading(false)
   }, [page, category, brand, sort])
 

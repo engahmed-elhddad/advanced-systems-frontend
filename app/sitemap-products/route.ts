@@ -16,11 +16,12 @@ export async function GET() {
 
   while (hasMore) {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/products/?page=${page}&size=${size}`, {
+      const params = new URLSearchParams({ q: '', page: String(page), limit: String(size) })
+      const res = await fetch(`${API_BASE}/search?${params}`, {
         next: { revalidate: 3600 },
       })
       const data = await res.json()
-      const items = data?.items || []
+      const items = data?.results ?? data?.products ?? data?.items ?? []
       for (const p of items) {
         const pn = p.part_number || p.slug || String(p.id)
         if (pn) urls.push(`${BASE}/part-number/${encodeURIComponent(pn)}`)
