@@ -88,6 +88,7 @@ export function normalizePartNumber(part: string): string {
 export const PRODUCT_PLACEHOLDER_IMAGE = "/images/product-placeholder.png"
 
 /**
+ * @deprecated Use resolveProductImage from '@/lib/imageResolver' (CDN-based: /products/{part_number}/main.png).
  * Robust product image resolver – images always render without breaking layout.
  * Priority:
  *  1. product.image_url (or images[0] / image) when present – use as-is (full URL or API-relative)

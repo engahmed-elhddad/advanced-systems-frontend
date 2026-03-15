@@ -1,4 +1,4 @@
-import { API_BASE_URL, resolveProductImageUrl } from '@/app/lib/constants'
+import { resolveProductImage } from '@/lib/imageResolver'
 import type { ProductCardProps } from '@/components/products/ProductCard'
 
 /** Flexible product shape from API (various backend responses) */
@@ -22,24 +22,18 @@ export interface ApiProduct {
 
 /**
  * Map an API product object to ProductCard props.
- * Handles various API shapes (brand vs manufacturer, images array vs primary_image, etc.)
+ * Uses centralized resolveProductImage (CDN/products/{part_number}/main.png or image_url).
  */
 export function productToCardProps(p: ApiProduct): ProductCardProps {
   const manufacturer =
     typeof p.brand === 'string' ? p.brand : (p.brand?.name ?? p.manufacturer)
   const category =
     typeof p.category === 'string' ? p.category : (p.category?.name ?? undefined)
-  const imageUrl = resolveProductImageUrl(
-    {
-      part_number: p.part_number,
-      images: Array.isArray(p.images)
-        ? p.images.map((img) => (typeof img === 'string' ? img : img?.url ?? '')).filter(Boolean)
-        : undefined,
-      image: p.primary_image ?? p.image,
-      image_url: p.image_url,
-    },
-    API_BASE_URL
-  )
+  const rawImageUrl =
+    p.image_url ?? p.primary_image ?? p.image ?? (Array.isArray(p.images) && p.images[0]
+      ? (typeof p.images[0] === 'string' ? p.images[0] : (p.images[0] as { url?: string })?.url)
+      : undefined)
+  const imageUrl = resolveProductImage(p.part_number, rawImageUrl)
   const stock = p.stock_quantity ?? 0
   const isAvailable =
     p.availability === 'available' ||

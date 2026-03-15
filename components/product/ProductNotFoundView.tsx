@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Package } from 'lucide-react'
 import { RelatedProducts } from '@/components/product/RelatedProducts'
 import { ProductNotFoundSearch } from '@/components/product/ProductNotFoundSearch'
-import { resolveProductImageUrl } from '@/app/lib/constants'
+import { resolveProductImage } from '@/lib/imageResolver'
 
 export interface ProductNotFoundIntelligence {
   part_number: string
@@ -28,17 +28,9 @@ export interface ProductNotFoundViewProps {
   apiBase: string
 }
 
-function imageUrlFor(
-  item: SimilarProductItem,
-  apiBase: string
-): string {
+function imageUrlFor(item: SimilarProductItem): string {
   const u = item.image_url ?? (Array.isArray(item.images) ? item.images[0] : null)
-  if (typeof u === 'string' && u.startsWith('http')) return u
-  if (typeof u === 'string' && u) return `${apiBase}${u.startsWith('/') ? '' : '/'}${u}`
-  return resolveProductImageUrl(
-    { part_number: item.part_number, image_url: item.image_url, images: item.images },
-    apiBase
-  )
+  return resolveProductImage(item.part_number, typeof u === 'string' ? u : undefined)
 }
 
 export function ProductNotFoundView({
@@ -119,7 +111,7 @@ export function ProductNotFoundView({
             <RelatedProducts
               products={similarProducts}
               productBasePath="/part-number"
-              imageUrl={(item) => imageUrlFor(item, apiBase)}
+              imageUrl={(item) => imageUrlFor(item)}
               title="Similar Products"
             />
           </div>

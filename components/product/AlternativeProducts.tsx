@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Package, Eye } from 'lucide-react'
 import { BrandLogo } from '@/components/ui/BrandLogo'
+import { resolveProductImage, PRODUCT_PLACEHOLDER_IMAGE } from '@/lib/imageResolver'
 
 interface AlternativeItem {
   part_number: string
@@ -24,7 +25,8 @@ interface AlternativeProductsProps {
   alternatives: AlternativeItem[]
   currentProduct: { part_number: string; specifications?: Record<string, unknown>; specs?: Array<{ key: string; value: string }> }
   productBasePath?: string
-  imageUrl: (url: string) => string
+  /** @deprecated Use resolveProductImage in component instead */
+  imageUrl?: (url: string) => string
 }
 
 function specVal(specs: Record<string, unknown> | undefined, keys: string[]): string {
@@ -66,7 +68,8 @@ export function AlternativeProducts({
             const volt = alt.voltage || specVal(specs, ['voltage', 'supply_voltage', 'rated_voltage'])
             const poles = alt.poles || specVal(specs, ['poles', 'number_of_poles'])
             const mfg = alt.manufacturer || ''
-            const img = alt.image_url
+            const imgSrc = resolveProductImage(alt.part_number, alt.image_url)
+            const showPlaceholder = imgSrc === PRODUCT_PLACEHOLDER_IMAGE
             return (
               <Link
                 key={alt.part_number}
@@ -74,16 +77,18 @@ export function AlternativeProducts({
                 className="group flex flex-col rounded-lg border border-gray-200 bg-white overflow-hidden hover:border-primary-300 hover:shadow-md transition-all"
               >
                 <div className="relative aspect-square bg-gray-50 flex items-center justify-center p-4">
-                  {img ? (
+                  {showPlaceholder ? (
+                    <Package className="w-16 h-16 text-gray-300" />
+                  ) : (
                     <Image
-                      src={imageUrl(img)}
+                      src={imgSrc}
                       alt={alt.part_number}
                       width={120}
                       height={120}
                       className="object-contain max-h-full w-auto group-hover:scale-105 transition-transform"
+                      unoptimized={imgSrc.startsWith('http')}
+                      onError={(e) => { (e.target as HTMLImageElement).src = PRODUCT_PLACEHOLDER_IMAGE }}
                     />
-                  ) : (
-                    <Package className="w-16 h-16 text-gray-300" />
                   )}
                   {alt.match_type && (
                     <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">

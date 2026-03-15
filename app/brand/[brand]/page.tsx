@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic"
 
 import Link from "next/link"
-import { API_BASE_URL, SITE_URL, rfqMailtoHref, slugToCategory, categoryToSlug, resolveProductImageUrl } from "@/app/lib/constants"
+import { API_BASE_URL, SITE_URL, rfqMailtoHref, slugToCategory, categoryToSlug } from "@/app/lib/constants"
+import { resolveProductImage } from "@/lib/imageResolver"
 import { MailIcon } from "@/components/ui/MailIcon"
 import { BrandLogo } from "@/components/ui/BrandLogo"
 import { ProductImageWithFallback } from "@/components/ui/ProductImageWithFallback"
@@ -177,7 +178,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
             {!fetchError && products.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
                 {products.map((p) => {
-                  const imageSrc = resolveProductImageUrl(p, API)
+                  const imageSrc = resolveProductImage(p.part_number, p.image_url)
                   const rfqHref = rfqMailtoHref(p.part_number)
                   const offer = p.offers?.[0]
                   const qty = offer?.quantity ?? p.quantity ?? 0

@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic"
 
 import Link from "next/link"
-import { API_BASE_URL, SITE_URL, rfqMailtoHref, categoryToSlug, slugToSpec, resolveProductImageUrl } from "@/app/lib/constants"
+import { API_BASE_URL, SITE_URL, rfqMailtoHref, categoryToSlug, slugToSpec } from "@/app/lib/constants"
+import { resolveProductImage } from "@/lib/imageResolver"
 import { MailIcon } from "@/components/ui/MailIcon"
 import { BrandLogo } from "@/components/ui/BrandLogo"
 import { ProductImageWithFallback } from "@/components/ui/ProductImageWithFallback"
@@ -114,7 +115,7 @@ export default async function SpecPage({ params, searchParams }: Props) {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {paginatedProducts.map((p) => {
-                const imageSrc = resolveProductImageUrl(p, API)
+                const imageSrc = resolveProductImage(p.part_number, p.image_url)
                 const qty = p.offers?.[0]?.quantity ?? 0
                 const inStock = qty > 0
                 return (

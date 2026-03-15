@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MessageCircle, Send, Package, FileText, ChevronDown } from 'lucide-react'
 import { API_BASE_URL } from '@/app/lib/constants'
-import { resolveProductImageUrl } from '@/app/lib/constants'
+import { resolveProductImage, PRODUCT_PLACEHOLDER_IMAGE } from '@/lib/imageResolver'
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || API_BASE_URL
 
@@ -26,16 +26,9 @@ const EXAMPLE_QUERIES = [
   'Power supply 24V DC 5A',
 ]
 
-function imageUrl(p: any): string {
-  const raw = p?.image_url || p?.image
-  if (!raw) return ''
-  if (typeof raw === 'string' && raw.startsWith('http')) return raw
-  return raw.startsWith('/') ? `${API}${raw}` : `${API}/${raw}`
-}
-
 function ProductResultCard({ p, alternatives = [] }: { p: any; alternatives?: any[] }) {
   const [showSpecs, setShowSpecs] = useState(false)
-  const img = imageUrl(p) || resolveProductImageUrl({ part_number: p.part_number, image_url: p.image_url }, API)
+  const [imgSrc, setImgSrc] = useState(() => resolveProductImage(p?.part_number, p?.image_url ?? p?.image))
   const specs = p.specifications || {}
   const hasSpecs = specs && typeof specs === 'object' && Object.keys(specs).length > 0
 
@@ -43,13 +36,15 @@ function ProductResultCard({ p, alternatives = [] }: { p: any; alternatives?: an
     <div className="rounded-xl border border-slate-200 bg-white overflow-hidden hover:border-primary-200 transition-colors">
       <div className="flex flex-col sm:flex-row">
         <Link href={`/part-number/${encodeURIComponent(p.part_number)}`} className="block relative w-full sm:w-28 h-36 sm:h-28 bg-slate-50 shrink-0">
-          {img ? (
-            <Image src={img} alt={p.part_number} fill className="object-contain p-2" sizes="112px" unoptimized={img.startsWith(API)} />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <Package className="w-12 h-12 text-slate-300" />
-            </div>
-          )}
+          <Image
+            src={imgSrc}
+            alt={p.part_number}
+            fill
+            className="object-contain p-2"
+            sizes="112px"
+            unoptimized={imgSrc.startsWith(API)}
+            onError={() => setImgSrc(PRODUCT_PLACEHOLDER_IMAGE)}
+          />
         </Link>
         <div className="flex-1 p-4 min-w-0">
           <div className="flex items-start justify-between gap-2">

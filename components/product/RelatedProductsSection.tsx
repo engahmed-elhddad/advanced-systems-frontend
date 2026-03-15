@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Package } from 'lucide-react'
 import { API_BASE_URL } from '@/app/lib/constants'
+import { resolveProductImage } from '@/lib/imageResolver'
 
 export interface RelatedProductsSectionProps {
   partNumber: string
@@ -73,11 +74,8 @@ export function RelatedProductsSection({
     images: p.images,
   }))
 
-  const imageUrl = (item: { image_url?: string; images?: string[] }) => {
-    const u = item.image_url ?? item.images?.[0]
-    if (!u) return '/images/product-placeholder.png'
-    return u.startsWith('http') ? u : u
-  }
+  const getImageSrc = (item: { part_number: string; image_url?: string; images?: string[] }) =>
+    resolveProductImage(item.part_number, item.image_url ?? (item.images?.[0] as string | undefined))
 
   if (!items.length) return null
 
@@ -88,8 +86,8 @@ export function RelatedProductsSection({
         <div className="flex gap-4 min-w-0" style={{ width: 'max-content' }}>
           {items.map((item) => {
             const href = `${productBasePath}/${encodeURIComponent(item.part_number)}`
-            const imgSrc = imageUrl(item)
-            const showPlaceholder = !imgSrc || imgSrc === '/products/no-product-image.jpg'
+            const imgSrc = getImageSrc(item)
+            const showPlaceholder = !imgSrc || imgSrc === '/images/product-placeholder.png'
             const brand = item.brand ?? item.manufacturer ?? ''
 
             return (
@@ -109,6 +107,7 @@ export function RelatedProductsSection({
                       height={176}
                       className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
                       unoptimized={imgSrc.startsWith('http')}
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/images/product-placeholder.png' }}
                     />
                   )}
                 </div>

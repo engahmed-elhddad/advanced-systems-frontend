@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { RFQButton } from '@/components/RFQButton'
 import { useCurrency } from '@/lib/hooks/useCurrency'
-import { PRODUCT_PLACEHOLDER_IMAGE } from '@/app/lib/constants'
+import { resolveProductImage, PRODUCT_PLACEHOLDER_IMAGE } from '@/lib/imageResolver'
 
 const PLACEHOLDER_IMAGE = PRODUCT_PLACEHOLDER_IMAGE
 
@@ -90,7 +90,8 @@ function ProductCardInner({
   const compact = variant === 'compact'
   const maker = brand ?? manufacturer ?? '—'
   const [imgError, setImgError] = useState(false)
-  const showImage = image_url && image_url !== PLACEHOLDER_IMAGE && !imgError
+  const displayImageUrl = resolveProductImage(part_number, image_url)
+  const showImage = displayImageUrl !== PLACEHOLDER_IMAGE && !imgError
 
   return (
     <motion.div
@@ -107,13 +108,13 @@ function ProductCardInner({
       >
         {showImage ? (
           <Image
-            src={image_url}
+            src={displayImageUrl}
             alt={`${maker} ${part_number}`}
             fill
             className="object-contain p-4 group-hover:scale-[1.02] transition-transform duration-200"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
             loading="lazy"
-            unoptimized={image_url?.startsWith("http") ?? false}
+            unoptimized={displayImageUrl.startsWith("http")}
             onError={() => setImgError(true)}
           />
         ) : (

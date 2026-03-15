@@ -11,7 +11,8 @@ import { EngineeringComparisonTable } from '@/components/product/EngineeringComp
 import { ComponentIntelligence } from '@/components/product/ComponentIntelligence'
 import { RfqForm } from '@/components/rfq/RfqForm'
 import { getBrandHref } from '@/lib/brandUtils'
-import { API_BASE_URL, CONTACT_EMAIL, SITE_URL, WHATSAPP_NUMBER, categoryToSlug, resolveProductImageUrl, seriesToSlug, specToSlug } from '@/app/lib/constants'
+import { API_BASE_URL, CONTACT_EMAIL, SITE_URL, WHATSAPP_NUMBER, categoryToSlug, seriesToSlug, specToSlug } from '@/app/lib/constants'
+import { resolveProductImage } from '@/lib/imageResolver'
 
 function imageUrl(url: string) {
   if (!url) return ''
@@ -40,14 +41,9 @@ function resolveSpecs(product: any): Record<string, unknown> | null {
 }
 
 export function ProductDetail({ product, productBasePath = '/product' }: { product: any; productBasePath?: string }) {
-  const heroImageSrc = resolveProductImageUrl(
-    {
-      part_number: product.part_number,
-      images: product.images?.map((img: any) => (typeof img === 'string' ? img : img?.url)).filter(Boolean),
-      image_url: product.image_url,
-      image: product.image,
-    },
-    API_BASE_URL
+  const heroImageSrc = resolveProductImage(
+    product.part_number,
+    product.image_url ?? product.image ?? (product.images?.[0] ? (typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url) : undefined)
   )
   const images = product.images && product.images.length > 0
     ? product.images

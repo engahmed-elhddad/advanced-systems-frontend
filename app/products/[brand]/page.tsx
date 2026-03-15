@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic"
 
 import Link from "next/link"
-import { API_BASE_URL, SITE_URL, rfqMailtoHref, resolveProductImageUrl } from "@/app/lib/constants"
+import { API_BASE_URL, SITE_URL, rfqMailtoHref } from "@/app/lib/constants"
+import { resolveProductImage, PRODUCT_PLACEHOLDER_IMAGE } from "@/lib/imageResolver"
 import { MailIcon } from "@/components/ui/MailIcon"
 
 /* =========================
@@ -127,7 +128,7 @@ export default async function BrandPage({ params }: { params: Promise<{ brand: s
         {!fetchError && products.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {products.map((p) => {
-              const imageSrc = resolveProductImageUrl(p, API)
+              const imageSrc = resolveProductImage(p.part_number, p.image_url)
               const rfqHref = rfqMailtoHref(p.part_number)
               return (
                 <div
@@ -143,7 +144,7 @@ export default async function BrandPage({ params }: { params: Promise<{ brand: s
                         loading="lazy"
                         className="max-h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/products/no-product-image.jpg"
+                          (e.currentTarget as HTMLImageElement).src = PRODUCT_PLACEHOLDER_IMAGE
                         }}
                       />
                     </div>
