@@ -46,10 +46,17 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
     p.availability === 'in_stock' ||
     stock > 0
 
-  const quickSpecs =
-    (p.series || p.voltage || p.current)
-      ? { series: String(p.series ?? ''), voltage: String(p.voltage ?? ''), current: String(p.current ?? '') }
-      : undefined
+  const hasQuickSpecs =
+    p.series || p.voltage || p.current || p.coil_voltage || p.mounting_type
+  const quickSpecs = hasQuickSpecs
+    ? {
+        series: p.series != null ? String(p.series) : undefined,
+        voltage: p.voltage != null ? String(p.voltage) : undefined,
+        current: p.current != null ? String(p.current) : undefined,
+        coil_voltage: p.coil_voltage != null ? String(p.coil_voltage) : undefined,
+        mounting_type: p.mounting_type != null ? String(p.mounting_type) : undefined,
+      }
+    : undefined
 
   const brand = typeof p.brand === 'string' ? p.brand : (p.brand?.name ?? p.manufacturer ?? 'Industrial')
   const categoryDisplay = category || 'Industrial Component'

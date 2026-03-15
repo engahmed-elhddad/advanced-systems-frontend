@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { BRAND_MAP, BRAND_DESCRIPTIONS } from "@/app/lib/brands"
-import { SITE_URL } from "@/app/lib/constants"
+import { API_BASE_URL, SITE_URL } from "@/app/lib/constants"
 
 export const metadata = {
   title: "All Brands | Advanced Systems – Industrial Automation",
@@ -9,13 +9,26 @@ export const metadata = {
   alternates: { canonical: `${SITE_URL}/brands` },
 }
 
-const BRAND_CATEGORIES: Record<string, string[]> = {
+const BRAND_CATEGORIES_FALLBACK: Record<string, string[]> = {
   "PLC & Automation": ["Siemens", "ABB", "Schneider Electric", "Omron", "Mitsubishi"],
   "Sensors & Safety": ["SICK", "IFM", "Balluff", "Pilz"],
   "Drives & Motion": ["Delta"],
 }
 
-const ALL_BRANDS = Object.values(BRAND_MAP)
+async function fetchBrandsFromApi(): Promise<string[]> {
+  try {
+    const api = API_BASE_URL
+    const res = await fetch(`${api}/brands`, { next: { revalidate: 3600 } })
+    const data = await res.json()
+    const list = data?.brands ?? data
+    if (Array.isArray(list)) {
+      return list.map((b: unknown) => (typeof b === "string" ? b : (b as { name?: string })?.name ?? "")).filter(Boolean)
+    }
+    return []
+  } catch {
+    return []
+  }
+}
 
 function slugOf(brand: string): string {
   const entry = Object.entries(BRAND_MAP).find(([, v]) => v === brand)
@@ -42,7 +55,14 @@ function BrandCard({ brand }: { brand: string }) {
   )
 }
 
-export default function BrandsPage() {
+export default async function BrandsPage() {
+  const apiBrands = await fetchBrandsFromApi()
+  const ALL_BRANDS = apiBrands.length > 0 ? apiBrands : Object.values(BRAND_MAP)
+  const BRAND_CATEGORIES =
+    apiBrands.length > 0
+      ? { "All Brands": ALL_BRANDS.slice(0, 24) }
+      : BRAND_CATEGORIES_FALLBACK
+
   return (
     <div className="min-h-screen bg-white">
       <div className="border-b border-gray-200 bg-gray-50 py-14 px-4">
@@ -62,7 +82,7 @@ export default function BrandsPage() {
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
           {[
-            { label: "Manufacturers", value: ALL_BRANDS.length + "+" },
+            { label: "Manufacturers", value: `${ALL_BRANDS.length}+` },
             { label: "Products Listed", value: "50,000+" },
             { label: "Categories", value: "8+" },
             { label: "Years Experience", value: "15+" },
@@ -82,7 +102,7 @@ export default function BrandsPage() {
               <span className="h-px flex-1 bg-gray-200" />
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              {brands.map((brand) => (
+              {(brands as string[]).map((brand) => (
                 <BrandCard key={brand} brand={brand} />
               ))}
             </div>

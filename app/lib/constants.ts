@@ -84,15 +84,15 @@ export function normalizePartNumber(part: string): string {
   return part.trim().replace(/[\s-]+/g, "").toUpperCase()
 }
 
+/** Canonical placeholder when no product image is available. Use everywhere for consistency. */
+export const PRODUCT_PLACEHOLDER_IMAGE = "/images/product-placeholder.png"
+
 /**
- * Resolve the best available image URL for a product.
- *
- * Rule: If image_url is null/empty, do NOT generate any image URL; use placeholder.
- * Product images from R2 CDN: {R2_PUBLIC_URL}/products/{part_number}/image.webp
- *
+ * Robust product image resolver – images always render without breaking layout.
  * Priority:
- *  1. p.images[0] / p.image_url / p.image – use when present (full URL or relative)
- *  2. Otherwise → placeholder: /products/no-product-image.jpg
+ *  1. product.image_url (or images[0] / image) when present – use as-is (full URL or API-relative)
+ *  2. Else: /uploads/products/{part_number}.jpg (backend may serve from uploads)
+ *  3. Else: /images/product-placeholder.png
  */
 export function resolveProductImageUrl(
   p: { part_number?: string; images?: string[]; image?: string; image_url?: string },
@@ -100,14 +100,19 @@ export function resolveProductImageUrl(
 ): string {
   const rawImg: string | null =
     (p.images && p.images.length > 0 ? p.images[0] : null) ?? p.image_url ?? p.image ?? null
-  if (typeof rawImg === "string" && rawImg) {
-    if (rawImg.startsWith("http")) return rawImg
-    if (rawImg.startsWith("/uploads/")) return `${api}${rawImg}`
-    if (rawImg.startsWith("uploads/")) return `${api}/${rawImg}`
-    if (rawImg.startsWith("/products/")) return rawImg
-    return `${api}/uploads/products/${rawImg}`
+  if (typeof rawImg === "string" && rawImg.trim()) {
+    const s = rawImg.trim()
+    if (s.startsWith("http")) return s
+    if (s.startsWith("/uploads/")) return `${api}${s}`
+    if (s.startsWith("uploads/")) return `${api}/${s}`
+    if (s.startsWith("/")) return s
+    return `${api}/uploads/products/${s}`
   }
-  return "/products/no-product-image.jpg"
+  if (p.part_number && typeof p.part_number === "string" && p.part_number.trim()) {
+    const part = p.part_number.trim().replace(/\s+/g, "-")
+    return `${api}/uploads/products/${part}.jpg`
+  }
+  return PRODUCT_PLACEHOLDER_IMAGE
 }
 
 export const FEATURED_BRANDS: { name: string; slug: string; logo: string }[] = [

@@ -65,6 +65,20 @@ async function fetchCategorySlugs(): Promise<string[]> {
   return fromConst
 }
 
+/** Fetch series from SEO API for /series/[slug] */
+async function fetchSeriesSlugs(): Promise<string[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/seo/urls?type=series`, { next: { revalidate: 3600 } })
+    const data = await res.json()
+    const list = data?.series || []
+    return list.map((s: { slug?: string; name?: string }) =>
+      (s?.slug || String(s?.name || "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""))
+    ).filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
 /** Fetch matrix slugs (product_count > 3) */
 async function fetchMatrixSlugs(): Promise<string[]> {
   try {
@@ -88,10 +102,11 @@ async function fetchNewsSlugs(): Promise<string[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [partNumbers, brands, categorySlugs, matrixSlugs, newsSlugs] = await Promise.all([
+  const [partNumbers, brands, categorySlugs, seriesSlugs, matrixSlugs, newsSlugs] = await Promise.all([
     fetchAllPartNumbers(),
     fetchBrands(),
     fetchCategorySlugs(),
+    fetchSeriesSlugs(),
     fetchMatrixSlugs(),
     fetchNewsSlugs(),
   ])
@@ -158,6 +173,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
+  const seriesPages = seriesSlugs.map((slug) => ({
+    url: `${base}/series/${encodeURIComponent(slug)}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }))
+
   const matrixPages = matrixSlugs.flatMap((slug) => [
     { url: `${base}/en/${encodeURIComponent(slug)}`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.75 },
     { url: `${base}/ar/${encodeURIComponent(slug)}`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.75 },
@@ -210,6 +232,7 @@ return [
   ...staticPages,
   ...brandPages,
   ...categoryPages,
+  ...seriesPages,
   ...matrixPages,
   ...newsArticlePages,
   ...partNumberPages,

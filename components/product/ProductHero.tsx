@@ -1,17 +1,19 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { FileText, MessageCircle, Package } from 'lucide-react'
+import { MessageCircle, Package, Download } from 'lucide-react'
 import { RFQButton } from '@/components/RFQButton'
-import { whatsappHref } from '@/app/lib/constants'
+import { whatsappHref, seriesToSlug } from '@/app/lib/constants'
 
 export interface ProductHeroProduct {
   part_number: string
   brand?: string
   manufacturer?: string
   category?: string
+  series?: string
   availability?: string
   image_url?: string
   images?: string[]
@@ -41,8 +43,10 @@ export function ProductHero({
   const partNumber = product.part_number ?? ''
   const brand = product.brand ?? product.manufacturer ?? ''
   const category = product.category ?? ''
-  const isInStock = product.availability === 'in_stock'
-  const showPlaceholder = !imageSrc || imageSrc === '/products/no-product-image.jpg'
+  const series = product.series ?? ''
+  const isInStock = product.availability === 'in_stock' || product.availability === 'available'
+  const [imgError, setImgError] = useState(false)
+  const showPlaceholder = !imageSrc || imageSrc.endsWith('/images/product-placeholder.png') || imgError
 
   return (
     <motion.section
@@ -59,18 +63,19 @@ export function ProductHero({
           className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-md"
         >
           {showPlaceholder ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Package className="w-24 h-24 text-gray-300" />
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+              <Package className="w-24 h-24 text-gray-300" aria-hidden />
             </div>
           ) : (
             <Image
               src={imageSrc}
-              alt={imageAlt ?? partNumber}
+              alt={imageAlt ?? `${partNumber} product`}
               fill
               className="object-contain p-6 transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
-              unoptimized={imageSrc.startsWith('http') && !imageSrc.includes(apiBase)}
+              unoptimized={imageSrc.startsWith('http')}
+              onError={() => setImgError(true)}
             />
           )}
         </motion.div>
@@ -103,6 +108,11 @@ export function ProductHero({
                 <span className="mt-1 inline-block text-sm text-gray-600">{category}</span>
               )
             )}
+            {series && (
+              <p className="mt-1 text-sm text-gray-500">
+                Series: <Link href={`/series/${seriesToSlug(series)}`} className="font-medium text-accent-600 hover:underline">{series}</Link>
+              </p>
+            )}
           </div>
 
           {/* Availability */}
@@ -121,7 +131,7 @@ export function ProductHero({
             </span>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons: Request Quote, WhatsApp, Datasheet */}
           <div className="flex flex-wrap gap-3 pt-2">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <RFQButton partNumber={partNumber} variant="default" />
@@ -131,9 +141,9 @@ export function ProductHero({
                 href={whatsappHref(partNumber)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-blue-200 hover:text-blue-700 font-medium text-sm shadow-sm transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-accent-300 hover:text-accent-700 font-medium text-sm shadow-sm transition-colors"
               >
-                <MessageCircle className="w-4 h-4" />
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
                 WhatsApp
               </a>
             </motion.div>
@@ -143,10 +153,10 @@ export function ProductHero({
                   href={datasheetUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-blue-200 hover:text-blue-700 font-medium text-sm shadow-sm transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-medium text-sm shadow-sm transition-colors"
                 >
-                  <FileText className="w-4 h-4" />
-                  Datasheet
+                  <Download className="w-4 h-4" />
+                  Download Datasheet
                 </a>
               </motion.div>
             )}

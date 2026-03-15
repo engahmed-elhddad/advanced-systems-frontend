@@ -6,6 +6,7 @@ import {
   categoryToSlug,
 } from '@/app/lib/constants'
 import { ProductHero } from '@/components/product/ProductHero'
+import { ProductDescriptionSpecsTabs } from '@/components/product/ProductDescriptionSpecsTabs'
 import { ProductSpecsCards } from '@/components/product/ProductSpecsCards'
 import { ProductSpecificationsTable } from '@/components/product/ProductSpecificationsTable'
 import { ProductDocumentation } from '@/components/product/ProductDocumentation'
@@ -261,7 +262,7 @@ export default async function PartNumberPage({ params }: Props) {
 
           <ProductHero
             product={virtualProduct}
-            imageSrc="/products/no-product-image.jpg"
+            imageSrc="/images/product-placeholder.png"
             imageAlt={decoded}
             apiBase={API_BASE}
             datasheetUrl={null}
@@ -394,6 +395,19 @@ export default async function PartNumberPage({ params }: Props) {
               : null
           }
         />
+
+        {/* Description & Specifications tabs */}
+        <div className="mt-10">
+          <ProductDescriptionSpecsTabs
+            description={product.description}
+            specifications={
+              product.specifications && typeof product.specifications === 'object'
+                ? product.specifications
+                : null
+            }
+            specs={product.specs ?? null}
+          />
+        </div>
 
         {/* Key specs cards */}
         <div className="mt-10">

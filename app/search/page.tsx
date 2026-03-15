@@ -42,6 +42,7 @@ function SearchResults() {
   const brandParam = searchParams.get("brand") ?? ""
   const manufacturerParam = searchParams.get("manufacturer") ?? ""
   const seriesParam = searchParams.get("series") ?? ""
+  const conditionParam = searchParams.get("condition") ?? ""
   const voltageParam = searchParams.get("voltage") ?? ""
   const currentParam = searchParams.get("current") ?? ""
   const mountingParam = searchParams.get("mounting_type") ?? ""
@@ -59,6 +60,7 @@ function SearchResults() {
   const [sort, setSort] = useState<'relevance' | 'price_low' | 'price_high'>('relevance')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [alternatives, setAlternatives] = useState<any[]>([])
+  const [didYouMeanSuggestions, setDidYouMeanSuggestions] = useState<string[]>([])
   const [filterOptions, setFilterOptions] = useState<{
     brands?: string[]
     categories?: string[]
@@ -77,11 +79,18 @@ function SearchResults() {
   const API = API_BASE_URL
 
   const sortedProducts = useMemo(() => {
-    const copy = [...products]
+    let copy = [...products]
+    if (conditionParam) {
+      const cond = conditionParam.toLowerCase()
+      copy = copy.filter((p) => {
+        const c = (p.condition ?? p.product_condition ?? "").toString().toLowerCase()
+        return c === cond || c.includes(cond)
+      })
+    }
     if (sort === "price_low") copy.sort((a, b) => (a.price_usd ?? 999999) - (b.price_usd ?? 999999))
     else if (sort === "price_high") copy.sort((a, b) => (b.price_usd ?? 0) - (a.price_usd ?? 0))
     return copy
-  }, [products, sort])
+  }, [products, sort, conditionParam])
 
   useEffect(() => { setQuery(q) }, [q])
 
@@ -114,19 +123,19 @@ function SearchResults() {
     return () => clearTimeout(suggestDebounceRef.current)
   }, [query, API])
 
-  // Dynamic filters from /filters (brands, categories, manufacturers with counts)
-  useEffect(() => {
-    fetch(`${API}/filters`)
-      .then((r) => r.json())
-      .then((d) => setFiltersWithCounts(d))
-      .catch(() => {})
-  }, [API])
-
-  // Legacy filter-options for series, voltage, current, mounting (if needed)
+  // Dynamic filters: /search/filter-options = single source for brands, categories, series (and voltage, current, mounting_type)
   useEffect(() => {
     fetch(`${API}/search/filter-options`)
       .then((r) => r.json())
       .then((d) => setFilterOptions(d))
+      .catch(() => {})
+  }, [API])
+
+  // Optional: /filters for counts (brands, categories, manufacturers) to show "Siemens (42)" in sidebar
+  useEffect(() => {
+    fetch(`${API}/filters`)
+      .then((r) => r.json())
+      .then((d) => setFiltersWithCounts(d))
       .catch(() => {})
   }, [API])
 
@@ -150,6 +159,7 @@ function SearchResults() {
         if (brandParam) params.set("brand", brandParam)
         if (manufacturerParam) params.set("manufacturer", manufacturerParam)
         if (seriesParam) params.set("series", seriesParam)
+        if (conditionParam) params.set("condition", conditionParam)
         if (voltageParam) params.set("voltage", voltageParam)
         if (currentParam) params.set("current", currentParam)
         if (mountingParam) params.set("mounting_type", mountingParam)
@@ -178,9 +188,27 @@ function SearchResults() {
       }
     }
     load()
-  }, [hasSearchOrFilters, q, categorySlug, brandParam, manufacturerParam, seriesParam, voltageParam, currentParam, mountingParam, pageParam, API])
+  }, [hasSearchOrFilters, q, categorySlug, brandParam, manufacturerParam, seriesParam, conditionParam, voltageParam, currentParam, mountingParam, pageParam, API])
 
-  const hasFilters = !!(categorySlug || brandParam || manufacturerParam || seriesParam || voltageParam || currentParam || mountingParam)
+  // When no results but we have a query, fetch "Did you mean" suggestions (closest part numbers)
+  useEffect(() => {
+    if (!q?.trim() || loading || products.length > 0) {
+      setDidYouMeanSuggestions([])
+      return
+    }
+    fetch(`${API}/search/suggest?q=${encodeURIComponent(q.trim())}&limit=5`)
+      .then((r) => r.json())
+      .then((data) => {
+        const raw = data?.suggestions ?? []
+        const list = raw.map((s: unknown) =>
+          typeof s === "string" ? s : (s as { part_number?: string })?.part_number
+        ).filter(Boolean) as string[]
+        setDidYouMeanSuggestions(list.slice(0, 5))
+      })
+      .catch(() => setDidYouMeanSuggestions([]))
+  }, [q, loading, products.length, API])
+
+  const hasFilters = !!(categorySlug || brandParam || manufacturerParam || seriesParam || conditionParam || voltageParam || currentParam || mountingParam)
 
   function navigate(updates: Record<string, string | null | undefined>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -220,46 +248,44 @@ function SearchResults() {
     }
   }
 
-  const allBrands = filtersWithCounts.brands?.map((b) => b.name) ?? filterOptions.brands ?? brands
-  const allBrandsSlice = allBrands.slice(0, 100)
-  const allCategories = filtersWithCounts.categories ?? filterOptions.categories ?? []
+  // Single source: filter-options from API (brands, categories, series). Use /filters only for optional counts.
+  const categoryNames = filterOptions.categories ?? []
+  const brandNames = filterOptions.brands ?? []
+  const seriesList = filterOptions.series ?? []
+  const countByCategory = (filtersWithCounts.categories ?? []).reduce((acc, c) => { acc[c.name] = c.count; return acc }, {} as Record<string, number>)
+  const countByBrand = (filtersWithCounts.brands ?? []).reduce((acc, b) => { acc[b.name] = b.count; return acc }, {} as Record<string, number>)
   const allManufacturers = filtersWithCounts.manufacturers ?? []
+
+  const CONDITION_OPTIONS = [
+    { value: "", label: "Any condition" },
+    { value: "new", label: "New" },
+    { value: "refurbished", label: "Refurbished" },
+    { value: "surplus", label: "Surplus" },
+  ]
 
   const FilterSidebar = () => (
     <>
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Category</h3>
-        <ul className="space-y-1 max-h-60 overflow-y-auto">
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Category</h3>
+        <ul className="space-y-0.5 max-h-52 overflow-y-auto">
           <li>
             <button
               onClick={() => { navigate({ category: null }); setMobileFiltersOpen(false) }}
-              className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${!categorySlug ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+              className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${!categorySlug ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
             >
               All Categories
             </button>
           </li>
-          {(filtersWithCounts.categories ?? []).map((item) => {
-            const slug = categoryToSlug(item.name)
-            return (
-              <li key={item.name}>
-                <button
-                  onClick={() => { navigate({ category: slug }); setMobileFiltersOpen(false) }}
-                  className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${categorySlug === slug ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
-                >
-                  {item.name}{item.count != null ? ` (${item.count})` : ""}
-                </button>
-              </li>
-            )
-          })}
-          {allCategories.length === 0 && (filterOptions.categories ?? []).map((cat: string) => {
+          {categoryNames.map((cat) => {
             const slug = categoryToSlug(cat)
+            const count = countByCategory[cat]
             return (
               <li key={cat}>
                 <button
                   onClick={() => { navigate({ category: slug }); setMobileFiltersOpen(false) }}
-                  className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${categorySlug === slug ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                  className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${categorySlug === slug ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
                 >
-                  {cat}
+                  {cat}{count != null ? ` (${count})` : ""}
                 </button>
               </li>
             )
@@ -267,34 +293,67 @@ function SearchResults() {
         </ul>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Brand</h3>
-        <ul className="space-y-1 max-h-60 overflow-y-auto">
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Brand</h3>
+        <ul className="space-y-0.5 max-h-52 overflow-y-auto">
           <li>
             <button
               onClick={() => { navigate({ brand: null }); setMobileFiltersOpen(false) }}
-              className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${!brandParam ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+              className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${!brandParam ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
             >
               All Brands
             </button>
           </li>
-          {(filtersWithCounts.brands ?? []).map((item) => (
-            <li key={item.name}>
+          {brandNames.slice(0, 100).map((b) => {
+            const count = countByBrand[b]
+            return (
+              <li key={b}>
+                <button
+                  onClick={() => { navigate({ brand: b }); setMobileFiltersOpen(false) }}
+                  className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${brandParam === b ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
+                >
+                  {b}{count != null ? ` (${count})` : ""}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Series</h3>
+        <ul className="space-y-0.5 max-h-52 overflow-y-auto">
+          <li>
+            <button
+              onClick={() => { navigate({ series: null }); setMobileFiltersOpen(false) }}
+              className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${!seriesParam ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
+            >
+              All Series
+            </button>
+          </li>
+          {seriesList.slice(0, 50).map((s: string) => (
+            <li key={s}>
               <button
-                onClick={() => { navigate({ brand: item.name }); setMobileFiltersOpen(false) }}
-                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${brandParam === item.name ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                onClick={() => { navigate({ series: s }); setMobileFiltersOpen(false) }}
+                className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${seriesParam === s ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
               >
-                {item.name}{item.count != null ? ` (${item.count})` : ""}
+                {s}
               </button>
             </li>
           ))}
-          {(!filtersWithCounts.brands?.length) && allBrandsSlice.map((b) => (
-            <li key={b}>
+        </ul>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Condition</h3>
+        <ul className="space-y-0.5">
+          {CONDITION_OPTIONS.map((opt) => (
+            <li key={opt.value || "any"}>
               <button
-                onClick={() => { navigate({ brand: b }); setMobileFiltersOpen(false) }}
-                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${brandParam === b ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                onClick={() => { navigate({ condition: opt.value || null }); setMobileFiltersOpen(false) }}
+                className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${conditionParam === opt.value ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
               >
-                {b}
+                {opt.label}
               </button>
             </li>
           ))}
@@ -302,13 +361,13 @@ function SearchResults() {
       </div>
 
       {allManufacturers.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Manufacturer</h3>
-          <ul className="space-y-1 max-h-60 overflow-y-auto">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Manufacturer</h3>
+          <ul className="space-y-0.5 max-h-52 overflow-y-auto">
             <li>
               <button
                 onClick={() => { navigate({ manufacturer: null }); setMobileFiltersOpen(false) }}
-                className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${!manufacturerParam ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${!manufacturerParam ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
               >
                 All Manufacturers
               </button>
@@ -317,7 +376,7 @@ function SearchResults() {
               <li key={item.name}>
                 <button
                   onClick={() => { navigate({ manufacturer: item.name }); setMobileFiltersOpen(false) }}
-                  className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${manufacturerParam === item.name ? "bg-primary-50 text-primary-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                  className={`w-full text-left text-sm px-3 py-2 rounded-md transition ${manufacturerParam === item.name ? "bg-accent-50 text-accent-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}
                 >
                   {item.name}{item.count != null ? ` (${item.count})` : ""}
                 </button>
@@ -327,32 +386,17 @@ function SearchResults() {
         </div>
       )}
 
-      {((filterOptions.series?.length ?? 0) > 0 || (filterOptions.voltage?.length ?? 0) > 0 || (filterOptions.current?.length ?? 0) > 0 || (filterOptions.mounting_type?.length ?? 0) > 0) && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-soft">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Specifications</h3>
+      {((filterOptions.voltage?.length ?? 0) > 0 || (filterOptions.current?.length ?? 0) > 0 || (filterOptions.mounting_type?.length ?? 0) > 0) && (
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Specifications</h3>
           <div className="space-y-3">
-            {filterOptions.series?.length ? (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Series</label>
-                <select
-                  value={seriesParam}
-                  onChange={(e) => { navigate({ series: e.target.value || null }); setMobileFiltersOpen(false) }}
-                  className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">Any</option>
-                  {filterOptions.series.slice(0, 15).map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
             {filterOptions.voltage?.length ? (
               <div>
                 <label className="text-xs text-gray-500 block mb-1">Voltage</label>
                 <select
                   value={voltageParam}
                   onChange={(e) => { navigate({ voltage: e.target.value || null }); setMobileFiltersOpen(false) }}
-                  className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-primary-500"
+                  className="w-full text-sm rounded-md border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                 >
                   <option value="">Any</option>
                   {filterOptions.voltage.slice(0, 12).map((v) => (
@@ -367,7 +411,7 @@ function SearchResults() {
                 <select
                   value={currentParam}
                   onChange={(e) => { navigate({ current: e.target.value || null }); setMobileFiltersOpen(false) }}
-                  className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-primary-500"
+                  className="w-full text-sm rounded-md border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                 >
                   <option value="">Any</option>
                   {filterOptions.current.slice(0, 12).map((c) => (
@@ -382,7 +426,7 @@ function SearchResults() {
                 <select
                   value={mountingParam}
                   onChange={(e) => { navigate({ mounting_type: e.target.value || null }); setMobileFiltersOpen(false) }}
-                  className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-primary-500"
+                  className="w-full text-sm rounded-md border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                 >
                   <option value="">Any</option>
                   {filterOptions.mounting_type.slice(0, 10).map((m) => (
@@ -398,9 +442,9 @@ function SearchResults() {
   )
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Sticky search bar */}
-      <div className="sticky top-16 z-20 border-b border-gray-200 bg-white/98 backdrop-blur py-4 px-4 shadow-sm">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky search bar – industrial */}
+      <div className="sticky top-16 z-20 border-b border-gray-200 bg-white py-4 px-4 shadow-sm">
         <div className="max-w-7xl mx-auto">
           <form onSubmit={handleSearch} className="flex gap-3">
             <div className="flex-1 relative">
@@ -416,7 +460,7 @@ function SearchResults() {
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search part number, brand, or description…"
-                className="w-full pl-11 pr-10 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:bg-white transition text-sm"
+                className="w-full pl-11 pr-10 py-2.5 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition text-sm"
                 autoComplete="off"
                 aria-label="Search industrial parts"
                 aria-expanded={showSuggestions && suggestions.length > 0}
@@ -458,16 +502,16 @@ function SearchResults() {
                 </div>
               )}
             </div>
-            <button type="submit" className="btn-primary px-5 py-2.5 whitespace-nowrap">
+            <button type="submit" className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-accent-600 hover:bg-accent-700 text-white font-semibold text-sm whitespace-nowrap transition-colors">
               Search
             </button>
           </form>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex gap-8">
-        {/* Desktop filters */}
-        <aside className="hidden lg:block w-56 shrink-0 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 lg:py-8 flex gap-6 lg:gap-8">
+        {/* Left sidebar – filters */}
+        <aside className="hidden lg:block w-56 shrink-0 space-y-4">
           <FilterSidebar />
         </aside>
 
@@ -512,7 +556,7 @@ function SearchResults() {
               <div className="text-sm text-gray-600">
                 {q ? (
                   <>
-                    <span className="font-bold text-gray-900">{totalCount || products.length}</span> Products found for{" "}
+                    <span className="font-bold text-gray-900">{conditionParam ? sortedProducts.length : (totalCount || products.length)}</span> Products found for{" "}
                     <span className="text-primary-600 font-medium">&quot;{q}&quot;</span>
                     {categorySlug && (
                       <span className="ml-2">
@@ -536,32 +580,31 @@ function SearchResults() {
               </div>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
-              {(categorySlug || brandParam || manufacturerParam || seriesParam || voltageParam || currentParam || mountingParam) && (
+              {(categorySlug || brandParam || manufacturerParam || seriesParam || conditionParam || voltageParam || currentParam || mountingParam) && (
                 <div className="flex gap-2 flex-wrap">
                   {categorySlug && (
-                    <FilterChip
-                      label="Category"
-                      value={slugToCategory(categorySlug) ?? categorySlug}
-                      onRemove={() => navigate({ category: null })}
-                    />
+                    <FilterChip variant="accent" label="Category" value={slugToCategory(categorySlug) ?? categorySlug} onRemove={() => navigate({ category: null })} />
                   )}
                   {brandParam && (
-                    <FilterChip label="Brand" value={brandParam} onRemove={() => navigate({ brand: null })} />
+                    <FilterChip variant="accent" label="Brand" value={brandParam} onRemove={() => navigate({ brand: null })} />
                   )}
                   {manufacturerParam && (
-                    <FilterChip label="Manufacturer" value={manufacturerParam} onRemove={() => navigate({ manufacturer: null })} />
+                    <FilterChip variant="accent" label="Manufacturer" value={manufacturerParam} onRemove={() => navigate({ manufacturer: null })} />
                   )}
                   {seriesParam && (
-                    <FilterChip label="Series" value={seriesParam} onRemove={() => navigate({ series: null })} />
+                    <FilterChip variant="accent" label="Series" value={seriesParam} onRemove={() => navigate({ series: null })} />
+                  )}
+                  {conditionParam && (
+                    <FilterChip variant="accent" label="Condition" value={conditionParam} onRemove={() => navigate({ condition: null })} />
                   )}
                   {voltageParam && (
-                    <FilterChip label="Voltage" value={voltageParam} onRemove={() => navigate({ voltage: null })} />
+                    <FilterChip variant="accent" label="Voltage" value={voltageParam} onRemove={() => navigate({ voltage: null })} />
                   )}
                   {currentParam && (
-                    <FilterChip label="Current" value={currentParam} onRemove={() => navigate({ current: null })} />
+                    <FilterChip variant="accent" label="Current" value={currentParam} onRemove={() => navigate({ current: null })} />
                   )}
                   {mountingParam && (
-                    <FilterChip label="Mounting" value={mountingParam} onRemove={() => navigate({ mounting_type: null })} />
+                    <FilterChip variant="accent" label="Mounting" value={mountingParam} onRemove={() => navigate({ mounting_type: null })} />
                   )}
                 </div>
               )}
@@ -606,20 +649,53 @@ function SearchResults() {
 
           {/* No results */}
           {q && !loading && products.length === 0 && (
+            <div className="text-center py-12">
+              <EmptyState
+                icon="🔍"
+                title="No results found"
+                description="Try a different search term or broaden your filters. We can also help source parts via RFQ."
+                action={
+                  <Link href={`/rfq?part=${encodeURIComponent(q)}`} className="btn-primary">
+                    Submit RFQ for &quot;{q}&quot; →
+                  </Link>
+                }
+              />
+              {didYouMeanSuggestions.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">Did you mean:</p>
+                  <ul className="flex flex-wrap gap-2 justify-center">
+                    {didYouMeanSuggestions.map((pn) => (
+                      <li key={pn}>
+                        <Link
+                          href={`/search?q=${encodeURIComponent(pn)}`}
+                          className="inline-flex px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-mono text-accent-600 hover:border-accent-300 hover:bg-accent-50 transition"
+                        >
+                          {pn}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* No results after client-side condition filter */}
+          {!loading && products.length > 0 && conditionParam && sortedProducts.length === 0 && (
             <EmptyState
-              icon="🔍"
-              title="No results found"
-              description="Try a different search term or broaden your filters. We can also help source parts via RFQ."
+              icon="📦"
+              title="No products match this condition"
+              description={`No results for condition "${conditionParam}". Try "Any condition" or broaden your search.`}
               action={
-                <Link href={`/rfq?part=${encodeURIComponent(q)}`} className="btn-primary">
-                  Submit RFQ for &quot;{q}&quot; →
-                </Link>
+                <button type="button" onClick={() => navigate({ condition: null })} className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-accent-600 hover:bg-accent-700 text-white font-semibold text-sm">
+                  Clear condition filter
+                </button>
               }
             />
           )}
 
           {/* Results */}
-          {!loading && products.length > 0 && (
+          {!loading && products.length > 0 && !(conditionParam && sortedProducts.length === 0) && (
             <>
               <ProductGrid
                 products={sortedProducts}

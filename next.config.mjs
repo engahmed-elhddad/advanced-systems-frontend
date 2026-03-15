@@ -4,6 +4,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.advancedsystems-int.com', pathname: '/**' },
       { protocol: 'https', hostname: '*.r2.dev', pathname: '/**' },
+      { protocol: 'https', hostname: '*.r2.cloudflarestorage.com', pathname: '/**' },
       { protocol: 'https', hostname: '*.amazonaws.com', pathname: '/**' },
       { protocol: 'https', hostname: '*.railway.app', pathname: '/**' },
       { protocol: 'http', hostname: 'localhost', pathname: '/**' },

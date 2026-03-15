@@ -1,11 +1,9 @@
 import { Suspense } from 'react'
-import { HeroSection } from '@/components/HeroSection'
-import { FeaturedBrands } from '@/components/home/FeaturedBrands'
-import { CategoriesGrid } from '@/components/home/CategoriesGrid'
+import { HeroSection } from '@/components/home/HeroSection'
+import { TrustedBrands } from '@/components/home/TrustedBrands'
+import { TopCategories } from '@/components/home/TopCategories'
 import { FeaturedProducts } from '@/components/home/FeaturedProducts'
-import { EngineeringToolsSection } from '@/components/home/EngineeringToolsSection'
-import { IndustrialNewsSection } from '@/components/home/IndustrialNewsSection'
-import { WhyUs } from '@/components/home/WhyUs'
+import { RFQBanner } from '@/components/home/RFQBanner'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -17,24 +15,22 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <div className="page-container space-y-16 py-12 sm:py-16 bg-white">
-        <Suspense fallback={<div className="h-48 skeleton rounded-xl" />}>
-          <CategoriesGrid />
+      <div className="page-container space-y-14 sm:space-y-16 py-12 sm:py-16 bg-gray-50">
+        <Suspense fallback={<SectionSkeleton className="h-40" />}>
+          <TrustedBrands />
         </Suspense>
-        <Suspense fallback={<div className="h-32 skeleton rounded-xl" />}>
-          <FeaturedBrands />
+        <Suspense fallback={<SectionSkeleton className="h-48" />}>
+          <TopCategories />
         </Suspense>
-        <Suspense fallback={<div className="h-80 skeleton rounded-xl" />}>
+        <Suspense fallback={<SectionSkeleton className="h-80" />}>
           <FeaturedProducts />
         </Suspense>
-        <Suspense fallback={<div className="h-32 skeleton rounded-xl" />}>
-          <EngineeringToolsSection />
-        </Suspense>
-        <Suspense fallback={<div className="h-24 skeleton rounded-xl" />}>
-          <IndustrialNewsSection />
-        </Suspense>
-        <WhyUs />
+        <RFQBanner />
       </div>
     </>
   )
+}
+
+function SectionSkeleton({ className = 'h-48' }: { className?: string }) {
+  return <div className={`skeleton rounded-xl ${className}`} />
 }

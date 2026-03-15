@@ -113,3 +113,17 @@
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+@keyframes hero-rotate-3d {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+.animate-hero-rotate-3d {
+  animation: hero-rotate-3d 20s linear infinite;
+}
+/* Disable 3D rotation on mobile — show static image only */
+@media (max-width: 1024px) {
+  .animate-hero-rotate-3d {
+    animation: none !important;
+  }
+}

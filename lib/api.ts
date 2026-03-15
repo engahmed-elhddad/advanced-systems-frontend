@@ -5,9 +5,6 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   "http://localhost:8000";
 
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-  console.log("[API] baseURL:", API_BASE);
-}
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -34,24 +31,33 @@ export const getProducts = (params: Record<string, unknown> = {}) => {
     const total = d?.total ?? d?.count ?? (Array.isArray(products) ? products.length : 0)
     const limitNum = Number(limit ?? 30)
     const pages = Math.max(1, Math.ceil(total / limitNum))
-    if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-      console.log("[API] getProducts (/search):", products.length, "products, total:", total)
-    }
     return { products, items: products, total, page: pageNum, pages }
   })
 }
 
+/** Featured products – GET /api/v1/featured */
+export const getFeaturedFromApi = (limit = 12) =>
+  api.get('/api/v1/featured', { params: { limit } }).then((r) => {
+    const data = r.data
+    const products = data?.products ?? data?.results ?? data?.items ?? (Array.isArray(data) ? data : [])
+    return Array.isArray(products) ? products : []
+  })
+
 /** Featured products – uses unified /search endpoint with limit, no filters */
 export const getFeaturedProducts = async (limit = 12): Promise<any[]> => {
   try {
-    const params = new URLSearchParams({ q: "", page: "1", limit: String(limit) })
-    const r = await api.get(`/search?${params}`)
-    const data = r.data
-    const products = data?.results ?? data?.products ?? data?.items ?? (Array.isArray(data) ? data : [])
-    return Array.isArray(products) ? products : []
+    return await getFeaturedFromApi(limit)
   } catch {
-    const data = await getProducts({ limit, page: 1 })
-    return data?.products ?? data?.items ?? []
+    try {
+      const params = new URLSearchParams({ q: "", page: "1", limit: String(limit) })
+      const r = await api.get(`/search?${params}`)
+      const data = r.data
+      const products = data?.results ?? data?.products ?? data?.items ?? (Array.isArray(data) ? data : [])
+      return Array.isArray(products) ? products : []
+    } catch {
+      const data = await getProducts({ limit, page: 1 })
+      return data?.products ?? data?.items ?? []
+    }
   }
 }
 
