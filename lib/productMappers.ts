@@ -51,10 +51,14 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
       ? { series: String(p.series ?? ''), voltage: String(p.voltage ?? ''), current: String(p.current ?? '') }
       : undefined
 
+  const brand = typeof p.brand === 'string' ? p.brand : (p.brand?.name ?? p.manufacturer ?? 'Industrial')
+  const categoryDisplay = category || 'Industrial Component'
+
   return {
     part_number: p.part_number,
+    brand,
     manufacturer,
-    category,
+    category: categoryDisplay,
     description: p.short_description ?? p.description,
     image_url: imageUrl,
     stock_quantity: stock,

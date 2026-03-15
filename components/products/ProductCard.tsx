@@ -11,6 +11,7 @@ const PLACEHOLDER_IMAGE = '/products/no-product-image.jpg'
 
 export interface ProductCardProps {
   part_number: string
+  brand?: string
   manufacturer?: string
   category?: string
   description?: string
@@ -28,6 +29,7 @@ export interface ProductCardProps {
 
 function ProductCardInner({
   part_number,
+  brand,
   manufacturer,
   category,
   description,
@@ -90,19 +92,15 @@ function ProductCardInner({
       </Link>
 
       <div className={compact ? 'p-3 flex flex-col flex-1' : 'p-4 flex flex-col flex-1'}>
-        {manufacturer && (
-          <span className="text-xs font-medium text-accent-600 uppercase tracking-wider">
-            {manufacturer}
-          </span>
-        )}
+        <div className="text-xs text-gray-500 uppercase tracking-wide">
+          {brand ?? manufacturer ?? 'Industrial'}
+        </div>
         <Link href={`${productBasePath}/${encodeURIComponent(part_number)}`}>
-          <h3 className="font-mono font-bold text-slate-900 text-sm group-hover:text-accent-600 transition-colors leading-snug mt-0.5">
+          <h3 className="font-mono font-semibold text-lg text-slate-900 group-hover:text-accent-600 transition-colors leading-snug mt-0.5 break-words">
             {part_number}
           </h3>
         </Link>
-        {category && (
-          <p className="text-xs text-slate-500 mt-0.5">{category}</p>
-        )}
+        <p className="text-sm text-gray-500 mt-0.5">{category ?? 'Industrial Component'}</p>
         {quickSpecs && (quickSpecs.series || quickSpecs.voltage || quickSpecs.current) && (
           <p className="text-xs text-slate-500 mt-1">
             {[quickSpecs.series, quickSpecs.voltage, quickSpecs.current].filter(Boolean).join(' · ')}
