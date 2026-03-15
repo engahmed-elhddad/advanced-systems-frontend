@@ -1,13 +1,16 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import {
   API_BASE_URL,
   SITE_URL,
   resolveProductImageUrl,
   categoryToSlug,
 } from '@/app/lib/constants'
+import { ProductHero } from '@/components/product/ProductHero'
+import { ProductSpecsCards } from '@/components/product/ProductSpecsCards'
+import { ProductSpecificationsTable } from '@/components/product/ProductSpecificationsTable'
+import { ProductDocumentation } from '@/components/product/ProductDocumentation'
+import { RelatedProducts } from '@/components/product/RelatedProducts'
 import { RFQButton } from '@/components/RFQButton'
-import { FileText, Package, Search } from 'lucide-react'
 import type { Metadata } from 'next'
 
 const API_BASE = API_BASE_URL
@@ -31,14 +34,117 @@ async function fetchProduct(partNumber: string) {
   }
 }
 
+async function fetchIntelligence(partNumber: string) {
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/intelligence/detect?part_number=${encodeURIComponent(partNumber)}`,
+      { cache: 'no-store' }
+    )
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
+/** Extract search prefix from part number (e.g. 6ES7322-1BL00-0AA0 → 6ES7) */
+function partNumberToPrefix(partNumber: string, length: number = 4): string {
+  const normalized = partNumber.replace(/\s/g, '').replace(/-/g, '').toUpperCase()
+  return normalized.slice(0, length) || partNumber.slice(0, length) || partNumber
+}
+
+async function fetchSimilarProducts(
+  partNumber: string,
+  intelligence: { brand?: string | null; category?: string | null } | null,
+  prefixOnly: boolean = false
+) {
+  const results: Array<{ part_number: string; brand?: string; manufacturer?: string; category?: string; image_url?: string; images?: string[] }> = []
+  const seen = new Set<string>()
+  const prefix = partNumberToPrefix(partNumber, 4)
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/search?q=${encodeURIComponent(prefix)}&limit=12`,
+      { cache: 'no-store' }
+    )
+    if (res.ok) {
+      const data = await res.json()
+      const list = data.results ?? data.products ?? []
+      for (const p of list) {
+        const pn = p.part_number ?? p.partNumber
+        if (pn && !seen.has(pn)) {
+          seen.add(pn)
+          results.push({
+            part_number: pn,
+            brand: p.brand ?? p.manufacturer,
+            manufacturer: p.manufacturer ?? p.brand,
+            category: p.category,
+            image_url: p.image_url,
+            images: p.images,
+          })
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  if (results.length >= 8) return results.slice(0, 8)
+  if (prefixOnly) return results.slice(0, 8)
+
+  const brand = intelligence?.brand ?? intelligence?.category
+  if (brand && typeof brand === 'string') {
+    try {
+      const res = await fetch(
+        `${API_BASE}/search?brand=${encodeURIComponent(brand)}&limit=${8 - results.length}`,
+        { cache: 'no-store' }
+      )
+      if (res.ok) {
+        const data = await res.json()
+        const list = data.results ?? data.products ?? []
+        for (const p of list) {
+          const pn = p.part_number ?? p.partNumber
+          if (pn && !seen.has(pn)) {
+            seen.add(pn)
+            results.push({
+              part_number: pn,
+              brand: p.brand ?? p.manufacturer,
+              manufacturer: p.manufacturer ?? p.brand,
+              category: p.category,
+              image_url: p.image_url,
+              images: p.images,
+            })
+            if (results.length >= 8) break
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return results.slice(0, 8)
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { partNumber } = await params
   const decoded = decodeURIComponent(partNumber)
   const product = await fetchProduct(decoded)
   if (!product) {
+    const title = `Buy ${decoded} | Supplier & RFQ | Advanced Systems`
+    const description = `Buy ${decoded}. Request quote, price, and availability from Advanced Systems industrial automation supplier.`
+    const canonical = `${SITE_URL}/part-number/${encodeURIComponent(decoded)}`
     return {
-      title: 'Product Not Found',
-      description: `Part ${decoded} could not be found. Search or request a quote.`,
+      title,
+      description,
+      alternates: { canonical },
+      openGraph: {
+        title,
+        description,
+        url: canonical,
+        type: 'website',
+      },
+      robots: { index: true, follow: true },
     }
   }
   const brandName = product.brand ?? product.manufacturer ?? 'Industrial'
@@ -64,81 +170,185 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export const dynamic = 'force-dynamic'
 
+function buildImageSrc(product: Record<string, unknown>, apiBase: string): string {
+  const imageUrl =
+    product.image_url ??
+    (Array.isArray(product.images) ? product.images[0] : null) ??
+    null
+  if (typeof imageUrl === 'string' && imageUrl.startsWith('http')) return imageUrl
+  if (typeof imageUrl === 'string' && imageUrl)
+    return `${apiBase}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
+  return resolveProductImageUrl(
+    product as { part_number?: string; images?: string[]; image_url?: string },
+    apiBase
+  )
+}
+
+function buildDatasheetUrl(product: Record<string, unknown>, apiBase: string): string | null {
+  const raw = product.datasheet_url ?? product.datasheet
+  const url = Array.isArray(raw) ? raw[0] : raw
+  if (typeof url === 'string' && url.startsWith('http')) return url
+  if (typeof url === 'string' && url)
+    return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+  return null
+}
+
 export default async function PartNumberPage({ params }: Props) {
   const { partNumber } = await params
   const decoded = decodeURIComponent(partNumber)
   const product = await fetchProduct(decoded)
 
   if (!product) {
+    const intelligence = await fetchIntelligence(decoded)
+    const similarProducts = await fetchSimilarProducts(decoded, intelligence, true)
+    const brand = intelligence?.manufacturer ?? intelligence?.brand ?? 'Industrial Automation'
+    const category = intelligence?.category ?? 'Industrial Components'
+    const description =
+      intelligence?.description ??
+      `${decoded} is an industrial automation component. Contact Advanced Systems for availability, pricing, and lead time.`
+    const virtualProduct = {
+      part_number: decoded,
+      brand,
+      manufacturer: brand,
+      category,
+      availability: 'on_request',
+      image_url: undefined as string | undefined,
+      images: [] as string[],
+      description,
+      specifications: null,
+      series: intelligence?.series ?? null,
+    }
+    const canonicalUrl = `${SITE_URL}/part-number/${encodeURIComponent(decoded)}`
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: decoded,
+      description,
+      brand: { '@type': 'Brand', name: brand },
+      mpn: decoded,
+      url: canonicalUrl,
+    }
+
     return (
-      <div className="min-h-screen bg-white">
-        <div className="page-container py-16 sm:py-24">
-          <div className="max-w-lg mx-auto text-center">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-slate-100 flex items-center justify-center">
-              <Package className="w-8 h-8 text-slate-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">
-              Product Not Found
-            </h1>
-            <p className="text-slate-600 mb-6">
-              We couldn&apos;t find a listing for{' '}
-              <span className="font-mono font-medium text-slate-800">
-                {decoded}
-              </span>
-              . Try searching or submit an RFQ and we&apos;ll help you source it.
-            </p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Link
-                href={`/search?q=${encodeURIComponent(decoded)}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium text-sm transition-colors"
-              >
-                <Search className="w-4 h-4" />
-                Search for similar parts
-              </Link>
+      <div className="min-h-screen bg-gray-50">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <div className="page-container py-8">
+          <nav className="text-sm text-gray-500 mb-6">
+            <Link href="/" className="hover:text-blue-600 transition-colors">
+              Home
+            </Link>
+            <span className="mx-2">/</span>
+            {category && (
+              <>
+                <Link
+                  href={
+                    categoryToSlug(category)
+                      ? `/category/${categoryToSlug(category)}`
+                      : `/search?category=${encodeURIComponent(category)}`
+                  }
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  {category}
+                </Link>
+                <span className="mx-2">/</span>
+              </>
+            )}
+            <span className="text-gray-900 font-medium">{decoded}</span>
+          </nav>
+
+          <ProductHero
+            product={virtualProduct}
+            imageSrc="/products/no-product-image.jpg"
+            imageAlt={decoded}
+            apiBase={API_BASE}
+            datasheetUrl={null}
+            productBasePath="/part-number"
+            categoryHref={
+              category
+                ? categoryToSlug(category)
+                  ? `/category/${categoryToSlug(category)}`
+                  : `/search?category=${encodeURIComponent(category)}`
+                : null
+            }
+          />
+
+          <div className="mt-10">
+            <ProductSpecsCards
+              product={{
+                specifications: null,
+                series: virtualProduct.series,
+              }}
+            />
+          </div>
+
+          <div className="mt-10">
+            <ProductSpecificationsTable specifications={null} />
+          </div>
+
+          <section className="mt-10">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
+              Request a Quote
+            </h2>
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md flex flex-wrap items-center gap-4">
               <Link
                 href={`/rfq?part_number=${encodeURIComponent(decoded)}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-medium text-sm transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg transition-all"
               >
-                <FileText className="w-4 h-4" />
-                Request quote for {decoded}
+                Request Quote for {decoded}
               </Link>
+              <p className="text-sm text-gray-600">
+                {decoded} is not in our catalog. We may still be able to source it—request a quote for pricing and availability.
+              </p>
             </div>
+          </section>
+
+          <div className="mt-10">
+            <ProductDocumentation partNumber={decoded} datasheetUrl={null} apiBase={API_BASE} />
           </div>
+
+          {similarProducts.length > 0 && (
+            <div className="mt-12">
+              <RelatedProducts
+                products={similarProducts}
+                productBasePath="/part-number"
+                imageUrl={(item) => {
+                  const u = item.image_url ?? (Array.isArray(item.images) ? item.images[0] : null)
+                  if (typeof u === 'string' && u.startsWith('http')) return u
+                  if (typeof u === 'string' && u) return `${API_BASE}${u.startsWith('/') ? '' : '/'}${u}`
+                  return resolveProductImageUrl(
+                    { part_number: item.part_number, image_url: item.image_url, images: item.images },
+                    API_BASE
+                  )
+                }}
+                title="Similar Products"
+              />
+            </div>
+          )}
         </div>
       </div>
     )
   }
 
-  const brandName = product.brand ?? product.manufacturer ?? ''
   const categoryName = product.category ?? ''
-  const imageUrl =
-    product.image_url ??
-    (Array.isArray(product.images) ? product.images[0] : null) ??
-    null
-  const imgSrc = imageUrl
-    ? typeof imageUrl === 'string' && imageUrl.startsWith('http')
-      ? imageUrl
-      : typeof imageUrl === 'string'
-        ? `${API_BASE}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
-        : resolveProductImageUrl(product, API_BASE)
-    : resolveProductImageUrl(product, API_BASE)
-  const rawDatasheet = product.datasheet_url ?? product.datasheet
-  const datasheetUrl = Array.isArray(rawDatasheet)
-    ? rawDatasheet[0]
-    : rawDatasheet
-  const datasheetFullUrl =
-    typeof datasheetUrl === 'string' && datasheetUrl.startsWith('http')
-      ? datasheetUrl
-      : typeof datasheetUrl === 'string' && datasheetUrl
-        ? `${API_BASE}${datasheetUrl.startsWith('/') ? '' : '/'}${datasheetUrl}`
-        : null
+  const imgSrc = buildImageSrc(product, API_BASE)
+  const datasheetFullUrl = buildDatasheetUrl(product, API_BASE)
+  const similarProducts = (product.similar_products ?? []) as Array<{
+    part_number: string
+    brand?: string
+    manufacturer?: string
+    image_url?: string
+    images?: string[]
+  }>
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <div className="page-container py-8">
         {/* Breadcrumb */}
-        <nav className="text-sm text-slate-500 mb-6">
-          <Link href="/" className="hover:text-accent-600 transition-colors">
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600 transition-colors">
             Home
           </Link>
           <span className="mx-2">/</span>
@@ -150,197 +360,107 @@ export default async function PartNumberPage({ params }: Props) {
                     ? `/category/${categoryToSlug(categoryName)}`
                     : `/search?category=${encodeURIComponent(categoryName)}`
                 }
-                className="hover:text-accent-600 transition-colors"
+                className="hover:text-blue-600 transition-colors"
               >
                 {categoryName}
               </Link>
               <span className="mx-2">/</span>
             </>
           )}
-          <span className="text-slate-900 font-medium">{product.part_number}</span>
+          <span className="text-gray-900 font-medium">{product.part_number}</span>
         </nav>
 
-        {/* Header section */}
-        <header className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tracking-tight">
-            {product.part_number}
-          </h1>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-            {brandName && (
-              <span className="font-medium text-slate-600">{brandName}</span>
-            )}
-            {categoryName && (
-              <span className="text-slate-500">
-                {brandName ? ' · ' : ''}
-                <Link
-                  href={
-                    categoryToSlug(categoryName)
-                      ? `/category/${categoryToSlug(categoryName)}`
-                      : `/search?category=${encodeURIComponent(categoryName)}`
-                  }
-                  className="text-accent-600 hover:underline"
-                >
-                  {categoryName}
-                </Link>
-              </span>
-            )}
-          </div>
-        </header>
+        <ProductHero
+          product={{
+            part_number: product.part_number,
+            brand: product.brand ?? product.manufacturer,
+            manufacturer: product.manufacturer,
+            category: product.category,
+            availability: product.availability,
+            image_url: product.image_url,
+            images: product.images,
+            description: product.description,
+          }}
+          imageSrc={imgSrc}
+          imageAlt={product.part_number}
+          apiBase={API_BASE}
+          datasheetUrl={datasheetFullUrl}
+          productBasePath="/part-number"
+          categoryHref={
+            categoryName
+              ? categoryToSlug(categoryName)
+                ? `/category/${categoryToSlug(categoryName)}`
+                : `/search?category=${encodeURIComponent(categoryName)}`
+              : null
+          }
+        />
 
-        {/* Main content: two columns */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
-          {/* Left column: Product image + gallery placeholder */}
-          <div className="space-y-4">
-            <div className="relative aspect-square bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-              {imgSrc && imgSrc !== '/products/no-product-image.jpg' ? (
-                <Image
-                  src={imgSrc}
-                  alt={product.part_number}
-                  fill
-                  className="object-contain p-6"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                  unoptimized={
-                    imgSrc.startsWith('http') && !imgSrc.includes(API_BASE)
-                  }
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Package className="w-24 h-24 text-slate-300" />
-                </div>
-              )}
-            </div>
-            <div className="rounded-xl border border-slate-200 border-dashed bg-slate-50/50 px-4 py-6 text-center">
-              <p className="text-sm text-slate-500">
-                Gallery support coming soon
-              </p>
-            </div>
-          </div>
-
-          {/* Right column: Product information */}
-          <div className="space-y-6">
-            <section className="rounded-xl border border-slate-200 bg-white p-6">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-4">
-                Product Information
-              </h2>
-              <dl className="space-y-3">
-                {brandName && (
-                  <div>
-                    <dt className="text-xs font-medium text-slate-500 uppercase">
-                      Brand
-                    </dt>
-                    <dd className="mt-0.5 text-slate-900 font-medium">
-                      {brandName}
-                    </dd>
-                  </div>
-                )}
-                {categoryName && (
-                  <div>
-                    <dt className="text-xs font-medium text-slate-500 uppercase">
-                      Category
-                    </dt>
-                    <dd className="mt-0.5">
-                      <Link
-                        href={
-                          categoryToSlug(categoryName)
-                            ? `/category/${categoryToSlug(categoryName)}`
-                            : `/search?category=${encodeURIComponent(categoryName)}`
-                        }
-                        className="text-accent-600 hover:underline font-medium"
-                      >
-                        {categoryName}
-                      </Link>
-                    </dd>
-                  </div>
-                )}
-                {product.series && (
-                  <div>
-                    <dt className="text-xs font-medium text-slate-500 uppercase">
-                      Series
-                    </dt>
-                    <dd className="mt-0.5 text-slate-900">{product.series}</dd>
-                  </div>
-                )}
-                {product.description && (
-                  <div>
-                    <dt className="text-xs font-medium text-slate-500 uppercase">
-                      Description
-                    </dt>
-                    <dd className="mt-1 text-slate-700 leading-relaxed">
-                      {product.description}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </section>
-
-            {product.availability && (
-              <p className="text-sm">
-                <span
-                  className={
-                    product.availability === 'in_stock'
-                      ? 'text-green-600 font-medium'
-                      : 'text-amber-600 font-medium'
-                  }
-                >
-                  {product.availability === 'in_stock'
-                    ? 'In stock'
-                    : 'On request'}
-                </span>
-              </p>
-            )}
-          </div>
+        {/* Key specs cards */}
+        <div className="mt-10">
+          <ProductSpecsCards
+            product={{
+              specifications: product.specifications,
+              series: product.series,
+              voltage: product.voltage,
+              current: product.current,
+              mounting_type: product.mounting_type,
+            }}
+          />
         </div>
 
-        {/* Product Specifications placeholder */}
-        <section className="mb-10">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">
-            Product Specifications
-          </h2>
-          <div className="rounded-xl border border-slate-200 border-dashed bg-slate-50/50 px-6 py-8 text-center">
-            <p className="text-slate-500 text-sm">
-              Specifications will be displayed here when available.
-            </p>
-          </div>
-        </section>
+        {/* Full specifications table */}
+        <div className="mt-10">
+          <ProductSpecificationsTable
+            specifications={
+              product.specifications && typeof product.specifications === 'object'
+                ? product.specifications
+                : null
+            }
+          />
+        </div>
 
-        {/* RFQ box placeholder */}
-        <section className="mb-10">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">
+        {/* RFQ box */}
+        <section className="mt-10">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">
             Request a Quote
           </h2>
-          <div className="rounded-xl border border-slate-200 bg-white p-6 flex flex-wrap items-center gap-4">
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md flex flex-wrap items-center gap-4">
             <RFQButton partNumber={product.part_number} variant="default" />
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-gray-600">
               Need a quote for {product.part_number}? We&apos;ll respond quickly
               with pricing and availability.
             </p>
           </div>
         </section>
 
-        {/* Datasheet placeholder */}
-        <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">
-            Datasheet &amp; Documents
-          </h2>
-          <div className="rounded-xl border border-slate-200 bg-white p-6">
-            {datasheetFullUrl ? (
-              <a
-                href={datasheetFullUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium text-sm transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                View Datasheet
-              </a>
-            ) : (
-              <p className="text-sm text-slate-500">
-                Datasheet not yet available for this product.
-              </p>
-            )}
+        {/* Documentation */}
+        <div className="mt-10">
+          <ProductDocumentation
+            partNumber={product.part_number}
+            datasheetUrl={datasheetFullUrl}
+            apiBase={API_BASE}
+          />
+        </div>
+
+        {/* Related products */}
+        {similarProducts.length > 0 && (
+          <div className="mt-12">
+            <RelatedProducts
+              products={similarProducts}
+              productBasePath="/part-number"
+              imageUrl={(item) => {
+                const u = item.image_url ?? (Array.isArray(item.images) ? item.images[0] : null)
+                if (typeof u === 'string' && u.startsWith('http')) return u
+                if (typeof u === 'string' && u) return `${API_BASE}${u.startsWith('/') ? '' : '/'}${u}`
+                return resolveProductImageUrl(
+                  { part_number: item.part_number, image_url: item.image_url, images: item.images },
+                  API_BASE
+                )
+              }}
+              title="Similar Products"
+            />
           </div>
-        </section>
+        )}
       </div>
     </div>
   )
