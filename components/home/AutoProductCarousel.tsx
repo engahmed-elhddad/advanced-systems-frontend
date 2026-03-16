@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { ProductCard } from '@/components/products/ProductCard'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { productToCardProps } from '@/lib/productMappers'
-import { getFeaturedFromApi } from '@/lib/api'
+import { searchProducts } from '@/lib/api'
 
 const CARD_MIN_WIDTH = 280
 
@@ -13,9 +13,11 @@ export function AutoProductCarousel() {
 
   useEffect(() => {
     let cancelled = false
-    getFeaturedFromApi(16)
-      .then((list) => {
-        if (!cancelled && Array.isArray(list)) setProducts(list)
+    searchProducts({ q: '', size: 20 })
+      .then((data: any) => {
+        if (cancelled) return
+        const list = data?.results ?? data?.products ?? data?.items ?? (Array.isArray(data) ? data : [])
+        setProducts(Array.isArray(list) ? list : [])
       })
       .catch(() => {})
     return () => { cancelled = true }
