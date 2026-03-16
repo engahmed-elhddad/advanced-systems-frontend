@@ -92,7 +92,7 @@ const config: Config = {
       },
       animation: {
         float: "float 4s ease-in-out infinite",
-        scroll: "scrollProducts 25s linear infinite",
+        scroll: "scrollProducts 30s linear infinite",
       },
     },
   },

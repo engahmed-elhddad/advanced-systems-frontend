@@ -29,10 +29,14 @@ export function Navbar() {
 
           <div className="flex-1 min-w-0 max-w-xl mx-auto">
             <SearchBar
+              variant="header"
               placeholder="Search by part number, brand, or category"
-              size="sm"
               showSuggestions
               debounceMs={300}
+              searchPath="/search"
+              productPath="/part-number"
+              brandPath="/brand"
+              categoryPath="/category"
             />
           </div>
 

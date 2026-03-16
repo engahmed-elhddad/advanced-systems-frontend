@@ -1,13 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Package, Download } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { RFQButton } from '@/components/RFQButton'
 import { whatsappHref, seriesToSlug } from '@/app/lib/constants'
 import { resolveBrandImage } from '@/lib/imageResolver'
+import { ProductImage } from '@/components/ui/ProductImage'
 
 export interface ProductHeroProduct {
   part_number: string
@@ -70,8 +69,6 @@ export function ProductHero({
   const category = product.category ?? ''
   const series = product.series ?? ''
   const isInStock = product.availability === 'in_stock' || product.availability === 'available'
-  const [imgError, setImgError] = useState(false)
-  const showPlaceholder = !imageSrc || imageSrc.endsWith('/images/product-placeholder.png') || imgError
   const specs = product.specifications ?? {}
   const seriesVal = product.series || getSpec(specs, 'series')
 
@@ -82,27 +79,15 @@ export function ProductHero({
       transition={{ duration: 0.35 }}
       className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
     >
-      {/* Left: Product image */}
-      <div className="max-w-[520px] mx-auto bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
-        <div className="flex items-center justify-center min-h-[280px] max-h-[420px]">
-          {showPlaceholder ? (
-            <div className="flex items-center justify-center w-full h-[320px] bg-gray-50 rounded-lg">
-              <Package className="w-24 h-24 text-gray-300" aria-hidden />
-            </div>
-          ) : (
-            <div className="relative w-full h-[360px] max-h-[420px] mx-auto">
-              <Image
-                src={imageSrc}
-                alt={imageAlt ?? `${partNumber} product`}
-                fill
-                className="object-contain"
-                sizes="(max-width: 1024px) 100vw, 520px"
-                priority
-                unoptimized={imageSrc.startsWith('http')}
-                onError={() => setImgError(true)}
-              />
-            </div>
-          )}
+      {/* Left: Product image — tries /uploads/products/{part_number}.jpg, .png, .webp then placeholder */}
+      <div className="max-w-[520px] mx-auto bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div className="relative w-full aspect-square max-h-[420px] mx-auto">
+          <ProductImage
+            partNumber={partNumber}
+            alt={imageAlt ?? `${partNumber} product`}
+            variant="hero"
+            priority
+          />
         </div>
       </div>
 

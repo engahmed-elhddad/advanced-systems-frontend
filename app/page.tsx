@@ -1,9 +1,10 @@
 import { Suspense } from 'react'
 import { HeroSection } from '@/components/home/HeroSection'
-import { BrandsSection } from '@/components/home/BrandsSection'
-import { TopCategories } from '@/components/home/TopCategories'
-import { FeaturedProducts } from '@/components/home/FeaturedProducts'
-import { AutoProductCarousel } from '@/components/home/AutoProductCarousel'
+import { TrendingProducts } from '@/components/home/TrendingProducts'
+import { BrandCarousel } from '@/components/home/BrandCarousel'
+import { CategoryHeroGrid } from '@/components/home/CategoryHeroGrid'
+import { FeaturedProductsCarousel } from '@/components/home/FeaturedProductsCarousel'
+import { TrendingParts } from '@/components/home/TrendingParts'
 import { RFQBanner } from '@/components/home/RFQBanner'
 import type { Metadata } from 'next'
 
@@ -16,20 +17,25 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <div className="page-container space-y-14 sm:space-y-16 py-12 sm:py-16 bg-gray-50">
-        <Suspense fallback={<SectionSkeleton className="h-40" />}>
-          <BrandsSection />
+      <Suspense fallback={<SectionSkeleton className="h-72" />}>
+        <TrendingProducts />
+      </Suspense>
+      <Suspense fallback={null}>
+        <BrandCarousel />
+      </Suspense>
+      <div className="bg-gray-50">
+        <Suspense fallback={<SectionSkeleton className="h-48" />}>
+          <CategoryHeroGrid />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton className="h-64" />}>
+          <FeaturedProductsCarousel />
         </Suspense>
         <Suspense fallback={<SectionSkeleton className="h-48" />}>
-          <TopCategories />
+          <TrendingParts />
         </Suspense>
-        <Suspense fallback={<SectionSkeleton className="h-80" />}>
-          <FeaturedProducts />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <AutoProductCarousel />
-        </Suspense>
-        <RFQBanner />
+        <div className="mx-auto max-w-7xl px-6 py-16">
+          <RFQBanner />
+        </div>
       </div>
     </>
   )

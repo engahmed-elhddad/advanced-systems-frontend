@@ -8,6 +8,8 @@ interface BrandLogoProps {
   brand: string
   /** Logo variant: default = .webp (grids), circle = _circle.png (badges), square = _square.png (product cards). */
   variant?: BrandLogoVariant
+  /** Override logo URL (e.g. /brands/siemens.png from public folder). When set, CDN is not used. */
+  logoSrc?: string | null
   /** Extra classes for the <img> element */
   logoClassName?: string
   /** Extra classes for the fallback text badge */
@@ -18,10 +20,11 @@ interface BrandLogoProps {
  * Shows the brand's logo from CDN (resolveBrandImage → CDN/cdn/brands/{brand}.webp | _circle.png | _square.png).
  * Falls back to placeholder image or text badge if the image fails to load.
  */
-export function BrandLogo({ brand, variant = "default", logoClassName, badgeClassName }: BrandLogoProps) {
+export function BrandLogo({ brand, variant = "default", logoSrc, logoClassName, badgeClassName }: BrandLogoProps) {
   const [usePlaceholder, setUsePlaceholder] = useState(false)
-  useEffect(() => setUsePlaceholder(false), [brand, variant])
-  const src = usePlaceholder ? BRAND_PLACEHOLDER_IMAGE : resolveBrandImage(brand, variant)
+  useEffect(() => setUsePlaceholder(false), [brand, variant, logoSrc])
+  const resolvedSrc = logoSrc ?? resolveBrandImage(brand, variant)
+  const src = usePlaceholder ? BRAND_PLACEHOLDER_IMAGE : resolvedSrc
 
   if (!brand) {
     return (

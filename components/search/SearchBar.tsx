@@ -24,9 +24,11 @@ interface CategoryItem {
 }
 
 export interface SearchBarProps {
+  /** Visual variant: hero = large with glow, header = compact */
+  variant?: 'hero' | 'header'
   /** Placeholder text for the input */
   placeholder?: string
-  /** Visual size */
+  /** Visual size (deprecated: use variant instead; lg = hero, sm = header) */
   size?: 'sm' | 'lg'
   /** Wrapper className */
   className?: string
@@ -40,7 +42,7 @@ export interface SearchBarProps {
   suggestionLimit?: number
   /** Search results path (default /search) */
   searchPath?: string
-  /** Product detail path (default /product) */
+  /** Product detail path (default /part-number) */
   productPath?: string
   /** Brand page path (default /brand) */
   brandPath?: string
@@ -105,6 +107,7 @@ type SuggestionOption =
   | { type: 'viewAll' }
 
 export function SearchBar({
+  variant: variantProp,
   placeholder = 'Search by part number, brand, or category',
   size = 'sm',
   className = '',
@@ -113,10 +116,12 @@ export function SearchBar({
   minLength = 2,
   suggestionLimit = 8,
   searchPath = '/search',
-  productPath = '/product',
+  productPath = '/part-number',
   brandPath = '/brand',
   categoryPath = '/category',
 }: SearchBarProps) {
+  const variant = variantProp ?? (size === 'lg' ? 'hero' : 'header')
+  const isHero = variant === 'hero'
   const [query, setQuery] = useState('')
   const [productSuggestions, setProductSuggestions] = useState<SearchSuggestion[]>([])
   const [allBrands, setAllBrands] = useState<BrandItem[]>([])
@@ -264,7 +269,6 @@ export function SearchBar({
     }
   }, [activeIndex])
 
-  const isLg = size === 'lg'
   const showDropdown = showSuggestions && dropdownOpen && (options.length > 0 || query.trim().length >= minLength)
 
   return (
@@ -272,14 +276,16 @@ export function SearchBar({
       <form onSubmit={handleSubmit} role="search">
         <div
           className={`
-            flex bg-white rounded-xl border-2 border-gray-200
+            flex items-center bg-white rounded-xl border-2 border-gray-200
             transition-all duration-200
-            focus-within:border-accent-500 focus-within:shadow-[0_0_0_3px_rgba(37,99,235,0.2)]
-            focus-within:ring-0 hover:border-gray-300
-            ${isLg ? 'p-2.5 shadow-xl' : 'p-1.5'}
+            focus-within:border-accent-500 focus-within:ring-0
+            ${isHero
+              ? 'h-14 min-h-[56px] px-4 shadow-xl shadow-accent-200/30 focus-within:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] hover:border-gray-300'
+              : 'h-10 min-h-[40px] px-2 focus-within:shadow-[0_0_0_3px_rgba(37,99,235,0.2)] hover:border-gray-300'
+            }
           `}
         >
-          <Search className={`text-gray-400 shrink-0 self-center ${isLg ? 'w-6 h-6 ml-3' : 'w-5 h-5 ml-2.5'}`} aria-hidden />
+          <Search className={`text-gray-400 shrink-0 self-center ${isHero ? 'w-6 h-6 ml-1' : 'w-5 h-5 ml-2'}`} aria-hidden />
           <input
             ref={inputRef}
             type="search"
@@ -294,16 +300,15 @@ export function SearchBar({
             aria-controls="search-suggestions"
             aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
             className={`
-              flex-1 bg-transparent border-0 outline-none text-gray-900 placeholder-gray-400
-              ${isLg ? 'pl-4 pr-4 py-4 text-lg' : 'pl-3 pr-4 py-2.5 text-sm'}
+              flex-1 bg-transparent border-0 outline-none text-gray-900 placeholder-gray-400 min-w-0
+              ${isHero ? 'pl-3 pr-4 text-base md:text-lg h-full' : 'pl-2 pr-3 text-sm h-full'}
             `}
           />
           <button
             type="submit"
             className={`
-              shrink-0 font-semibold text-white bg-accent-600 hover:bg-accent-700
-              rounded-lg transition-colors
-              ${isLg ? 'px-8 py-3 text-base' : 'px-5 py-2 text-sm'}
+              shrink-0 font-semibold text-white bg-accent-600 hover:bg-accent-700 rounded-lg transition-colors self-center
+              ${isHero ? 'px-6 py-2.5 text-base' : 'px-4 py-1.5 text-sm'}
             `}
           >
             Search
@@ -322,7 +327,7 @@ export function SearchBar({
           {productOptions.length > 0 && (
             <>
               <div className="px-4 py-2 bg-gray-50/80 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Products
+                Part Numbers
               </div>
               {productOptions.map((opt, idx) => {
                 const i = idx

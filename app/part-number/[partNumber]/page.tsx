@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { API_BASE_URL, SITE_URL, categoryToSlug } from '@/app/lib/constants'
-import { resolveProductImage } from '@/lib/imageResolver'
+import { getProductImage } from '@/lib/getProductImage'
 import { ProductHero } from '@/components/product/ProductHero'
 import { ProductDescriptionSpecsTabs } from '@/components/product/ProductDescriptionSpecsTabs'
 import { ProductSpecsCards } from '@/components/product/ProductSpecsCards'
@@ -174,7 +174,7 @@ export const dynamic = 'force-dynamic'
 
 function buildImageSrc(product: Record<string, unknown>): string {
   const partNumber = product.part_number as string | undefined
-  return resolveProductImage(partNumber)
+  return getProductImage(partNumber)
 }
 
 function buildDatasheetUrl(product: Record<string, unknown>, apiBase: string): string | null {

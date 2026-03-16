@@ -3,12 +3,35 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { SearchBar } from '@/components/search/SearchBar'
+import { HeroSearch } from '@/components/home/HeroSearch'
 import { getBrandHref } from '@/lib/brandUtils'
 import { API_BASE_URL } from '@/app/lib/constants'
 
 function slugFromName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+}
+
+function QuickBrandCard({ name, slug }: { name: string; slug: string }) {
+  const [logoError, setLogoError] = useState(false)
+  return (
+    <Link
+      href={getBrandHref({ name, slug })}
+      className="flex flex-col items-center justify-center w-20 rounded-xl bg-white/10 hover:bg-white/20 border border-slate-600/50 hover:border-slate-500 hover:shadow-lg hover:scale-105 transition-all duration-200 p-3"
+    >
+      {!logoError ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={`/brands/${slug}.png`}
+          alt=""
+          className="h-8 w-full object-contain mb-1.5 min-h-[2rem]"
+          onError={() => setLogoError(true)}
+        />
+      ) : null}
+      <span className="text-xs font-medium text-slate-200 text-center leading-tight">
+        {name}
+      </span>
+    </Link>
+  )
 }
 
 function useQuickBrands(limit: number) {
@@ -75,15 +98,9 @@ export function HeroSection() {
               Search millions of industrial components by part number, brand, or category.
             </p>
 
-            <div className="w-full max-w-xl mx-auto lg:mx-0 mb-6">
-              <div className="rounded-xl bg-white/95 border border-slate-600/50 shadow-xl overflow-hidden">
-                <SearchBar
-                  placeholder="Search by part number, brand, or category"
-                  size="lg"
-                  showSuggestions
-                  debounceMs={300}
-                  className="border-0 shadow-none"
-                />
+            <div className="w-full max-w-2xl mx-auto lg:mx-0 mb-6">
+              <div className="rounded-xl bg-white/95 border border-slate-600/50 shadow-xl overflow-hidden px-4 py-3">
+                <HeroSearch variant="hero" />
               </div>
             </div>
 
@@ -106,15 +123,10 @@ export function HeroSection() {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                 Quick brands
               </p>
-              <ul className="flex flex-wrap gap-2 justify-center lg:justify-start">
+              <ul className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 {quickBrands.map((brand) => (
                   <li key={brand.slug}>
-                    <Link
-                      href={getBrandHref({ name: brand.name, slug: brand.slug })}
-                      className="inline-flex px-4 py-2.5 rounded-lg text-sm font-medium text-slate-200 bg-white/5 border border-slate-600 hover:bg-white/10 hover:border-slate-500 transition-all duration-200"
-                    >
-                      {brand.name}
-                    </Link>
+                    <QuickBrandCard name={brand.name} slug={brand.slug} />
                   </li>
                 ))}
               </ul>

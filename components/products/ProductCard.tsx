@@ -1,14 +1,11 @@
 'use client'
 
-import { memo, useState } from 'react'
-import Image from 'next/image'
+import { memo } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { RFQButton } from '@/components/RFQButton'
 import { useCurrency } from '@/lib/hooks/useCurrency'
-import { resolveProductImage, PRODUCT_PLACEHOLDER_IMAGE } from '@/lib/imageResolver'
-
-const PLACEHOLDER_IMAGE = PRODUCT_PLACEHOLDER_IMAGE
+import { ProductImage } from '@/components/ui/ProductImage'
 
 function KeySpecs({
   quickSpecs,
@@ -89,9 +86,6 @@ function ProductCardInner({
   const inStock = availability === 'in_stock' || stock_quantity > 0
   const compact = variant === 'compact'
   const maker = brand ?? manufacturer ?? '—'
-  const [imgError, setImgError] = useState(false)
-  const displayImageUrl = resolveProductImage(part_number)
-  const showImage = displayImageUrl !== PLACEHOLDER_IMAGE && !imgError
 
   return (
     <motion.div
@@ -106,27 +100,14 @@ function ProductCardInner({
         href={`${productBasePath}/${encodeURIComponent(part_number)}`}
         className={`block relative bg-gray-50 overflow-hidden ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
       >
-        {showImage ? (
-          <Image
-            src={displayImageUrl}
+        <div className="absolute inset-0">
+          <ProductImage
+            partNumber={part_number}
             alt={`${maker} ${part_number}`}
-            fill
-            className="object-contain p-4 group-hover:scale-[1.02] transition-transform duration-200"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            loading="lazy"
-            unoptimized={displayImageUrl.startsWith("http")}
-            onError={() => setImgError(true)}
+            variant="card"
+            className="group-hover:scale-[1.02] transition-transform duration-200"
           />
-        ) : (
-          <Image
-            src={PLACEHOLDER_IMAGE}
-            alt=""
-            fill
-            className="object-contain p-4 bg-gray-50"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            loading="lazy"
-          />
-        )}
+        </div>
         <div className="absolute top-2 right-2">
           {inStock ? (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-accent-50 text-accent-700 border border-accent-200">

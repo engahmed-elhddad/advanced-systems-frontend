@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { BrandLogo } from '@/components/ui/BrandLogo'
-import { getBrandHref } from '@/lib/brandUtils'
 import { API_BASE_URL } from '@/app/lib/constants'
 import { BRAND_MAP } from '@/app/lib/brands'
+import { resolveBrandImage, BRAND_PLACEHOLDER_IMAGE } from '@/lib/imageResolver'
 
 interface BrandItem {
   name: string
@@ -21,7 +20,6 @@ function slugFromName(name: string): string {
     .replace(/[^a-z0-9-]/g, '')
 }
 
-/** Display name: use BRAND_MAP for known brands (IFM, ABB, etc.), else title case. */
 function brandDisplayName(name: string): string {
   if (!name || !name.trim()) return name
   const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
@@ -34,7 +32,6 @@ function brandDisplayName(name: string): string {
     .join(' ')
 }
 
-/** Convert logo filename to brand name: siemens.png → Siemens, abb.png → ABB */
 function filenameToBrandName(filename: string): string {
   const base = filename.replace(/\.(png|jpg|jpeg|webp|svg)$/i, '').trim()
   if (!base) return filename
@@ -43,7 +40,6 @@ function filenameToBrandName(filename: string): string {
   return withSpaces.replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-/** Merge brands from products API and from public/brands logos; dedupe by slug, sort by name. */
 async function fetchMergedBrands(): Promise<BrandItem[]> {
   const [productsRes, logosRes] = await Promise.all([
     fetch(`${API_BASE_URL}/products?limit=500`),
@@ -85,21 +81,40 @@ async function fetchMergedBrands(): Promise<BrandItem[]> {
   return list
 }
 
-export function BrandsSection() {
+function BrandCarouselLogo({
+  brand,
+  logoUrl,
+  className,
+}: {
+  brand: string
+  logoUrl?: string | null
+  className?: string
+}) {
+  const [src, setSrc] = useState(logoUrl ?? resolveBrandImage(brand))
+  useEffect(() => {
+    setSrc(logoUrl ?? resolveBrandImage(brand))
+  }, [brand, logoUrl])
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={brand}
+      loading="lazy"
+      onError={() => setSrc(BRAND_PLACEHOLDER_IMAGE)}
+      className={className}
+    />
+  )
+}
+
+export function BrandCarousel() {
   const [brands, setBrands] = useState<BrandItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(false)
     fetchMergedBrands()
       .then((list) => {
         if (!cancelled) setBrands(list)
-      })
-      .catch(() => {
-        if (!cancelled) setError(true)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -109,42 +124,34 @@ export function BrandsSection() {
 
   if (loading) {
     return (
-      <section className="bg-white py-8">
-        <h2 className="section-title mb-6">Trusted Brands</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-lg bg-gray-100 animate-pulse border border-gray-200" />
-          ))}
+      <section className="overflow-hidden w-full py-8 bg-white">
+        <div className="h-10 md:h-12 flex items-center justify-center">
+          <div className="h-8 w-48 rounded bg-gray-100 animate-pulse" />
         </div>
       </section>
     )
   }
 
-  if (error || !brands.length) {
-    return null
-  }
+  if (!brands.length) return null
 
   return (
-    <section className="bg-white py-8">
-      <h2 className="section-title mb-6">Trusted Brands</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-        {brands.map((brand) => (
+    <section
+      className="group relative w-full overflow-hidden py-8 bg-white before:pointer-events-none before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-24 before:bg-gradient-to-r before:from-white before:to-transparent before:content-[''] after:pointer-events-none after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-24 after:bg-gradient-to-l after:from-white after:to-transparent after:content-['']"
+      aria-label="Brand logos"
+    >
+      <div className="flex w-max gap-12 animate-scroll group-hover:[animation-play-state:paused]">
+        {[...brands, ...brands].map((brand, index) => (
           <Link
-            key={brand.slug}
-            href={getBrandHref({ name: brand.name, slug: brand.slug })}
-            className="flex flex-col items-center border rounded-lg p-4 bg-white hover:shadow-md transition-all hover:scale-105"
+            key={`${brand.slug}-${index}`}
+            href={`/brand/${encodeURIComponent(brand.slug)}`}
+            className="flex w-[140px] flex-shrink-0 items-center justify-center opacity-80 transition-opacity hover:opacity-100"
+            aria-label={brand.name}
           >
-            <div className="flex items-center justify-center min-h-[2.5rem] w-full">
-              <BrandLogo
-                brand={brand.name}
-                logoSrc={brand.logoUrl ?? undefined}
-                logoClassName="h-10 object-contain mx-auto"
-                badgeClassName="text-xs font-semibold"
-              />
-            </div>
-            <span className="text-sm font-semibold mt-2 text-center text-gray-700">
-              {brandDisplayName(brand.name)}
-            </span>
+            <BrandCarouselLogo
+              brand={brand.name}
+              logoUrl={brand.logoUrl}
+              className="h-8 w-full object-contain md:h-10"
+            />
           </Link>
         ))}
       </div>
