@@ -3,6 +3,9 @@ import { API_BASE_URL } from '@/app/lib/constants'
 import { CATEGORIES } from '@/app/lib/constants'
 import { CategoryCard } from '@/components/ui/CategoryCard'
 
+/** DB category values merged under the "Drives" slug (counts summed on categories page). */
+const DRIVES_CATEGORY_ALIASES = ['Drives', 'VFD', 'Variable Frequency Drive']
+
 export const metadata = {
   title: 'Product Categories | Advanced Systems',
   description: 'Browse industrial automation parts by category: PLC, drives, sensors, HMI, and more.',
@@ -27,6 +30,14 @@ async function getCategoryProductCount(categoryName: string): Promise<number> {
   }
 }
 
+/** Count for "Drives" = sum of products in Drives, VFD, and Variable Frequency Drive (no double-count). */
+async function getDrivesProductCount(): Promise<number> {
+  const counts = await Promise.all(
+    DRIVES_CATEGORY_ALIASES.map((cat) => getCategoryProductCount(cat))
+  )
+  return counts.reduce((a, b) => a + b, 0)
+}
+
 export default async function CategoriesPage() {
   let apiCategories: { name: string; slug?: string; product_count?: number }[] = []
   try {
@@ -40,7 +51,10 @@ export default async function CategoriesPage() {
 
   const categories = await Promise.all(
     baseCategories.map(async (cat) => {
-      const count = await getCategoryProductCount(cat.name)
+      const count =
+        cat.slug === 'drives'
+          ? await getDrivesProductCount()
+          : await getCategoryProductCount(cat.name)
       return { name: cat.name, slug: cat.slug, product_count: count }
     })
   )

@@ -8,6 +8,10 @@ import type { Metadata } from 'next'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://advancedsystems-int.com'
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
+/** When slug is "drives", products are fetched from these DB category values (merged). */
+const DRIVES_CATEGORY_ALIASES = ['Drives', 'VFD', 'Variable Frequency Drive'] as const
+const PER_PAGE = 24
+
 interface Props {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ page?: string; brand?: string }>
@@ -38,11 +42,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export const revalidate = 3600
 
-async function fetchProducts(category: string, page: number = 1, brand?: string) {
+async function fetchProducts(
+  category: string,
+  page: number = 1,
+  brand?: string,
+  limit: number = PER_PAGE
+) {
   try {
     const params = new URLSearchParams({
-      category: category,
-      limit: '24',
+      category,
+      limit: String(limit),
       page: String(page),
     })
     if (brand) params.set('brand', brand)
@@ -59,6 +68,28 @@ async function fetchProducts(category: string, page: number = 1, brand?: string)
   }
 }
 
+/** Fetch products for "drives" by querying Drives, VFD, and Variable Frequency Drive; merge and dedupe by part_number. */
+async function fetchDrivesProducts(page: number, brand?: string) {
+  const limitPerCategory = 200
+  const [r1, r2, r3] = await Promise.all(
+    DRIVES_CATEGORY_ALIASES.map((cat) =>
+      fetchProducts(cat, 1, brand, limitPerCategory)
+    )
+  )
+  const byPartNumber = new Map<string, Record<string, unknown>>()
+  for (const r of [r1.results, r2.results, r3.results]) {
+    for (const p of r) {
+      const key = String(p.part_number ?? '')
+      if (key && !byPartNumber.has(key)) byPartNumber.set(key, p)
+    }
+  }
+  const merged = Array.from(byPartNumber.values())
+  const count = merged.length
+  const start = (page - 1) * PER_PAGE
+  const results = merged.slice(start, start + PER_PAGE)
+  return { results, count }
+}
+
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { slug } = await params
   const { page: pageStr, brand } = await searchParams
@@ -71,7 +102,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   }
 
   const page = Math.max(1, parseInt(pageStr || '1', 10))
-  const { results, count } = await fetchProducts(categoryName, page, brand || undefined)
+  const { results, count } =
+    slug === 'drives'
+      ? await fetchDrivesProducts(page, brand || undefined)
+      : await fetchProducts(categoryName, page, brand || undefined)
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -98,7 +132,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                 <ProductCard key={String(p.part_number ?? '')} {...productToCardProps(p as never)} productBasePath="/part-number" />
               ))}
             </div>
-            {count > 24 && (
+            {count > PER_PAGE && (
               <div className="mt-8 flex justify-center gap-2">
                 {page > 1 && (
                   <Link
@@ -108,7 +142,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                     Previous
                   </Link>
                 )}
-                {page * 24 < count && (
+                {page * PER_PAGE < count && (
                   <Link
                     href={`/category/${slug}?page=${page + 1}${brand ? `&brand=${encodeURIComponent(brand)}` : ''}`}
                     className="px-4 py-2 rounded-lg bg-primary-500 text-white hover:bg-primary-600"

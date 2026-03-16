@@ -247,6 +247,11 @@ export default async function PartNumberPage({ params }: Props) {
             image_url: product.image_url,
             images: product.images,
             description: product.description,
+            specifications: product.specifications && typeof product.specifications === 'object' ? product.specifications : null,
+            series: product.series,
+            voltage: product.voltage,
+            current: product.current,
+            mounting_type: product.mounting_type,
           }}
           imageSrc={imgSrc}
           imageAlt={product.part_number}
