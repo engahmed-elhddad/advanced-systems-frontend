@@ -41,10 +41,7 @@ function resolveSpecs(product: any): Record<string, unknown> | null {
 }
 
 export function ProductDetail({ product, productBasePath = '/product' }: { product: any; productBasePath?: string }) {
-  const heroImageSrc = resolveProductImage(
-    product.part_number,
-    product.image_url ?? product.image ?? (product.images?.[0] ? (typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url) : undefined)
-  )
+  const heroImageSrc = resolveProductImage(product.part_number)
   const images = product.images && product.images.length > 0
     ? product.images
     : product.image_url || heroImageSrc

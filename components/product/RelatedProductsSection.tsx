@@ -75,7 +75,7 @@ export function RelatedProductsSection({
   }))
 
   const getImageSrc = (item: { part_number: string; image_url?: string; images?: string[] }) =>
-    resolveProductImage(item.part_number, item.image_url ?? (item.images?.[0] as string | undefined))
+    resolveProductImage(item.part_number)
 
   if (!items.length) return null
 

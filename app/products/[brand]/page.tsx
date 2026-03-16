@@ -128,7 +128,7 @@ export default async function BrandPage({ params }: { params: Promise<{ brand: s
         {!fetchError && products.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {products.map((p) => {
-              const imageSrc = resolveProductImage(p.part_number, p.image_url)
+              const imageSrc = resolveProductImage(p.part_number)
               const rfqHref = rfqMailtoHref(p.part_number)
               return (
                 <div

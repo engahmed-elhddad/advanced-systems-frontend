@@ -29,8 +29,7 @@ export interface ProductNotFoundViewProps {
 }
 
 function imageUrlFor(item: SimilarProductItem): string {
-  const u = item.image_url ?? (Array.isArray(item.images) ? item.images[0] : null)
-  return resolveProductImage(item.part_number, typeof u === 'string' ? u : undefined)
+  return resolveProductImage(item.part_number)
 }
 
 export function ProductNotFoundView({

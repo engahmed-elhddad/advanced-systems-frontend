@@ -115,7 +115,7 @@ export default async function SpecPage({ params, searchParams }: Props) {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {paginatedProducts.map((p) => {
-                const imageSrc = resolveProductImage(p.part_number, p.image_url)
+                const imageSrc = resolveProductImage(p.part_number)
                 const qty = p.offers?.[0]?.quantity ?? 0
                 const inStock = qty > 0
                 return (

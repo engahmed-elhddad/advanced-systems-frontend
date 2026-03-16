@@ -12,14 +12,11 @@ const PRODUCT_PLACEHOLDER = "/images/product-placeholder.png"
 const BRAND_PLACEHOLDER = "/images/brand-placeholder.png"
 
 /**
- * Resolve product image URL.
- * Priority: 1) imageUrl if full URL, 2) CDN/products/{partNumber}/main.png, 3) placeholder.
+ * Resolve product image URL from CDN.
+ * Uses CDN/products/{partNumber}/main.png; fallback: product-placeholder.png.
  */
-export function resolveProductImage(partNumber?: string, imageUrl?: string): string {
+export function resolveProductImage(partNumber?: string): string {
   const CDN = getCdnBase()
-  if (imageUrl && imageUrl.startsWith("http")) {
-    return imageUrl
-  }
   if (partNumber && CDN) {
     const part = partNumber.trim().replace(/\s+/g, "-")
     return `${CDN}/products/${part}/main.png`

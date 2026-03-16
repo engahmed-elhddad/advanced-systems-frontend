@@ -28,7 +28,7 @@ const EXAMPLE_QUERIES = [
 
 function ProductResultCard({ p, alternatives = [] }: { p: any; alternatives?: any[] }) {
   const [showSpecs, setShowSpecs] = useState(false)
-  const [imgSrc, setImgSrc] = useState(() => resolveProductImage(p?.part_number, p?.image_url ?? p?.image))
+  const [imgSrc, setImgSrc] = useState(() => resolveProductImage(p?.part_number))
   const specs = p.specifications || {}
   const hasSpecs = specs && typeof specs === 'object' && Object.keys(specs).length > 0
 

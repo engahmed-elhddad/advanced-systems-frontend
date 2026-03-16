@@ -178,7 +178,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
             {!fetchError && products.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
                 {products.map((p) => {
-                  const imageSrc = resolveProductImage(p.part_number, p.image_url)
+                  const imageSrc = resolveProductImage(p.part_number)
                   const rfqHref = rfqMailtoHref(p.part_number)
                   const offer = p.offers?.[0]
                   const qty = offer?.quantity ?? p.quantity ?? 0

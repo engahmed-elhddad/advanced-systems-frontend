@@ -90,7 +90,7 @@ function ProductCardInner({
   const compact = variant === 'compact'
   const maker = brand ?? manufacturer ?? '—'
   const [imgError, setImgError] = useState(false)
-  const displayImageUrl = resolveProductImage(part_number, image_url)
+  const displayImageUrl = resolveProductImage(part_number)
   const showImage = displayImageUrl !== PLACEHOLDER_IMAGE && !imgError
 
   return (

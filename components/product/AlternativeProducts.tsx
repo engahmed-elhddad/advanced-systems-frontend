@@ -68,7 +68,7 @@ export function AlternativeProducts({
             const volt = alt.voltage || specVal(specs, ['voltage', 'supply_voltage', 'rated_voltage'])
             const poles = alt.poles || specVal(specs, ['poles', 'number_of_poles'])
             const mfg = alt.manufacturer || ''
-            const imgSrc = resolveProductImage(alt.part_number, alt.image_url)
+            const imgSrc = resolveProductImage(alt.part_number)
             const showPlaceholder = imgSrc === PRODUCT_PLACEHOLDER_IMAGE
             return (
               <Link

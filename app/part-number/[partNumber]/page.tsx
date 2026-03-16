@@ -169,10 +169,7 @@ export const dynamic = 'force-dynamic'
 
 function buildImageSrc(product: Record<string, unknown>): string {
   const partNumber = product.part_number as string | undefined
-  const imageUrl =
-    (product.image_url as string | undefined) ??
-    (Array.isArray(product.images) ? (product.images[0] as string) : undefined)
-  return resolveProductImage(partNumber, imageUrl)
+  return resolveProductImage(partNumber)
 }
 
 function buildDatasheetUrl(product: Record<string, unknown>, apiBase: string): string | null {
@@ -305,12 +302,7 @@ export default async function PartNumberPage({ params }: Props) {
               <RelatedProducts
                 products={similarProducts}
                 productBasePath="/part-number"
-                imageUrl={(item) =>
-                  resolveProductImage(
-                    item.part_number,
-                    item.image_url ?? (Array.isArray(item.images) ? item.images[0] : undefined)
-                  )
-                }
+                imageUrl={(item) => resolveProductImage(item.part_number)}
                 title="Similar Products"
               />
             </div>
@@ -449,12 +441,7 @@ export default async function PartNumberPage({ params }: Props) {
             <RelatedProducts
               products={similarProducts}
               productBasePath="/part-number"
-              imageUrl={(item) =>
-                resolveProductImage(
-                  item.part_number,
-                  item.image_url ?? (Array.isArray(item.images) ? item.images[0] : undefined)
-                )
-              }
+              imageUrl={(item) => resolveProductImage(item.part_number)}
               title="Similar Products"
             />
           </div>

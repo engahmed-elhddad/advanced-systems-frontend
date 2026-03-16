@@ -29,11 +29,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
     typeof p.brand === 'string' ? p.brand : (p.brand?.name ?? p.manufacturer)
   const category =
     typeof p.category === 'string' ? p.category : (p.category?.name ?? undefined)
-  const rawImageUrl =
-    p.image_url ?? p.primary_image ?? p.image ?? (Array.isArray(p.images) && p.images[0]
-      ? (typeof p.images[0] === 'string' ? p.images[0] : (p.images[0] as { url?: string })?.url)
-      : undefined)
-  const imageUrl = resolveProductImage(p.part_number, rawImageUrl)
+  const imageUrl = resolveProductImage(p.part_number)
   const stock = p.stock_quantity ?? 0
   const isAvailable =
     p.availability === 'available' ||
