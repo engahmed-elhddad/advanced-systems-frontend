@@ -1,4 +1,5 @@
 import { getCategories } from '@/lib/api'
+import { API_BASE_URL } from '@/app/lib/constants'
 import { CATEGORIES } from '@/app/lib/constants'
 import { CategoryCard } from '@/components/ui/CategoryCard'
 
@@ -7,16 +8,42 @@ export const metadata = {
   description: 'Browse industrial automation parts by category: PLC, drives, sensors, HMI, and more.',
 }
 
+async function getCategoryProductCount(categoryName: string): Promise<number> {
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/products?category=${encodeURIComponent(categoryName)}&limit=1`,
+      { cache: 'no-store' }
+    )
+    if (!res.ok) return 0
+    const data = await res.json()
+    return (
+      data?.total ??
+      data?.count ??
+      (Array.isArray(data?.products) ? data.products.length : 0) ??
+      0
+    )
+  } catch {
+    return 0
+  }
+}
+
 export default async function CategoriesPage() {
   let apiCategories: { name: string; slug?: string; product_count?: number }[] = []
   try {
     const data = await getCategories()
     apiCategories = Array.isArray(data) ? data : data?.categories || []
   } catch {}
-  const categories =
+  const baseCategories =
     apiCategories.length > 0
       ? apiCategories
-      : CATEGORIES.map((c) => ({ name: c.name, slug: c.slug, product_count: 0 }))
+      : CATEGORIES.map((c) => ({ name: c.name, slug: c.slug }))
+
+  const categories = await Promise.all(
+    baseCategories.map(async (cat) => {
+      const count = await getCategoryProductCount(cat.name)
+      return { name: cat.name, slug: cat.slug, product_count: count }
+    })
+  )
 
   return (
     <div className="min-h-screen bg-white">

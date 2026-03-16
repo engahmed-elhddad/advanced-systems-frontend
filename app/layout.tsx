@@ -12,7 +12,7 @@ const IndustrialAssistant = dynamic(
   { ssr: false }
 )
 
-const inter = Inter({ subsets: ['latin'], display: 'swap' })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 
 export const metadata: Metadata = {
   title: {
@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
       </head>
-      <body className={`${inter.className} bg-white text-slate-900 antialiased`}>
+      <body className={`${inter.variable} ${inter.className} font-sans bg-white text-slate-900 antialiased`}>
         <QueryProvider>
         <CurrencyProvider>
           <Navbar />

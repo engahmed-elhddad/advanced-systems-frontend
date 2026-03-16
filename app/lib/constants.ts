@@ -27,7 +27,7 @@ export function whatsappHref(partNumber: string): string {
 
 export const CATEGORIES = [
   { name: "PLC", slug: "plc", icon: "🔲", description: "Programmable Logic Controllers for automation control" },
-  { name: "Drives", slug: "drives", icon: "⚡", description: "Variable frequency & servo drives for motor control" },
+  { name: "Drives (VFD)", slug: "drives", icon: "⚡", description: "Variable frequency & servo drives for motor control" },
   { name: "HMI", slug: "hmi", icon: "🖥️", description: "Human machine interface panels & touchscreens" },
   { name: "Sensors", slug: "sensors", icon: "📡", description: "Industrial proximity, vision & process sensors" },
   { name: "Power Supply", slug: "power-supply", icon: "🔌", description: "24V DC industrial DIN-rail power supplies" },

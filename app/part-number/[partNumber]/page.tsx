@@ -18,15 +18,19 @@ interface Props {
 }
 
 async function fetchProduct(partNumber: string) {
-  const decoded = decodeURIComponent(partNumber)
+  const decoded = decodeURIComponent(partNumber).trim()
   try {
     const res = await fetch(
-      `${API_BASE}/product/${encodeURIComponent(decoded)}`,
+      `${API_BASE}/products?search=${encodeURIComponent(decoded)}&limit=10`,
       { cache: 'no-store' }
     )
     if (!res.ok) return null
     const data = await res.json()
-    return data && (data.part_number || data.partNumber) ? data : null
+    const list = data?.products ?? data?.results ?? data?.items ?? (Array.isArray(data) ? data : [])
+    const product =
+      list.find((p: any) => (p.part_number || p.partNumber || '').trim() === decoded) ??
+      list[0]
+    return product && (product.part_number || product.partNumber) ? product : null
   } catch {
     return null
   }

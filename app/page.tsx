@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { HeroSection } from '@/components/home/HeroSection'
-import { TrustedBrands } from '@/components/home/TrustedBrands'
+import { BrandsSection } from '@/components/home/BrandsSection'
 import { TopCategories } from '@/components/home/TopCategories'
 import { FeaturedProducts } from '@/components/home/FeaturedProducts'
 import { AutoProductCarousel } from '@/components/home/AutoProductCarousel'
@@ -18,7 +18,7 @@ export default function HomePage() {
       <HeroSection />
       <div className="page-container space-y-14 sm:space-y-16 py-12 sm:py-16 bg-gray-50">
         <Suspense fallback={<SectionSkeleton className="h-40" />}>
-          <TrustedBrands />
+          <BrandsSection />
         </Suspense>
         <Suspense fallback={<SectionSkeleton className="h-48" />}>
           <TopCategories />
