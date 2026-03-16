@@ -333,7 +333,7 @@ export default async function PartNumberPage({ params }: Props) {
             <RelatedProducts
               products={similarProducts}
               productBasePath="/part-number"
-              imageUrl={(item) => resolveProductImage(item.part_number)}
+              imageUrl={(item) => getProductImage(item.part_number)}
               title="Similar Products"
             />
           </div>
