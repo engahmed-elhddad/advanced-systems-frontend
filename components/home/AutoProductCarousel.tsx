@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { ProductCard } from '@/components/products/ProductCard'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { productToCardProps } from '@/lib/productMappers'
-import { searchProducts } from '@/lib/api'
+import { getProducts } from '@/lib/api'
 
 const CARD_MIN_WIDTH = 280
 
@@ -13,7 +13,7 @@ export function AutoProductCarousel() {
 
   useEffect(() => {
     let cancelled = false
-    searchProducts({ q: '', size: 20 })
+    getProducts({ q: '', page: 1, limit: 20 })
       .then((data: any) => {
         if (cancelled) return
         const list = data?.results ?? data?.products ?? data?.items ?? (Array.isArray(data) ? data : [])
