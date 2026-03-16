@@ -145,7 +145,7 @@ export function ComponentIntelligence({
                   className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-amber-200 hover:border-amber-400 hover:shadow-sm transition-all group"
                 >
                   {alt.manufacturer && (
-                    <BrandLogo brand={alt.manufacturer} logoClassName="h-5 max-w-[60px] object-contain" badgeClassName="hidden" />
+                    <BrandLogo brand={alt.manufacturer} variant="square" logoClassName="h-5 max-w-[60px] object-contain" badgeClassName="hidden" />
                   )}
                   <span className="font-mono font-medium text-slate-900 group-hover:text-primary-600">
                     {alt.part_number}

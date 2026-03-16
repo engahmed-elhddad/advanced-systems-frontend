@@ -85,9 +85,14 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-12px)" },
         },
+        scrollProducts: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         float: "float 4s ease-in-out infinite",
+        scroll: "scrollProducts 25s linear infinite",
       },
     },
   },

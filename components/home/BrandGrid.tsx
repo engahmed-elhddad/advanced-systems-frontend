@@ -98,9 +98,9 @@ export function BrandGrid({
         <div className="flex items-center justify-between mb-6">
           <h2 className="section-title">{title}</h2>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-xl bg-slate-100 animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="h-36 rounded-xl bg-gray-100 animate-pulse" />
           ))}
         </div>
       </section>
@@ -134,29 +134,30 @@ export function BrandGrid({
         )}
       </div>
       <motion.div
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6"
         variants={container}
         initial="hidden"
         animate="show"
       >
         {brands.map((brand) => (
-          <motion.div key={brand.name} variants={item}>
+          <motion.div key={brand.name} variants={item} className="flex justify-center">
             <Link
               href={getBrandHref(brand)}
-              className="flex flex-col items-center gap-2.5 p-5 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-accent-200 hover:-translate-y-0.5 transition-all duration-200 group"
+              className="group flex flex-col items-center justify-center p-6 rounded-xl bg-white border border-gray-200 transition duration-300 ease-out hover:shadow-lg hover:scale-105 cursor-pointer w-full max-w-[200px]"
             >
-              <div className="h-12 flex items-center justify-center">
+              <div className="flex items-center justify-center min-h-[2.5rem]">
                 <BrandLogo
                   brand={brand.name}
-                  logoClassName="h-10 max-w-[90px] object-contain opacity-90 group-hover:opacity-100"
+                  variant="default"
+                  logoClassName="h-10 object-contain mb-2 transition duration-300 group-hover:scale-110"
                   badgeClassName="hidden"
                 />
               </div>
-              <span className="font-medium text-slate-800 text-sm group-hover:text-accent-700 truncate w-full text-center transition-colors">
+              <span className="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition truncate w-full text-center">
                 {brand.name}
               </span>
               {(brand.product_count ?? brand.count ?? 0) > 0 && (
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-gray-500 mt-0.5">
                   {brand.product_count ?? brand.count} products
                 </span>
               )}

@@ -3,6 +3,7 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { TrustedBrands } from '@/components/home/TrustedBrands'
 import { TopCategories } from '@/components/home/TopCategories'
 import { FeaturedProducts } from '@/components/home/FeaturedProducts'
+import { AutoProductCarousel } from '@/components/home/AutoProductCarousel'
 import { RFQBanner } from '@/components/home/RFQBanner'
 import type { Metadata } from 'next'
 
@@ -24,6 +25,9 @@ export default function HomePage() {
         </Suspense>
         <Suspense fallback={<SectionSkeleton className="h-80" />}>
           <FeaturedProducts />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton className="h-72" />}>
+          <AutoProductCarousel />
         </Suspense>
         <RFQBanner />
       </div>

@@ -99,7 +99,7 @@ export function AlternativeProducts({
                 <div className="p-3 flex flex-col flex-1">
                   {mfg && (
                     <div className="mb-1">
-                      <BrandLogo brand={mfg} logoClassName="h-6 max-w-[80px] object-contain" />
+                      <BrandLogo brand={mfg} variant="square" logoClassName="h-6 max-w-[80px] object-contain" />
                     </div>
                   )}
                   <span className="font-mono font-semibold text-gray-900 text-sm block truncate">

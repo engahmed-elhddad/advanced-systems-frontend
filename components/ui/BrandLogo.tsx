@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { resolveBrandImage, BRAND_PLACEHOLDER_IMAGE } from "@/lib/imageResolver"
+import { resolveBrandImage, BRAND_PLACEHOLDER_IMAGE, type BrandLogoVariant } from "@/lib/imageResolver"
 
 interface BrandLogoProps {
   /** Display name of the brand, e.g. "Siemens", "IFM", "ABB" */
   brand: string
+  /** Logo variant: default = .webp (grids), circle = _circle.png (badges), square = _square.png (product cards). */
+  variant?: BrandLogoVariant
   /** Extra classes for the <img> element */
   logoClassName?: string
   /** Extra classes for the fallback text badge */
@@ -13,13 +15,13 @@ interface BrandLogoProps {
 }
 
 /**
- * Shows the brand's logo from CDN (resolveBrandImage → CDN/brands/{brand}.webp).
+ * Shows the brand's logo from CDN (resolveBrandImage → CDN/cdn/brands/{brand}.webp | _circle.png | _square.png).
  * Falls back to placeholder image or text badge if the image fails to load.
  */
-export function BrandLogo({ brand, logoClassName, badgeClassName }: BrandLogoProps) {
+export function BrandLogo({ brand, variant = "default", logoClassName, badgeClassName }: BrandLogoProps) {
   const [usePlaceholder, setUsePlaceholder] = useState(false)
-  useEffect(() => setUsePlaceholder(false), [brand])
-  const src = usePlaceholder ? BRAND_PLACEHOLDER_IMAGE : resolveBrandImage(brand)
+  useEffect(() => setUsePlaceholder(false), [brand, variant])
+  const src = usePlaceholder ? BRAND_PLACEHOLDER_IMAGE : resolveBrandImage(brand, variant)
 
   if (!brand) {
     return (

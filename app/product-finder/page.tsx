@@ -304,7 +304,7 @@ export default function ProductFinderPage() {
                       <div className="p-4">
                         {p.manufacturer && (
                           <div className="mb-1">
-                            <BrandLogo brand={p.manufacturer} logoClassName="h-5 max-w-[80px]" badgeClassName="hidden" />
+                            <BrandLogo brand={p.manufacturer} variant="square" logoClassName="h-5 max-w-[80px]" badgeClassName="hidden" />
                           </div>
                         )}
                         <Link

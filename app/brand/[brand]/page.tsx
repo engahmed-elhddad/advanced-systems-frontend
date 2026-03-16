@@ -110,7 +110,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
             </ol>
           </nav>
           <div className="flex items-center gap-3 mb-3">
-            <BrandLogo brand={brand} logoClassName="h-10 max-w-[120px]" badgeClassName="px-3 py-1 text-xs bg-primary-50 text-primary-600 border border-primary-200 rounded-lg" />
+            <BrandLogo brand={brand} variant="default" logoClassName="h-10 max-w-[120px]" badgeClassName="px-3 py-1 text-xs bg-primary-50 text-primary-600 border border-primary-200 rounded-lg" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
             {brand} Industrial Automation Parts
@@ -204,7 +204,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
                       </Link>
                       <div className="flex-1 flex flex-col p-3 gap-2">
                         <div className="flex items-center justify-between gap-2 min-h-[20px]">
-                          <BrandLogo brand={p.manufacturer || brand} badgeClassName="text-xs" />
+                          <BrandLogo brand={p.manufacturer || brand} variant="square" badgeClassName="text-xs" />
                         </div>
                         <Link href={`/product/${p.part_number}`} className="font-mono font-semibold text-gray-900 text-sm group-hover:text-primary-600 transition truncate" title={p.part_number}>
                           {p.part_number}

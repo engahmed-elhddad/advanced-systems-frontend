@@ -143,7 +143,7 @@ export default async function AlternativesPage({ params }: Props) {
                   <div className="p-4 flex flex-col flex-1">
                     {alt.manufacturer && (
                       <div className="mb-2">
-                        <BrandLogo brand={alt.manufacturer} logoClassName="h-6 max-w-[80px] object-contain" badgeClassName="hidden" />
+                        <BrandLogo brand={alt.manufacturer} variant="square" logoClassName="h-6 max-w-[80px] object-contain" badgeClassName="hidden" />
                       </div>
                     )}
                     <span className="font-mono font-semibold text-slate-900 text-lg block truncate">

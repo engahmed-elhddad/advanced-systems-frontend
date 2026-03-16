@@ -59,9 +59,9 @@ export function TrustedBrands() {
     return (
       <section className="bg-white">
         <h2 className="section-title mb-6">Trusted Brands</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-28 rounded-xl bg-slate-100 animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="h-36 rounded-xl bg-gray-100 animate-pulse" />
           ))}
         </div>
       </section>
@@ -75,25 +75,26 @@ export function TrustedBrands() {
   return (
     <section className="bg-white">
       <h2 className="section-title mb-6">Trusted Brands</h2>
-      {/* Grid: 2 cols mobile, 3 tablet (sm), 6 desktop (lg) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {brands.map((brand) => (
-          <Link
-            key={brand.slug}
-            href={getBrandHref({ name: brand.name, slug: brand.slug })}
-            className="flex flex-col items-center gap-3 p-5 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 group"
-          >
-            <div className="h-12 flex items-center justify-center w-full">
+          <div key={brand.slug} className="flex justify-center">
+            <Link
+              href={getBrandHref({ name: brand.name, slug: brand.slug })}
+              className="group flex flex-col items-center justify-center p-6 rounded-xl bg-white border border-gray-200 transition duration-300 ease-out hover:shadow-lg hover:scale-105 cursor-pointer w-full max-w-[200px]"
+            >
+            <div className="flex items-center justify-center min-h-[2.5rem]">
               <BrandLogo
                 brand={brand.name}
-                logoClassName="h-10 max-w-[90px] object-contain opacity-90 group-hover:opacity-100"
+                variant="default"
+                logoClassName="h-10 object-contain mb-2 transition duration-300 group-hover:scale-110"
                 badgeClassName="text-xs font-semibold"
               />
             </div>
-            <span className="font-medium text-slate-800 text-sm text-center truncate w-full group-hover:text-accent-600 transition-colors">
+            <span className="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition truncate w-full text-center">
               {brand.name}
             </span>
           </Link>
+          </div>
         ))}
       </div>
     </section>

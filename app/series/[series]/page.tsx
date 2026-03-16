@@ -140,7 +140,7 @@ export default async function SeriesPage({ params, searchParams }: Props) {
                       </div>
                     </Link>
                     <div className="flex-1 flex flex-col p-3 gap-2">
-                      <BrandLogo brand={p.manufacturer || p.brand || ''} badgeClassName="text-xs" />
+                      <BrandLogo brand={p.manufacturer || p.brand || ''} variant="square" badgeClassName="text-xs" />
                       <Link href={`/product/${p.part_number}`} className="font-mono font-semibold text-gray-900 text-sm hover:text-primary-600 truncate">
                         {p.part_number}
                       </Link>
