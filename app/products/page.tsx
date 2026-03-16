@@ -81,7 +81,7 @@ export default async function ProductsPage({
           <Suspense fallback={<ProductGridSkeleton count={10} />}>
             {products.length > 0 ? (
               <>
-                <ProductGrid products={products as Array<Record<string, unknown>>} productBasePath="/product" />
+                <ProductGrid products={products as Array<Record<string, unknown>>} productBasePath="/part-number" />
                 {totalPages > 1 && (
                   <div className="flex justify-center gap-2 mt-10">
                     {pageNum > 1 && (

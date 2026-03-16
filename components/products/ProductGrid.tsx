@@ -28,7 +28,7 @@ const item = {
 
 function ProductGridInner({
   products,
-  productBasePath = '/product',
+  productBasePath = '/part-number',
   columns = 'default',
 }: ProductGridProps) {
   return (

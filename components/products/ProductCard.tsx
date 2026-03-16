@@ -83,7 +83,7 @@ function ProductCardInner({
   price_usd,
   quickSpecs,
   variant = 'default',
-  productBasePath = '/product',
+  productBasePath = '/part-number',
 }: ProductCardProps) {
   const { format } = useCurrency()
   const inStock = availability === 'in_stock' || stock_quantity > 0

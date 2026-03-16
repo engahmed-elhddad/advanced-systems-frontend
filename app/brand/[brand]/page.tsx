@@ -31,10 +31,18 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
+/** Normalize URL slug to display name: "allen-bradley" → "Allen Bradley", "siemens" → "Siemens" */
+function slugToBrandName(slug: string): string {
+  const lower = slug.toLowerCase().trim()
+  const fromMap = BRAND_MAP[lower]
+  if (fromMap) return fromMap
+  return decodeURIComponent(slug).replace(/-/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
+}
+
 export default async function BrandPage({ params, searchParams }: Props) {
   const { brand: brandSlug } = await params
   const sp = await searchParams
-  const brand = BRAND_MAP[brandSlug.toLowerCase()] ?? decodeURIComponent(brandSlug).replace(/\b\w/g, (l: string) => l.toUpperCase())
+  const brand = slugToBrandName(brandSlug)
   const page = Math.max(1, Number(sp.page) || 1)
   const categorySlugParam = sp.category || ""
   const category = categorySlugParam
@@ -43,25 +51,30 @@ export default async function BrandPage({ params, searchParams }: Props) {
 
   const API = API_BASE_URL
 
-  let products: { part_number: string; manufacturer?: string; images?: string[]; image?: string; description?: string; category?: string; quantity?: number; offers?: { quantity?: number; availability?: string }[] }[] = []
+  // DEBUG: verify brand/category/part_number values (remove in production)
+  if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
+    console.debug("[BrandPage] brand=%s category=%s slug=%s", brand, category || "(all)", brandSlug)
+  }
+
+  let products: { part_number: string; manufacturer?: string; images?: string[]; image?: string; description?: string; category?: string; quantity?: number; stock_quantity?: number; availability?: string; offers?: { quantity?: number; availability?: string }[] }[] = []
   let totalPages = 1
   let categories: string[] = []
   let fetchError = false
 
   try {
-    const params = new URLSearchParams({
-      q: "",
-      brand: brand,
+    const queryParams = new URLSearchParams({
+      brand,
       page: page.toString(),
       limit: "20",
     })
-    if (category) params.set("category", category)
-    const res = await fetch(`${API}/search?${params}`, { cache: "no-store" })
+    if (category) queryParams.set("category", category)
+    const res = await fetch(`${API}/products?${queryParams}`, { cache: "no-store" })
     if (res.ok) {
       const data = await res.json()
-      products = data?.results ?? data?.products ?? []
-      const total = data?.total ?? data?.count ?? products.length
-      totalPages = Math.max(1, Math.ceil(total / 20))
+      products = data?.products ?? data?.results ?? []
+      const total = data?.total ?? products.length
+      totalPages = Math.max(1, data?.pages ?? Math.ceil(total / 20))
     } else {
       fetchError = true
     }
@@ -180,13 +193,12 @@ export default async function BrandPage({ params, searchParams }: Props) {
                 {products.map((p) => {
                   const imageSrc = resolveProductImage(p.part_number)
                   const rfqHref = rfqMailtoHref(p.part_number)
-                  const offer = p.offers?.[0]
-                  const qty = offer?.quantity ?? p.quantity ?? 0
-                  const inStock = qty > 0
+                  const qty = p.stock_quantity ?? p.offers?.[0]?.quantity ?? p.quantity ?? 0
+                  const inStock = qty > 0 || p.availability === "in_stock"
 
                   return (
                     <div key={p.part_number} className="card card-hover group flex flex-col overflow-hidden">
-                      <Link href={`/product/${p.part_number}`} className="block relative">
+                      <Link href={`/part-number/${encodeURIComponent(p.part_number)}`} className="block relative">
                         <div className="aspect-square flex items-center justify-center p-3 bg-gray-50 border-b border-gray-100 overflow-hidden">
                           <ProductImageWithFallback
                             src={imageSrc}
@@ -206,7 +218,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
                         <div className="flex items-center justify-between gap-2 min-h-[20px]">
                           <BrandLogo brand={p.manufacturer || brand} variant="square" badgeClassName="text-xs" />
                         </div>
-                        <Link href={`/product/${p.part_number}`} className="font-mono font-semibold text-gray-900 text-sm group-hover:text-primary-600 transition truncate" title={p.part_number}>
+                        <Link href={`/part-number/${encodeURIComponent(p.part_number)}`} className="font-mono font-semibold text-gray-900 text-sm group-hover:text-primary-600 transition truncate" title={p.part_number}>
                           {p.part_number}
                         </Link>
                         {p.description && <p className="text-gray-500 text-xs line-clamp-2 leading-snug flex-1">{p.description}</p>}

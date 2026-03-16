@@ -41,16 +41,15 @@ export const revalidate = 3600
 async function fetchProducts(category: string, page: number = 1, brand?: string) {
   try {
     const params = new URLSearchParams({
-      q: '',
       category: category,
       limit: '24',
       page: String(page),
     })
     if (brand) params.set('brand', brand)
-    const res = await fetch(`${API_BASE}/search?${params}`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE}/products?${params}`, { next: { revalidate: 3600 } })
     if (!res.ok) return { results: [], count: 0 }
     const data = await res.json()
-    const results = data.results ?? data.products ?? []
+    const results = data.products ?? data.results ?? []
     return {
       results,
       count: data.total ?? data.count ?? results.length,
@@ -65,6 +64,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const { page: pageStr, brand } = await searchParams
   const categoryName = slugToCategoryName(slug)
   if (!categoryName) notFound()
+
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.debug('[CategoryPage] category=%s slug=%s brand=%s', categoryName, slug, brand || '(none)')
+  }
 
   const page = Math.max(1, parseInt(pageStr || '1', 10))
   const { results, count } = await fetchProducts(categoryName, page, brand || undefined)
@@ -91,7 +95,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {results.map((p: Record<string, unknown>) => (
-                <ProductCard key={String(p.part_number ?? '')} {...productToCardProps(p as never)} productBasePath="/product" />
+                <ProductCard key={String(p.part_number ?? '')} {...productToCardProps(p as never)} productBasePath="/part-number" />
               ))}
             </div>
             {count > 24 && (

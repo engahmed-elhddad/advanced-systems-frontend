@@ -28,7 +28,7 @@ export interface CrossReferencesProps {
 export function CrossReferences({
   crossRefs,
   currentProduct,
-  productBasePath = '/product',
+  productBasePath = '/part-number',
   imageUrl,
   className = '',
 }: CrossReferencesProps) {

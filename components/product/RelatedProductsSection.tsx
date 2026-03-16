@@ -25,7 +25,7 @@ interface SuggestionItem {
 export function RelatedProductsSection({
   partNumber,
   apiBase = API_BASE_URL,
-  productBasePath = '/product',
+  productBasePath = '/part-number',
   title = 'Related Products',
   className = '',
 }: RelatedProductsSectionProps) {

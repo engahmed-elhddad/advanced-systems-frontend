@@ -131,7 +131,7 @@ export default async function SeriesPage({ params, searchParams }: Props) {
                 const inStock = qty > 0
                 return (
                   <div key={p.part_number} className="card card-hover group flex flex-col overflow-hidden">
-                    <Link href={`/product/${p.part_number}`} className="block relative">
+                    <Link href={`/part-number/${encodeURIComponent(p.part_number)}`} className="block relative">
                       <div className="aspect-square flex items-center justify-center p-3 bg-gray-50 border-b border-gray-100 overflow-hidden">
                         <ProductImageWithFallback src={imageSrc} alt={p.part_number} className="max-h-full w-full object-contain group-hover:scale-105 transition-transform duration-300" />
                       </div>
@@ -141,7 +141,7 @@ export default async function SeriesPage({ params, searchParams }: Props) {
                     </Link>
                     <div className="flex-1 flex flex-col p-3 gap-2">
                       <BrandLogo brand={p.manufacturer || p.brand || ''} variant="square" badgeClassName="text-xs" />
-                      <Link href={`/product/${p.part_number}`} className="font-mono font-semibold text-gray-900 text-sm hover:text-primary-600 truncate">
+                      <Link href={`/part-number/${encodeURIComponent(p.part_number)}`} className="font-mono font-semibold text-gray-900 text-sm hover:text-primary-600 truncate">
                         {p.part_number}
                       </Link>
                       {p.category && (

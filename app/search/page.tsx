@@ -699,7 +699,7 @@ function SearchResults() {
             <>
               <ProductGrid
                 products={sortedProducts}
-                productBasePath="/product"
+                productBasePath="/part-number"
               />
 
               {/* Compatible alternatives (when search returns part-number results) */}
@@ -709,7 +709,7 @@ function SearchResults() {
                   <p className="text-sm text-gray-500 mb-4">Equivalent parts from other brands for &quot;{q}&quot;</p>
                   <ProductGrid
                     products={alternatives.slice(0, 8)}
-                    productBasePath="/product"
+                    productBasePath="/part-number"
                   />
                 </div>
               )}

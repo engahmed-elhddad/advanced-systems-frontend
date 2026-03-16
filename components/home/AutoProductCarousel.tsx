@@ -45,7 +45,7 @@ export function AutoProductCarousel() {
             >
               <ProductCard
                 {...props}
-                productBasePath="/product"
+                productBasePath="/part-number"
               />
             </div>
           ))}
@@ -57,7 +57,7 @@ export function AutoProductCarousel() {
             >
               <ProductCard
                 {...props}
-                productBasePath="/product"
+                productBasePath="/part-number"
               />
             </div>
           ))}

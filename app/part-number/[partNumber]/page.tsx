@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { API_BASE_URL, SITE_URL, categoryToSlug } from '@/app/lib/constants'
 import { resolveProductImage } from '@/lib/imageResolver'
 import { ProductHero } from '@/components/product/ProductHero'
@@ -184,133 +185,15 @@ function buildDatasheetUrl(product: Record<string, unknown>, apiBase: string): s
 export default async function PartNumberPage({ params }: Props) {
   const { partNumber } = await params
   const decoded = decodeURIComponent(partNumber)
+
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.debug('[PartNumberPage] part_number=%s', decoded)
+  }
+
   const product = await fetchProduct(decoded)
 
-  if (!product) {
-    const intelligence = await fetchIntelligence(decoded)
-    const similarProducts = await fetchSimilarProducts(decoded, intelligence, true)
-    const brand = intelligence?.manufacturer ?? intelligence?.brand ?? 'Industrial Automation'
-    const category = intelligence?.category ?? 'Industrial Components'
-    const description =
-      intelligence?.description ??
-      `${decoded} is an industrial automation component. Contact Advanced Systems for availability, pricing, and lead time.`
-    const virtualProduct = {
-      part_number: decoded,
-      brand,
-      manufacturer: brand,
-      category,
-      availability: 'on_request',
-      image_url: undefined as string | undefined,
-      images: [] as string[],
-      description,
-      specifications: null,
-      series: intelligence?.series ?? null,
-    }
-    const canonicalUrl = `${SITE_URL}/part-number/${encodeURIComponent(decoded)}`
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: decoded,
-      description,
-      brand: { '@type': 'Brand', name: brand },
-      mpn: decoded,
-      url: canonicalUrl,
-    }
-
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <div className="page-container py-8">
-          <nav className="text-sm text-gray-500 mb-6">
-            <Link href="/" className="hover:text-blue-600 transition-colors">
-              Home
-            </Link>
-            <span className="mx-2">/</span>
-            {category && (
-              <>
-                <Link
-                  href={
-                    categoryToSlug(category)
-                      ? `/category/${categoryToSlug(category)}`
-                      : `/search?category=${encodeURIComponent(category)}`
-                  }
-                  className="hover:text-blue-600 transition-colors"
-                >
-                  {category}
-                </Link>
-                <span className="mx-2">/</span>
-              </>
-            )}
-            <span className="text-gray-900 font-medium">{decoded}</span>
-          </nav>
-
-          <ProductHero
-            product={virtualProduct}
-            imageSrc="/images/product-placeholder.png"
-            imageAlt={decoded}
-            apiBase={API_BASE}
-            datasheetUrl={null}
-            productBasePath="/part-number"
-            categoryHref={
-              category
-                ? categoryToSlug(category)
-                  ? `/category/${categoryToSlug(category)}`
-                  : `/search?category=${encodeURIComponent(category)}`
-                : null
-            }
-          />
-
-          <div className="mt-10">
-            <ProductSpecsCards
-              product={{
-                specifications: null,
-                series: virtualProduct.series,
-              }}
-            />
-          </div>
-
-          <div className="mt-10">
-            <ProductSpecificationsTable specifications={null} />
-          </div>
-
-          <section className="mt-10">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">
-              Request a Quote
-            </h2>
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md flex flex-wrap items-center gap-4">
-              <Link
-                href={`/rfq?part_number=${encodeURIComponent(decoded)}`}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg transition-all"
-              >
-                Request Quote for {decoded}
-              </Link>
-              <p className="text-sm text-gray-600">
-                {decoded} is not in our catalog. We may still be able to source it—request a quote for pricing and availability.
-              </p>
-            </div>
-          </section>
-
-          <div className="mt-10">
-            <ProductDocumentation partNumber={decoded} datasheetUrl={null} apiBase={API_BASE} />
-          </div>
-
-          {similarProducts.length > 0 && (
-            <div className="mt-12">
-              <RelatedProducts
-                products={similarProducts}
-                productBasePath="/part-number"
-                imageUrl={(item) => resolveProductImage(item.part_number)}
-                title="Similar Products"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
+  if (!product) return notFound()
 
   const categoryName = product.category ?? ''
   const imgSrc = buildImageSrc(product)

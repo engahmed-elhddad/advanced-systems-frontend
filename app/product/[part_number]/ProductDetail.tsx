@@ -40,7 +40,7 @@ function resolveSpecs(product: any): Record<string, unknown> | null {
   return null
 }
 
-export function ProductDetail({ product, productBasePath = '/product' }: { product: any; productBasePath?: string }) {
+export function ProductDetail({ product, productBasePath = '/part-number' }: { product: any; productBasePath?: string }) {
   const heroImageSrc = resolveProductImage(product.part_number)
   const images = product.images && product.images.length > 0
     ? product.images

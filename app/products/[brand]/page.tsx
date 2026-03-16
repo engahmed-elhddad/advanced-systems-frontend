@@ -135,7 +135,7 @@ export default async function BrandPage({ params }: { params: Promise<{ brand: s
                   key={p.part_number}
                   className="card-hover group flex flex-col rounded-xl border border-[#1e2d4f] bg-[#131d35] overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-sky-500/50 hover:shadow-xl hover:shadow-sky-500/10"
                 >
-                  <Link href={`/product/${p.part_number}`} className="block relative">
+                  <Link href={`/part-number/${encodeURIComponent(p.part_number)}`} className="block relative">
                     <div className="aspect-square flex items-center justify-center p-3 bg-[#0f1629] border-b border-[#1e2d4f] overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -159,7 +159,7 @@ export default async function BrandPage({ params }: { params: Promise<{ brand: s
                       {p.manufacturer || brand}
                     </span>
                     <Link
-                      href={`/product/${p.part_number}`}
+                      href={`/part-number/${encodeURIComponent(p.part_number)}`}
                       className="text-sky-300 font-bold text-sm truncate hover:text-sky-200 transition"
                       title={p.part_number}
                     >
