@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Zap, Mail, Globe, Shield } from "lucide-react";
 
+const COPYRIGHT_YEAR = 2026;
+
 export function Footer() {
   return (
     <footer className="bg-industrial-950 border-t border-industrial-800 mt-auto">
@@ -52,7 +54,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-industrial-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-industrial-500 text-sm">© 2024 Advanced Systems. All rights reserved.</p>
+          <p className="text-industrial-500 text-sm">© {COPYRIGHT_YEAR} Advanced Systems. All rights reserved.</p>
           <div className="flex gap-4 text-sm text-industrial-500">
             <Link href="/sitemap.xml" className="hover:text-industrial-300 transition-colors">Sitemap</Link>
           </div>

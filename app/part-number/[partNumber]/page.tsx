@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import Script from 'next/script'
 import { API_BASE_URL, SITE_URL, categoryToSlug } from '@/app/lib/constants'
 import { getProductImage } from '@/lib/getProductImage'
 import { ProductHero } from '@/components/product/ProductHero'
@@ -21,7 +22,7 @@ async function fetchProduct(partNumber: string) {
   const decoded = decodeURIComponent(partNumber).trim()
   try {
     const res = await fetch(
-      `${API_BASE}/products?search=${encodeURIComponent(decoded)}&limit=10`,
+      `${API_BASE}/api/v1/products/?search=${encodeURIComponent(decoded)}&size=10`,
       { cache: 'no-store' }
     )
     if (!res.ok) return null
@@ -66,7 +67,7 @@ async function fetchSimilarProducts(
 
   try {
     const res = await fetch(
-      `${API_BASE}/search?q=${encodeURIComponent(prefix)}&limit=12`,
+      `${API_BASE}/api/v1/search/?q=${encodeURIComponent(prefix)}&size=12`,
       { cache: 'no-store' }
     )
     if (res.ok) {
@@ -98,7 +99,7 @@ async function fetchSimilarProducts(
   if (brand && typeof brand === 'string') {
     try {
       const res = await fetch(
-        `${API_BASE}/search?brand=${encodeURIComponent(brand)}&limit=${8 - results.length}`,
+        `${API_BASE}/api/v1/search/?q=${encodeURIComponent(brand)}&brand=${encodeURIComponent(brand)}&size=${8 - results.length}`,
         { cache: 'no-store' }
       )
       if (res.ok) {
@@ -210,8 +211,29 @@ export default async function PartNumberPage({ params }: Props) {
     images?: string[]
   }>
 
+  const partNum = String(product.part_number)
+  const brandName = String(product.brand ?? product.manufacturer ?? 'Industrial')
+  const desc = String(product.description || `Buy ${partNum} with fast delivery.`)
+  const canonicalUrl = `${SITE_URL}/part-number/${encodeURIComponent(partNum)}`
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: partNum,
+    description: desc,
+    sku: partNum,
+    category: String(categoryName || 'Industrial Parts'),
+    brand: { '@type': 'Brand', name: brandName },
+    url: canonicalUrl,
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Script
+        id="part-number-product-jsonld"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
       <div className="page-container py-8">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6">
