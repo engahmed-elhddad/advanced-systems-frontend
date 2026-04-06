@@ -1,0 +1,231 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-[2px] font-semibold text-sm
+           transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-primary-hover);
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-[2px] font-medium text-sm transition-all duration-150;
+    border: 1px solid var(--color-border);
+    background: var(--color-background-secondary);
+    color: var(--color-foreground);
+  }
+  .card {
+    @apply rounded-[2px] overflow-hidden transition-all duration-150;
+    background: var(--color-background-secondary);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+  }
+  .input {
+    @apply w-full rounded-[2px] px-4 py-2.5 text-sm transition-colors duration-150;
+    background: var(--color-input-background);
+    border: 1px solid var(--color-border);
+    color: var(--color-foreground);
+  }
+  .input:focus {
+    border-color: var(--color-ring);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-ring) 35%, transparent);
+  }
+  .section-title {
+    @apply text-xl font-bold tracking-tight;
+    color: var(--color-foreground);
+  }
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .card-hover {
+    @apply transition-all duration-250;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .admin-shell {
+    @apply min-h-screen text-slate-900;
+    background-color: var(--admin-bg);
+    color: var(--color-foreground);
+  }
+  .admin-card {
+    @apply rounded-[2px] border p-4;
+    border-color: var(--admin-border);
+    background-color: var(--admin-surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .admin-card-lg {
+    @apply rounded-[2px] border p-6;
+    border-color: var(--admin-border);
+    background-color: var(--admin-surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .admin-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-[2px] px-3.5 py-2 text-sm font-medium transition duration-150 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .admin-btn-primary {
+    @apply admin-btn text-white shadow-sm hover:brightness-105;
+    background-color: var(--admin-primary);
+  }
+  .admin-btn-primary:hover {
+    background-color: var(--admin-primary-hover);
+  }
+  .admin-btn-secondary {
+    @apply admin-btn border bg-white text-slate-700 hover:bg-slate-50;
+    border-color: var(--admin-border);
+  }
+  .admin-btn-ai {
+    @apply admin-btn text-white shadow-sm hover:brightness-105;
+    background-color: var(--admin-ai);
+  }
+  .admin-btn-ai-soft {
+    @apply admin-btn border text-violet-700;
+    background-color: var(--admin-ai-soft);
+    border-color: #ddd6fe;
+  }
+  .admin-title {
+    @apply text-2xl font-semibold tracking-tight;
+    color: var(--color-foreground);
+  }
+  .admin-subtitle {
+    @apply mt-1 text-sm;
+    color: var(--color-foreground-muted);
+  }
+  .admin-pill-ai {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium;
+    color: var(--admin-ai);
+    border-color: #ddd6fe;
+    background-color: var(--admin-ai-soft);
+  }
+  .admin-icon {
+    @apply h-4 w-4 shrink-0;
+    stroke-width: 2;
+  }
+  .admin-kpi-success {
+    color: var(--admin-success);
+  }
+  .admin-kpi-warning {
+    color: var(--admin-warning);
+  }
+  .admin-ai-highlight {
+    @apply rounded-[2px] border;
+    border-color: #c4b5fd;
+    box-shadow: 0 0 0 1px rgba(109, 40, 217, 0.08), 0 0 18px rgba(109, 40, 217, 0.09);
+    background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+@keyframes ui-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+.toast-progress-bar {
+  transform-origin: left;
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.08) 80%
+  );
+  background-size: 200% 100%;
+  animation: ui-shimmer 1.35s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes hero-rotate-3d {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+.animate-hero-rotate-3d {
+  animation: hero-rotate-3d 20s linear infinite;
+}
+@media (max-width: 1024px) {
+  .animate-hero-rotate-3d {
+    animation: none !important;
+  }
+}

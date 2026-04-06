@@ -43,7 +43,7 @@ function ProductGridInner({
       animate="show"
     >
       {products.map((p, idx) => {
-        const props = productToCardProps(p as Parameters<typeof productToCardProps>[0])
+        const props = productToCardProps(p as unknown as Parameters<typeof productToCardProps>[0])
         return (
           <motion.div key={props.part_number + String(idx)} variants={item}>
             <ProductCard

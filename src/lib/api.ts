@@ -15,6 +15,36 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/** Native fetch for RSC / routes; supports `next: { revalidate }` and attaches admin token in the browser. */
+export function apiFetch(
+  input: string | URL | globalThis.Request,
+  init?: RequestInit
+): Promise<Response> {
+  const headers = new Headers(init?.headers ?? undefined);
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("admin_token");
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+  }
+  return fetch(input, { ...init, headers });
+}
+
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (error == null) return fallback;
+  if (typeof error === "string" && error.trim()) return error;
+  const e = error as Record<string, unknown>;
+  const msg = e.message;
+  if (typeof msg === "string" && msg.trim()) return msg;
+  const response = e.response as Record<string, unknown> | undefined;
+  const data = response?.data as Record<string, unknown> | string | undefined;
+  if (typeof data === "string" && data.trim()) return data;
+  if (data && typeof data === "object") {
+    const detail = (data as Record<string, unknown>).detail;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail) && detail.length) return String(detail[0]);
+  }
+  return fallback;
+}
+
 // Products
 export const productsApi = {
   list: (params?: Record<string, any>) => api.get("/api/v1/products/", { params }),
@@ -52,6 +82,29 @@ export const getProductBySlug = (slug: string) =>
 export const getProductOrGenerate = (partNumber: string) =>
   api.get(`/api/v1/products/part/${encodeURIComponent(partNumber)}/or-generate`).then((r) => r.data);
 
+/** RSC helper: DB product first, then or-generate fallback. */
+export async function getProduct(partNumber: string): Promise<Record<string, unknown> | null> {
+  const pn = partNumber.trim();
+  if (!pn) return null;
+  try {
+    const p = await getProductByPartNumber(pn);
+    if (p && typeof p === "object" && ("part_number" in p || "partNumber" in p)) {
+      return p as Record<string, unknown>;
+    }
+  } catch {
+    /* try generate */
+  }
+  try {
+    const g = await getProductOrGenerate(pn);
+    if (g && typeof g === "object" && ("part_number" in g || "partNumber" in g)) {
+      return g as Record<string, unknown>;
+    }
+  } catch {
+    /* */
+  }
+  return null;
+}
+
 // Search
 export const searchApi = {
   search: (q: string, params?: Record<string, any>) =>
@@ -61,6 +114,16 @@ export const searchApi = {
 
 export const suggestProducts = (q: string, limit = 8) =>
   searchApi.autocomplete(q).then((r) => r.data);
+
+/** Client search helper: returns Meilisearch-shaped payload (`hits` / `products` / `items`). */
+export async function searchProductsSimple(
+  q: string,
+  size: number,
+  page: number
+): Promise<unknown> {
+  const { data } = await searchApi.search(q, { page, size });
+  return data;
+}
 
 // Brands
 export const brandsApi = {

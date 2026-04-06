@@ -611,13 +611,14 @@ function SearchResults() {
               {q && products.length > 0 && (
                 <Select
                   value={sort}
-                  onChange={(e) => setSort(e.target.value as 'relevance' | 'price_low' | 'price_high')}
+                  onChange={(v) => setSort(v as 'relevance' | 'price_low' | 'price_high')}
                   className="w-auto min-w-[160px] text-sm py-2"
-                >
-                  <option value="relevance">Sort: Relevance</option>
-                  <option value="price_low">Price: Low to High</option>
-                  <option value="price_high">Price: High to Low</option>
-                </Select>
+                  options={[
+                    { value: 'relevance', label: 'Sort: Relevance' },
+                    { value: 'price_low', label: 'Price: Low to High' },
+                    { value: 'price_high', label: 'Price: High to Low' },
+                  ]}
+                />
               )}
             </div>
           </div>

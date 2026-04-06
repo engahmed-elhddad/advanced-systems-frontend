@@ -1,0 +1,104 @@
+:root {
+  --color-bg: #F5F7FA;
+  --color-bg-secondary: #F9FAFB;
+  --color-bg-tertiary: #F3F4F6;
+  --color-bg-elevated: #FFFFFF;
+  --color-fg: #1A1A1A;
+  --color-fg-muted: #6B7280;
+  --color-fg-subtle: #9CA3AF;
+  --color-primary: #0B1F3A;
+  --color-primary-hover: #122948;
+  --color-primary-fg: #ffffff;
+  --color-primary-light: #E8F4FD;
+  --color-destructive: #EF4444;
+  --color-destructive-hover: #DC2626;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-accent: #FF7A00;
+  --color-info: #0072CE;
+  --color-border: #E5E7EB;
+  --color-border-hover: #D1D5DB;
+  --color-input-bg: #FFFFFF;
+  --color-ring: #FF7A00;
+  --color-overlay: rgba(0, 0, 0, 0.4);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --text-11: 11px;
+  --text-12: 12px;
+  --text-13: 13px;
+  --text-14: 14px;
+  --text-16: 16px;
+  --text-18: 18px;
+  --text-20: 20px;
+  --text-24: 24px;
+  --text-30: 30px;
+  --text-36: 36px;
+  --text-48: 48px;
+
+  --font-weight-400: 400;
+  --font-weight-500: 500;
+  --font-weight-600: 600;
+  --font-weight-700: 700;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --shadow-focus: 0 0 0 2px var(--color-ring);
+
+  --z-dropdown: 30;
+  --z-overlay: 35;
+  --z-modal: 40;
+  --z-toast: 50;
+
+  /* Backward-compatible aliases */
+  --color-background: var(--color-bg);
+  --color-background-secondary: var(--color-bg-secondary);
+  --color-background-tertiary: var(--color-bg-tertiary);
+  --color-foreground: var(--color-fg);
+  --color-foreground-muted: var(--color-fg-muted);
+  --color-primary-foreground: var(--color-primary-fg);
+  --color-input-background: var(--color-input-bg);
+  --radius-1: var(--radius-sm);
+  --radius-2: var(--radius-md);
+  --radius-3: var(--radius-lg);
+  --radius-4: var(--radius-xl);
+  --radius-5: var(--radius-2xl);
+  --radius: var(--radius-lg);
+  --background: var(--color-bg);
+  --foreground: var(--color-fg);
+}
+
+/* Admin section overrides */
+:root {
+  --admin-bg: #F9FAFB;
+  --admin-surface: #FFFFFF;
+  --admin-border: #E5E7EB;
+  --admin-primary: #0072CE;
+  --admin-primary-hover: #005BA4;
+  --admin-success: #10B981;
+  --admin-warning: #F59E0B;
+  --admin-ai: #7C3AED;
+  --admin-ai-soft: #F5F3FF;
+}

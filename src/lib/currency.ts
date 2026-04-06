@@ -45,3 +45,15 @@ export function formatCurrency(amount: number, currency: Currency): string {
   }
   return `${Math.round(amount).toLocaleString("en-EG")} EGP`;
 }
+
+/** Used by CurrencyProvider: format a converted amount for the active currency. */
+export function formatPrice(
+  amount: number | null | undefined,
+  currency: Currency
+): string {
+  if (amount == null || Number.isNaN(amount)) return "—";
+  return formatCurrency(amount, currency);
+}
+
+export const resolveCurrency = detectUserCurrency;
+export const getUSDtoEGPRate = getExchangeRate;

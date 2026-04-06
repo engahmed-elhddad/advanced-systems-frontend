@@ -12,6 +12,10 @@
 
 # testing
 /coverage
+playwright-report/
+test-results/
+build-log.txt
+visual-tests/results/
 
 # next.js
 /.next/
