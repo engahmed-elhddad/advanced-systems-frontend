@@ -1,9 +1,11 @@
-import { apiFetch } from '@/lib/api'
 export const dynamic = "force-dynamic"
 
 import Link from "next/link"
-import { API_BASE_URL, SITE_URL, rfqMailtoHref, categoryToSlug, slugToSpec } from "@/app/lib/constants"
+import { API_BASE_URL, SITE_URL, rfqMailtoHref, categoryToSlug, slugToSpec } from "@/lib/constants"
+import { resolveProductImage } from "@/lib/imageResolver"
 import { MailIcon } from "@/components/ui/MailIcon"
+import { BrandLogo } from "@/components/ui/BrandLogo"
+import { ProductImageWithFallback } from "@/components/ui/ProductImageWithFallback"
 
 const API = API_BASE_URL
 
@@ -40,7 +42,7 @@ export default async function SpecPage({ params, searchParams }: Props) {
     url.searchParams.set("spec_key", specKey)
     if (specValue) url.searchParams.set("spec_value", specValue)
     url.searchParams.set("limit", String(size * 2))
-    const res = await apiFetch(url.toString(), { cache: "no-store" })
+    const res = await fetch(url.toString(), { cache: "no-store" })
     if (res.ok) {
       const data = await res.json()
       products = data?.products ?? []
@@ -113,29 +115,26 @@ export default async function SpecPage({ params, searchParams }: Props) {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {paginatedProducts.map((p) => {
-                const imageSrc = p.image_url || ''
+                const imageSrc = resolveProductImage(p.part_number)
                 const qty = p.offers?.[0]?.quantity ?? 0
                 const inStock = qty > 0
                 return (
                   <div key={p.part_number} className="card card-hover group flex flex-col overflow-hidden">
                     <Link href={`/products/${encodeURIComponent(p.part_number)}`} className="block relative">
                       <div className="aspect-square flex items-center justify-center p-3 bg-gray-50 border-b border-gray-100 overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={imageSrc} alt={p.part_number} className="max-h-full w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                        <ProductImageWithFallback src={imageSrc} alt={p.part_number} className="max-h-full w-full object-contain group-hover:scale-105 transition-transform duration-300" />
                       </div>
                       <div className="absolute top-2 right-2">
                         {inStock ? <span className="badge-in-stock">In Stock</span> : <span className="badge-on-request">On Request</span>}
                       </div>
                     </Link>
                     <div className="flex-1 flex flex-col p-3 gap-2">
-                      <span className="inline-flex px-2 py-1 rounded-full bg-gray-100 text-xs text-gray-700">
-                        {p.manufacturer || p.brand || ''}
-                      </span>
+                      <BrandLogo brand={p.manufacturer || p.brand || ''} variant="square" badgeClassName="text-xs" />
                       <Link href={`/products/${encodeURIComponent(p.part_number)}`} className="font-mono font-semibold text-gray-900 text-sm hover:text-primary-600 truncate">
                         {p.part_number}
                       </Link>
                       {p.category && (
-                        <Link href={`/categories/${categoryToSlug(p.category)}`} className="text-xs text-gray-500 hover:text-primary-600 truncate">
+                        <Link href={`/category/${categoryToSlug(p.category)}`} className="text-xs text-gray-500 hover:text-primary-600 truncate">
                           {p.category}
                         </Link>
                       )}

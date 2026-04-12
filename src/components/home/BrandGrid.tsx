@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { getBrandHref } from '@/lib/brandUtils'
-import { API_BASE_URL } from '@/app/lib/constants'
+import { API_BASE_URL } from '@/lib/constants'
 
 export interface BrandItem {
   name: string
@@ -79,7 +79,7 @@ export function BrandGrid({
     let cancelled = false
     setLoading(true)
     setError(false)
-    apiFetch(`${API_BASE_URL}/brands`)
+    apiFetch(`${API_BASE_URL}/api/v1/brands/`)
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return

@@ -1,4 +1,3 @@
-import { apiFetch } from '@/lib/api'
 import { NextResponse } from 'next/server'
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://advancedsystems-int.com'
@@ -17,12 +16,16 @@ export async function GET() {
 
   while (hasMore) {
     try {
-      const params = new URLSearchParams({ q: '', page: String(page), limit: String(size) })
-      const res = await apiFetch(`${API_BASE}/api/v1/search/?${params}`, {
+      const params = new URLSearchParams({ page: String(page), size: String(size) })
+      let res = await fetch(`${API_BASE}/api/v1/products/?${params}`, {
         next: { revalidate: 3600 },
       })
+      if (!res.ok) {
+        const leg = new URLSearchParams({ q: '', page: String(page), limit: String(size) })
+        res = await fetch(`${API_BASE}/search?${leg}`, { next: { revalidate: 3600 } })
+      }
       const data = await res.json()
-      const items = data?.results ?? data?.products ?? data?.items ?? []
+      const items = data?.items ?? data?.results ?? data?.products ?? []
       for (const p of items) {
         const pn = p.part_number || p.slug || String(p.id)
         if (pn) urls.push(`${BASE}/products/${encodeURIComponent(pn)}`)

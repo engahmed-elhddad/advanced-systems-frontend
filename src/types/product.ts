@@ -36,6 +36,7 @@ export interface Brand {
   name: string
   slug?: string
   product_count?: number
+  logo_url?: string | null
 }
 
 export interface Category {

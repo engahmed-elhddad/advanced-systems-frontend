@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import { SafeImage } from '@/components/common/SafeImage'
+import { SafeImage } from '@/components/ui/SafeImage'
 
 export interface RelatedProductItem {
   part_number: string
@@ -85,7 +85,7 @@ function RelatedProductCard({
 
 export function RelatedProducts({
   products,
-  productBasePath = '/part-number',
+  productBasePath = '/products',
   imageUrl,
   title = 'Related Products',
   className = '',

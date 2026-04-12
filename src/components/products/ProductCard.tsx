@@ -1,12 +1,13 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { useRFQListStore } from '@/state/rfqListStore'
-import { useCurrency } from '@/hooks/useCurrency'
-import { SafeImage } from '@/components/common/SafeImage'
-
+import { useCurrency } from '@/lib/hooks/useCurrency'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { cn } from '@/lib/utils'
+import { usePricingGate } from '@/lib/hooks/usePricingGate'
 
 function KeySpecs({
   quickSpecs,
@@ -33,12 +34,14 @@ function KeySpecs({
     <ul className="mt-2 space-y-0.5" aria-label="Key specifications">
       {items.map(({ label, value }) =>
         label ? (
-          <li key={label} className="text-xs text-[#6B7280] flex flex-wrap gap-x-1.5">
-            <span className="text-[#9CA3AF] font-medium">{label}:</span>
+          <li key={label} className="flex flex-wrap gap-x-1.5 text-xs text-white/50">
+            <span className="font-medium text-white/40">{label}:</span>
             <span>{value}</span>
           </li>
         ) : (
-          <li key="fallback" className="text-xs text-[#6B7280]">{value}</li>
+          <li key="fallback" className="text-xs text-white/50">
+            {value}
+          </li>
         )
       )}
     </ul>
@@ -66,6 +69,9 @@ export interface ProductCardProps {
   productBasePath?: string
 }
 
+const shellClass =
+  'group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:border-orange-400/25 hover:shadow-[0_0_32px_rgba(255,122,0,0.1)] focus-within:border-orange-400/35 focus-within:shadow-[0_0_28px_rgba(255,122,0,0.12)]'
+
 function ProductCardInner({
   part_number,
   brand,
@@ -79,11 +85,17 @@ function ProductCardInner({
   quickSpecs,
   variant = 'default',
   productBasePath = '/products',
+  product_id: _productId,
 }: ProductCardProps) {
   const { format } = useCurrency()
+  const { showExactPricing, openLoginModal } = usePricingGate()
   const addItem = useRFQListStore((s) => s.addItem)
   const listItems = useRFQListStore((s) => s.items)
-  const isInList = listItems.some((i) => i.part_number === part_number)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  const isInList = mounted && listItems.some((i) => i.part_number === part_number)
   const inStock = availability === 'in_stock' || stock_quantity > 0
   const compact = variant === 'compact'
   const maker = brand ?? manufacturer ?? 'Brand on request'
@@ -96,83 +108,92 @@ function ProductCardInner({
   )
 
   return (
-    <div
-      className={
-        compact
-          ? 'group flex flex-col rounded-[2px] border border-[#E5E7EB] bg-white overflow-hidden hover:border-[#0072CE]/40 hover:shadow-sm hover:-translate-y-px focus-within:border-[#0072CE] focus-within:ring-1 focus-within:ring-[#0072CE]/20 transition-all duration-150'
-          : 'group flex flex-col rounded-[2px] border border-[#E5E7EB] bg-white overflow-hidden shadow-sm hover:shadow-md hover:border-[#0072CE]/40 hover:-translate-y-px focus-within:border-[#0072CE] focus-within:ring-1 focus-within:ring-[#0072CE]/20 transition-all duration-150'
-      }
-    >
+    <div className={cn(shellClass, !compact && 'shadow-lg shadow-black/20')}>
       <Link
         href={`${productBasePath}/${encodeURIComponent(part_number)}`}
-        className={`block relative bg-[#F9FAFB] overflow-hidden ${compact ? 'aspect-square' : 'aspect-[4/3]'} focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0072CE] focus-visible:ring-inset`}
+        className={`relative block overflow-hidden border-b border-white/[0.06] bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-inset ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
       >
         <div className="absolute inset-0">
           <SafeImage
             src={image_url}
             alt={`${maker} ${part_number}`}
-            className="h-full w-full object-contain group-hover:scale-[1.02] transition-transform duration-200"
+            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </div>
-        <div className="absolute top-2 right-2">
+        <div className="absolute right-2 top-2">
           {inStock ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] text-[10px] font-semibold bg-[#E8F4FD] text-[#0072CE] border border-[#0072CE]/20">
-              In Stock
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+              In stock
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] text-[10px] font-semibold bg-[#FEF3C7] text-[#92400E] border border-[#F59E0B]/30">
-              On Request
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/35 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-100">
+              On request
             </span>
           )}
         </div>
       </Link>
 
-      <div className={compact ? 'p-3 flex flex-col flex-1' : 'p-4 flex flex-col flex-1'}>
-        <p className="text-[11px] font-medium text-[#6B7280] uppercase tracking-wider">
-          {maker}
-        </p>
+      <div className={compact ? 'flex flex-1 flex-col p-3' : 'flex flex-1 flex-col p-4'}>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">{maker}</p>
         <Link
           href={`${productBasePath}/${encodeURIComponent(part_number)}`}
-          className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0072CE] focus-visible:ring-offset-1 rounded-[2px]"
+          className="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]"
         >
-          <h3 className="font-mono font-semibold text-base text-[#1A1A1A] group-hover:text-[#0072CE] transition-colors duration-150 leading-snug mt-0.5 break-all">
+          <h3 className="mt-0.5 break-all font-mono text-base font-semibold leading-snug text-white transition-colors duration-300 group-hover:text-orange-200">
             {part_number}
           </h3>
         </Link>
-        <p className="text-xs text-[#6B7280] mt-0.5">{category ?? 'Industrial Component'}</p>
+        <p className="mt-0.5 text-xs text-white/50">{category ?? 'Industrial component'}</p>
         {quickSpecs && <KeySpecs quickSpecs={quickSpecs} />}
-        {!hasSpecs && (
-          <p className="mt-2 text-xs text-[#6B7280]">Specifications available on request</p>
-        )}
+        {!hasSpecs && <p className="mt-2 text-xs text-white/40">Specifications available on request</p>}
         {!compact && description && (
-          <p className="text-xs text-[#6B7280] line-clamp-2 leading-relaxed mb-3 flex-1 mt-1">
-            {description}
-          </p>
+          <p className="mb-3 mt-1 flex-1 line-clamp-2 text-xs leading-relaxed text-white/45">{description}</p>
         )}
 
         {price_usd != null && price_usd > 0 && (
-          <p className="text-sm font-semibold text-[#1A1A1A] mt-2">{format(price_usd)}</p>
+          <div className="mt-2 space-y-2">
+            {showExactPricing ? (
+              <p className="text-base font-bold tracking-tight text-orange-200">{format(price_usd)}</p>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-white/90">
+                  Starting from <span className="text-white">{format(price_usd)}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    openLoginModal()
+                  }}
+                  className="text-left text-xs font-semibold text-orange-300/90 underline decoration-orange-400/40 underline-offset-2 hover:text-orange-200"
+                >
+                  Login to view pricing
+                </button>
+              </>
+            )}
+          </div>
         )}
 
-        <div className="flex items-center gap-2 pt-3 mt-auto border-t border-[#E5E7EB]">
+        <div className="mt-auto flex items-center gap-2 border-t border-white/10 pt-3">
           <Link
             href={`${productBasePath}/${encodeURIComponent(part_number)}`}
-            className="inline-flex items-center justify-center px-4 py-2 rounded-[2px] text-sm font-semibold bg-[#0072CE] hover:bg-[#005BA4] text-white transition-colors duration-150 flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0072CE] focus-visible:ring-offset-2"
+            className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition-all duration-300 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]"
           >
-            View Product
+            View product
           </Link>
           <button
             type="button"
             onClick={() => addItem({ part_number, quantity: 1 })}
             disabled={isInList}
-            className={`inline-flex items-center justify-center p-2 rounded-[2px] border transition-colors duration-150 ${
+            className={
               isInList
-                ? 'border-[#10B981]/30 bg-[#D1FAE5] text-[#065F46] cursor-default'
-                : 'border-[#E5E7EB] text-[#6B7280] hover:border-[#0072CE]/40 hover:text-[#0072CE]'
-            }`}
+                ? 'inline-flex cursor-default items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 p-2 text-emerald-200'
+                : 'inline-flex items-center justify-center rounded-xl border border-white/15 p-2 text-white/60 transition-all duration-300 hover:border-orange-400/35 hover:text-orange-200'
+            }
             aria-label={isInList ? `${part_number} added to RFQ list` : `Add ${part_number} to RFQ list`}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
           </button>
         </div>
       </div>

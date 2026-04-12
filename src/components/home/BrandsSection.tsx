@@ -6,8 +6,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { getBrandHref } from '@/lib/brandUtils'
-import { API_BASE_URL } from '@/app/lib/constants'
-import { BRAND_MAP } from '@/app/lib/brands'
+import { API_BASE_URL } from '@/lib/constants'
+import { BRAND_MAP } from '@/lib/brands'
 
 interface BrandItem {
   name: string
@@ -48,20 +48,38 @@ function filenameToBrandName(filename: string): string {
 /** Merge brands from products API and from public/brands logos; dedupe by slug, sort by name. */
 async function fetchMergedBrands(): Promise<BrandItem[]> {
   const [productsRes, logosRes] = await Promise.all([
-    apiFetch(`${API_BASE_URL}/products?limit=500`),
+    apiFetch(`${API_BASE_URL}/api/v1/products/?page=1&size=100`),
     apiFetch('/api/brands/logos'),
   ])
 
   const bySlug = new Map<string, BrandItem>()
 
-  if (productsRes.ok) {
-    const data = await productsRes.json()
-    const products = data.products ?? data.results ?? []
+  const ingestProducts = (products: Array<{ brand?: string; manufacturer?: string }>) => {
     for (const p of products) {
       const raw = (p.brand ?? p.manufacturer ?? '').trim()
       if (!raw) continue
       const slug = slugFromName(raw)
       if (!bySlug.has(slug)) bySlug.set(slug, { name: brandDisplayName(raw), slug, logoUrl: null })
+    }
+  }
+
+  if (productsRes.ok) {
+    const data = await productsRes.json()
+    const products = (data.items ?? data.products ?? data.results ?? []) as Array<{
+      brand?: string
+      manufacturer?: string
+    }>
+    if (Array.isArray(products)) ingestProducts(products)
+  }
+  if (bySlug.size < 8) {
+    const legacy = await apiFetch(`${API_BASE_URL}/products?limit=500`)
+    if (legacy.ok) {
+      const data = await legacy.json()
+      const products = (data.products ?? data.results ?? []) as Array<{
+        brand?: string
+        manufacturer?: string
+      }>
+      if (Array.isArray(products)) ingestProducts(products)
     }
   }
 

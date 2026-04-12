@@ -1,19 +1,42 @@
 /**
- * UI primitive components.
- * Use these for consistent styling and composition across the app.
+ * UI primitive components — AdvancedSystems industrial / glass design system.
+ * Use for admin dashboard and marketplace; prefer `SortableTable` for column-driven data grids.
  */
 export { Button } from './Button'
-export type { ButtonProps } from './Button'
+export type { ButtonProps, ButtonVariant } from './Button'
 export { Card } from './Card'
-export type { CardProps } from './Card'
+export type { CardProps, CardVariant } from './Card'
 export { Badge } from './Badge'
-export type { BadgeProps } from './Badge'
+export type { BadgeProps, BadgeVariant } from './Badge'
 export { Container } from './Container'
 export type { ContainerProps } from './Container'
-export { Section } from './layout/Section'
-export type { SectionProps } from './layout/Section'
+export { Section } from './Section'
+export type { SectionProps } from './Section'
 export { Input } from './Input'
 export type { InputProps } from './Input'
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableCaption,
+} from './Table'
+export type {
+  TableRootProps,
+  TableVariant,
+  TableHeaderProps,
+  TableBodyProps,
+  TableFooterProps,
+  TableRowProps,
+  TableHeadProps,
+  TableCellProps,
+  TableCaptionProps,
+} from './Table'
+export { SortableTable } from './SortableTable'
+export type { TableColumn, TableProps, SortableTableColumn, SortableTableProps } from './SortableTable'
 export { Select } from './Select'
 export type { SelectProps } from './Select'
 export { FilterChip } from './FilterChip'
@@ -31,11 +54,12 @@ export { CategoryCard } from './CategoryCard'
 export type { CategoryCardProps } from './CategoryCard'
 export { ProductSkeleton, ProductGridSkeleton } from './ProductSkeleton'
 export { BrandLogo } from './BrandLogo'
+export { ProductImage } from './ProductImage'
+export { ProductImageWithFallback } from './ProductImageWithFallback'
 export { MailIcon } from './MailIcon'
+export { SafeImage } from './SafeImage'
 export { Modal } from './Modal'
 export type { ModalProps } from './Modal'
-export { Table } from './Table'
-export type { TableColumn, TableProps } from './Table'
 export { DataTable } from './DataTable'
 export type { DataTableColumn, DataTableProps } from './DataTable'
 export { Skeleton, SkeletonLine } from './Skeleton'

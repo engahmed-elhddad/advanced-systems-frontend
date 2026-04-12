@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { FileText } from 'lucide-react'
-import { CATEGORIES } from '@/app/lib/constants'
+import { CATEGORIES } from '@/lib/constants'
 
 export default function DatasheetLibraryPage() {
   return (
@@ -25,7 +25,7 @@ export default function DatasheetLibraryPage() {
           {CATEGORIES.map((c) => (
             <Link
               key={c.slug}
-              href={`/search?category=${encodeURIComponent(c.slug)}`}
+              href={`/search?category=${encodeURIComponent(c.name)}`}
               className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 hover:border-primary-200 hover:shadow-sm transition-all"
             >
               <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-2xl">

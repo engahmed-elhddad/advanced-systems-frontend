@@ -1,6 +1,7 @@
 'use client'
 
 import { type ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 
 export interface DataTableColumn<T> {
   key: string
@@ -17,6 +18,10 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T, index: number) => void
   stickyHeader?: boolean
   rowKey?: (row: T, index: number) => string | number
+  /** `dark` = glass table on marketplace background */
+  variant?: 'light' | 'dark'
+  /** Extra classes per row (e.g. highlight high-intent leads). */
+  rowClassName?: (row: T, index: number) => string | undefined
 }
 
 export function DataTable<T extends Record<string, unknown>>({
@@ -27,20 +32,40 @@ export function DataTable<T extends Record<string, unknown>>({
   onRowClick,
   stickyHeader = false,
   rowKey,
+  variant = 'light',
+  rowClassName,
 }: DataTableProps<T>) {
   const skeletonWidths = ['56%', '72%', '64%', '83%', '61%', '74%']
+  const isDark = variant === 'dark'
+  const wrap = cn(
+    'w-full overflow-hidden rounded-xl',
+    isDark
+      ? 'border border-white/10 bg-white/[0.04] shadow-[0_16px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl'
+      : 'border border-[#E5E7EB] rounded-[4px]',
+  )
+  const thRow = cn(
+    'border-b',
+    isDark ? 'border-white/[0.08] bg-white/[0.06]' : 'border-[#E5E7EB] bg-[#F9FAFB]',
+    stickyHeader && 'sticky top-0 z-10',
+  )
+  const thText = cn(
+    'text-left text-[11px] uppercase tracking-wider font-medium px-3 py-2.5',
+    isDark ? 'text-white/45' : 'text-[#6B7280]',
+  )
+  const rowBorder = isDark ? 'border-white/[0.06]' : 'border-[#F3F4F6]'
+  const rowHover = isDark ? 'hover:bg-white/[0.05]' : 'hover:bg-[#F9FAFB]'
+  const skeletonBg = isDark ? 'bg-white/10' : 'bg-[#E5E7EB]'
+  const emptyText = isDark ? 'text-white/50' : 'text-[#6B7280]'
+  const tdText = isDark ? 'text-white/90' : ''
 
   if (loading) {
     return (
-      <div className="w-full border border-[#E5E7EB] rounded-[4px] overflow-hidden">
-        <table className="w-full text-sm border-collapse">
+      <div className={wrap}>
+        <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
+            <tr className={thRow}>
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className="text-left text-[11px] uppercase tracking-wider text-[#6B7280] font-medium px-3 py-2.5"
-                >
+                <th key={col.key} className={cn(thText, col.className)}>
                   {col.header}
                 </th>
               ))}
@@ -48,11 +73,11 @@ export function DataTable<T extends Record<string, unknown>>({
           </thead>
           <tbody>
             {Array.from({ length: 6 }).map((_, i) => (
-              <tr key={i} className="border-b border-[#F3F4F6]">
+              <tr key={i} className={cn('border-b', rowBorder)}>
                 {columns.map((col) => (
-                  <td key={col.key} className="px-3 py-2.5">
+                  <td key={col.key} className={cn('px-3 py-2.5', tdText)}>
                     <div
-                      className="h-4 bg-[#E5E7EB] rounded-[2px] animate-pulse"
+                      className={cn('h-4 rounded-md animate-pulse', skeletonBg)}
                       style={{ width: skeletonWidths[i % skeletonWidths.length] }}
                     />
                   </td>
@@ -67,23 +92,20 @@ export function DataTable<T extends Record<string, unknown>>({
 
   if (data.length === 0) {
     return (
-      <div className="w-full border border-[#E5E7EB] rounded-[4px] overflow-hidden">
-        <div className="text-center py-12 text-sm text-[#6B7280]">{emptyMessage}</div>
+      <div className={wrap}>
+        <div className={cn('py-14 text-center text-sm', emptyText)}>{emptyMessage}</div>
       </div>
     )
   }
 
   return (
-    <div className="w-full border border-[#E5E7EB] rounded-[4px] overflow-hidden">
+    <div className={wrap}>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
+        <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className={`bg-[#F9FAFB] border-b border-[#E5E7EB] ${stickyHeader ? 'sticky top-0 z-10' : ''}`}>
+            <tr className={thRow}>
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={`text-left text-[11px] uppercase tracking-wider text-[#6B7280] font-medium px-3 py-2.5 ${col.className ?? ''}`}
-                >
+                <th key={col.key} className={cn(thText, col.className ?? '')}>
                   {col.header}
                 </th>
               ))}
@@ -94,10 +116,16 @@ export function DataTable<T extends Record<string, unknown>>({
               <tr
                 key={rowKey ? rowKey(row, index) : index}
                 onClick={onRowClick ? () => onRowClick(row, index) : undefined}
-                className={`border-b border-[#F3F4F6] hover:bg-[#F9FAFB] transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                className={cn(
+                  'border-b transition-colors duration-300',
+                  rowBorder,
+                  rowHover,
+                  onRowClick && 'cursor-pointer',
+                  rowClassName?.(row, index),
+                )}
               >
                 {columns.map((col) => (
-                  <td key={col.key} className={`px-3 py-2.5 ${col.className ?? ''}`}>
+                  <td key={col.key} className={cn('px-3 py-2.5', tdText, col.className ?? '')}>
                     {col.render
                       ? col.render(row, index)
                       : String(row[col.key] ?? '')}

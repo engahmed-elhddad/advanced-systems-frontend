@@ -1,13 +1,11 @@
 'use client'
 
-import { apiFetch } from '@/lib/api'
-
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { SlidersHorizontal, Search, FileText, Package, GitCompare, X } from 'lucide-react'
-import { API_BASE_URL, CATEGORIES, normalizeCategoryQueryForApi } from '@/app/lib/constants'
+import { API_BASE_URL, CATEGORIES } from '@/lib/constants'
 import { BrandLogo } from '@/components/ui/BrandLogo'
-import { SafeImage } from '@/components/common/SafeImage'
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || API_BASE_URL
 
@@ -61,7 +59,7 @@ export default function ProductFinderPage() {
 
   const fetchOptions = useCallback(async () => {
     try {
-      const res = await apiFetch(`${API}/api/product-finder/options`)
+      const res = await fetch(`${API}/api/product-finder/options`)
       const data = await res.json()
       setOptions({
         categories: data.categories?.length ? data.categories : CATEGORIES.map(c => c.name),
@@ -87,17 +85,14 @@ export default function ProductFinderPage() {
     setLoading(true)
     try {
       const params = new URLSearchParams()
-      if (filters.category) {
-        const slug = normalizeCategoryQueryForApi(filters.category)
-        if (slug) params.set('category', slug)
-      }
+      if (filters.category) params.set('category', filters.category)
       if (filters.current) params.set('current', filters.current)
       if (filters.voltage) params.set('voltage', filters.voltage)
       if (filters.poles) params.set('poles', filters.poles)
       if (filters.mounting_type) params.set('mounting_type', filters.mounting_type)
       params.set('page', String(page))
       params.set('limit', '24')
-      const res = await apiFetch(`${API}/api/product-finder/search?${params}`)
+      const res = await fetch(`${API}/api/product-finder/search?${params}`)
       const data = await res.json()
       setProducts(data.products || [])
       setTotalPages(data.pages ?? 1)
@@ -108,8 +103,7 @@ export default function ProductFinderPage() {
     }
   }, [filters, page])
 
-  const { category, current: filterCurrent, voltage, poles, mounting_type } = filters
-  useEffect(() => { setPage(1) }, [category, filterCurrent, voltage, poles, mounting_type]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(1) }, [filters.category, filters.current, filters.voltage, filters.poles, filters.mounting_type])
   useEffect(() => { search() }, [search])
 
   const toggleCompare = (pn: string) => {
@@ -122,7 +116,7 @@ export default function ProductFinderPage() {
   }
 
   const imageUrl = (url: string | undefined) => {
-    if (!url) return ''
+    if (!url) return '/products/no-product-image.jpg'
     if (url.startsWith('http')) return url
     return `${API}${url.startsWith('/') ? '' : '/'}${url}`
   }
@@ -135,7 +129,7 @@ export default function ProductFinderPage() {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Smart Component Finder</h1>
           <p className="text-slate-300 text-lg">
-            Search by specifications – current, voltage, poles, mounting. No part number required.
+            Search by specifications â€“ current, voltage, poles, mounting. No part number required.
           </p>
         </div>
       </div>
@@ -286,11 +280,19 @@ export default function ProductFinderPage() {
                         href={`/products/${encodeURIComponent(p.part_number)}`}
                         className="block relative aspect-square bg-slate-50"
                       >
-                        <SafeImage
-                          src={imageUrl(p.image_url)}
-                          alt={p.part_number}
-                          className="h-full w-full object-contain p-4"
-                        />
+                        {p.image_url ? (
+                          <Image
+                            src={imageUrl(p.image_url)}
+                            alt={p.part_number}
+                            fill
+                            className="object-contain p-4"
+                            sizes="(max-width:640px) 100vw, (max-width:1280px) 50vw, 33vw"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <Package className="w-20 h-20 text-slate-300" />
+                          </div>
+                        )}
                         <button
                           onClick={e => { e.preventDefault(); toggleCompare(p.part_number) }}
                           className={`absolute top-2 right-2 p-2 rounded-lg ${compareIds.has(p.part_number) ? 'bg-primary-500 text-white' : 'bg-white/90 text-slate-600 hover:bg-slate-100'} shadow`}
@@ -314,7 +316,7 @@ export default function ProductFinderPage() {
                         {p.category && <p className="text-sm text-slate-500 mt-0.5">{p.category}</p>}
                         {(p.current || p.voltage || p.poles) && (
                           <p className="text-xs text-slate-500 mt-1">
-                            {[p.current, p.voltage, p.poles].filter(Boolean).join(' · ')}
+                            {[p.current, p.voltage, p.poles].filter(Boolean).join(' Â· ')}
                           </p>
                         )}
                         <div className="mt-3 flex gap-2">
@@ -399,12 +401,12 @@ export default function ProductFinderPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Brand</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.manufacturer || '—'}</td>)}</tr>
-                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Category</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.category || '—'}</td>)}</tr>
-                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Current</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.current || '—'}</td>)}</tr>
-                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Voltage</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.voltage || '—'}</td>)}</tr>
-                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Poles</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.poles || '—'}</td>)}</tr>
-                  <tr><td className="px-4 py-2 font-medium text-slate-500">Mounting</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.mounting_type || '—'}</td>)}</tr>
+                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Brand</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.manufacturer || 'â€”'}</td>)}</tr>
+                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Category</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.category || 'â€”'}</td>)}</tr>
+                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Current</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.current || 'â€”'}</td>)}</tr>
+                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Voltage</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.voltage || 'â€”'}</td>)}</tr>
+                  <tr className="border-b border-slate-100"><td className="px-4 py-2 font-medium text-slate-500">Poles</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.poles || 'â€”'}</td>)}</tr>
+                  <tr><td className="px-4 py-2 font-medium text-slate-500">Mounting</td>{compareProducts.map(p => <td key={p.part_number} className="px-4 py-2">{p.mounting_type || 'â€”'}</td>)}</tr>
                 </tbody>
               </table>
             </div>

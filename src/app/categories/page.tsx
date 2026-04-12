@@ -1,18 +1,50 @@
 import { getCategories } from '@/lib/api'
-import { CATEGORIES } from '@/app/lib/constants'
+import { API_BASE_URL } from '@/lib/constants'
+import { CATEGORIES } from '@/lib/constants'
 import { CategoryCard } from '@/components/ui/CategoryCard'
-import { Container, Section, Input } from '@/components/ui'
 
-const TOP_CATEGORY_SLUGS = [
-  'plc',
-  'sensors',
-  'drive',
-  'power-supply',
-]
+/** DB category values merged under the "Drives" slug (counts summed on categories page). */
+const DRIVES_CATEGORY_ALIASES = ['Drives', 'VFD', 'Variable Frequency Drive']
 
 export const metadata = {
   title: 'Product Categories | Advanced Systems',
   description: 'Browse industrial automation parts by category: PLC, drives, sensors, HMI, and more.',
+}
+
+async function getCategoryProductCount(categoryName: string): Promise<number> {
+  try {
+    const sp = new URLSearchParams({
+      category: categoryName,
+      page: '1',
+      size: '1',
+    })
+    let res = await fetch(`${API_BASE_URL}/api/v1/search/?${sp.toString()}`, { cache: 'no-store' })
+    if (!res.ok) {
+      res = await fetch(
+        `${API_BASE_URL}/products?category=${encodeURIComponent(categoryName)}&limit=1`,
+        { cache: 'no-store' }
+      )
+    }
+    if (!res.ok) return 0
+    const data = await res.json()
+    return (
+      data?.total ??
+      data?.count ??
+      (Array.isArray(data?.products) ? data.products.length : 0) ??
+      (Array.isArray(data?.items) ? data.items.length : 0) ??
+      0
+    )
+  } catch {
+    return 0
+  }
+}
+
+/** Count for "Drives" = sum of products in Drives, VFD, and Variable Frequency Drive (no double-count). */
+async function getDrivesProductCount(): Promise<number> {
+  const counts = await Promise.all(
+    DRIVES_CATEGORY_ALIASES.map((cat) => getCategoryProductCount(cat))
+  )
+  return counts.reduce((a, b) => a + b, 0)
 }
 
 export default async function CategoriesPage() {
@@ -21,81 +53,46 @@ export default async function CategoriesPage() {
     const data = await getCategories()
     apiCategories = Array.isArray(data) ? data : data?.categories || []
   } catch {}
-  const categories =
+  const baseCategories =
     apiCategories.length > 0
-      ? apiCategories.map((cat) => ({
-          name: cat.name,
-          slug: cat.slug,
-          count: Number(cat.product_count ?? 0),
-        }))
-      : CATEGORIES.map((c) => ({ name: c.name, slug: c.slug, count: 0 }))
+      ? apiCategories
+      : CATEGORIES.map((c) => ({ name: c.name, slug: c.slug }))
 
-  const topCategories = categories.filter((cat) => TOP_CATEGORY_SLUGS.includes((cat.slug || '').toLowerCase()))
-  const otherCategories = categories.filter((cat) => !TOP_CATEGORY_SLUGS.includes((cat.slug || '').toLowerCase()))
+  const categories = await Promise.all(
+    baseCategories.map(async (cat) => {
+      const count =
+        cat.slug === 'drives'
+          ? await getDrivesProductCount()
+          : await getCategoryProductCount(cat.name)
+      return { name: cat.name, slug: cat.slug, product_count: count }
+    })
+  )
 
   return (
     <div className="min-h-screen bg-white">
-      <Section className="relative overflow-hidden bg-[#0B1220] px-4" spacing="lg">
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            background:
-              "radial-gradient(circle at 20% 20%, rgba(0,114,206,0.35), transparent 35%), radial-gradient(circle at 80% 10%, rgba(14,165,233,0.25), transparent 35%)",
-          }}
-        />
-        <Container className="relative flex w-full flex-col items-center text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-            Find Industrial Parts
+      <div className="border-b border-gray-200 bg-gray-50 py-14 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+            Product Categories
           </h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
-            Search by part number, brand, or category
+          <p className="text-gray-600 max-w-2xl">
+            Browse our industrial automation catalog by category. Find PLCs, drives, sensors, and more.
           </p>
-          <form action="/search" className="mt-8 w-full max-w-3xl">
-            <Input
-              type="search"
-              name="q"
-              placeholder="Search by part number, brand, or category..."
-              className="h-14 bg-white text-[15px] text-slate-900"
-              aria-label="Search industrial parts"
+        </div>
+      </div>
+
+      <div className="page-container py-12">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {categories.map((cat) => (
+            <CategoryCard
+              key={cat.name}
+              name={cat.name}
+              slug={cat.slug}
+              product_count={cat.product_count}
             />
-          </form>
-        </Container>
-      </Section>
-
-      <Container className="py-14 sm:py-16">
-        {topCategories.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Top Categories</h2>
-            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-              {topCategories.map((cat) => (
-                <CategoryCard
-                  key={`top-${cat.name}`}
-                  name={cat.name}
-                  slug={cat.slug}
-                  count={cat.count}
-                  variant="large"
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        <div className="my-12 border-t border-slate-200" />
-
-        <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">All Categories</h2>
-          <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4 lg:gap-8">
-            {otherCategories.map((cat) => (
-              <CategoryCard
-                key={cat.name}
-                name={cat.name}
-                slug={cat.slug}
-                count={cat.count}
-              />
-            ))}
-          </div>
-        </section>
-      </Container>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

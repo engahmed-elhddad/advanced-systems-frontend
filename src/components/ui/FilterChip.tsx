@@ -6,26 +6,36 @@ export interface FilterChipProps {
   value: string
   onRemove: () => void
   className?: string
-  variant?: 'primary' | 'accent'
+  variant?: 'primary' | 'accent' | 'neutral'
 }
 
 export function FilterChip({ label, value, onRemove, className, variant = 'primary' }: FilterChipProps) {
   const isAccent = variant === 'accent'
+  const isNeutral = variant === 'neutral'
+  const text = value.trim() ? `${label}: ${value}` : label
   return (
     <span
       className={cn(
         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium',
-        isAccent
-          ? 'bg-accent-50 border border-accent-200 text-accent-700'
-          : 'bg-primary-50 border border-primary-200 text-primary-700',
+        isNeutral &&
+          'border border-white/20 bg-white/10 text-slate-100',
+        !isNeutral &&
+          (isAccent
+            ? 'bg-accent-50 border border-accent-200 text-accent-700'
+            : 'bg-primary-50 border border-primary-200 text-primary-700'),
         className
       )}
     >
-      {label}: {value}
+      {text}
       <button
         type="button"
         onClick={onRemove}
-        className={cn('ml-0.5 transition-colors', isAccent ? 'hover:text-accent-800' : 'hover:text-primary-800')}
+        className={cn(
+          'ml-0.5 transition-colors',
+          isNeutral && 'hover:text-white',
+          isAccent && 'hover:text-accent-800',
+          !isNeutral && !isAccent && 'hover:text-primary-800'
+        )}
         aria-label={`Remove ${label} filter`}
       >
         ×

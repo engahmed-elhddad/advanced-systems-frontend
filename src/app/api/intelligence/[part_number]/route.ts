@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { detectPartNumberInfo } from "@/app/lib/partNumberIntelligence"
+import { detectPartNumberInfo } from "@/lib/partNumberIntelligence"
 
 /**
  * GET /api/intelligence/[part_number]

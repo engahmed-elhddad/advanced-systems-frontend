@@ -1,4 +1,3 @@
-import { apiFetch } from '@/lib/api'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -12,7 +11,7 @@ type Props = { params: Promise<{ locale: string; slug: string }> }
 export async function generateMetadata({ params }: Props) {
   const { locale, slug } = await params
   try {
-    const res = await apiFetch(`${API}/api/news/${encodeURIComponent(slug)}`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API}/api/news/${encodeURIComponent(slug)}`, { next: { revalidate: 3600 } })
     if (!res.ok) return { title: 'Article Not Found' }
     const a = await res.json()
     const title = (locale === 'ar' ? a.title_ar : a.title_en) || a.title_en || 'News'
@@ -38,7 +37,7 @@ export default async function NewsArticlePage({ params }: Props) {
 
   let article: { title_en?: string; title_ar?: string; content_en?: string; content_ar?: string; image_url?: string; source?: string; published_date?: string }
   try {
-    const res = await apiFetch(`${API}/api/news/${encodeURIComponent(slug)}`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API}/api/news/${encodeURIComponent(slug)}`, { next: { revalidate: 3600 } })
     if (!res.ok) notFound()
     article = await res.json()
   } catch {

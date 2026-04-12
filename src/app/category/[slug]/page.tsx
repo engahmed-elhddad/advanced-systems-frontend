@@ -1,11 +1,15 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { slugToCategory, SITE_URL } from '@/app/lib/constants'
-import { getProducts } from '@/lib/api'
+import Link from 'next/link'
+import { slugToCategory } from '@/lib/constants'
 import { ProductCard } from '@/components/products/ProductCard'
 import { productToCardProps } from '@/lib/productMappers'
 import type { Metadata } from 'next'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://advancedsystems-int.com'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+
+/** When slug is "drives", products are fetched from these DB category values (merged). */
+const DRIVES_CATEGORY_ALIASES = ['Drives', 'VFD', 'Variable Frequency Drive'] as const
 const PER_PAGE = 24
 
 interface Props {
@@ -16,64 +20,101 @@ interface Props {
 function slugToCategoryName(slug: string): string | undefined {
   const fromConst = slugToCategory(slug)
   if (fromConst) return fromConst
-  return decodeURIComponent(slug).replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const categoryName = slugToCategoryName(slug)
   if (!categoryName) return { title: 'Category Not Found' }
-  const { items } = await fetchCategoryProducts(decodeURIComponent(slug), 1)
-  const brands = Array.from(
-    new Set(
-      items
-        .map((item: Record<string, unknown>) => String(item.brand ?? '').trim())
-        .filter(Boolean)
-    )
-  ).slice(0, 5)
-  const title = `${categoryName} | Industrial Parts Marketplace`
-  const description = `Browse ${categoryName} industrial components with specs, delivery options, and quick RFQ support.`
-  const canonical = `${SITE_URL}/categories/${slug}`
-  const keywordCombos = brands.map((brand) => `${brand} ${categoryName}`)
+  const title = `${categoryName} – Industrial Automation Components | Advanced Systems`
+  const desc = `Browse ${categoryName} from leading manufacturers. Specifications, datasheets and RFQ for industrial automation components.`.slice(0, 160)
+  const canonical = `${SITE_URL}/category/${slug}`
   return {
     title,
-    description,
-    keywords: [categoryName, ...keywordCombos, 'industrial automation', 'industrial parts', 'PLC', 'sensors', 'drives'],
+    description: desc,
+    keywords: `${categoryName}, industrial automation, components, specifications, datasheet, RFQ`.split(', ').join(', '),
     alternates: { canonical },
-    openGraph: { title, description, url: canonical, type: 'website' },
+    openGraph: { title, description: desc, url: canonical, type: 'website' },
     robots: { index: true, follow: true },
   }
 }
 
-export const revalidate = 300
+export const revalidate = 3600
 
-async function fetchCategoryProducts(categoryQuery: string, page: number, brand?: string) {
+async function fetchProducts(
+  category: string,
+  page: number = 1,
+  brand?: string,
+  limit: number = PER_PAGE
+) {
   try {
-    const data = await getProducts({
-      category: categoryQuery,
-      brand,
-      page,
-      size: PER_PAGE,
-      include_unready: false,
+    const v1 = new URLSearchParams({
+      category,
+      page: String(page),
+      size: String(limit),
     })
-    const raw = data.items ?? data.products ?? []
-    const items = Array.isArray(raw) ? raw : []
-    const total = typeof data.total === "number" ? data.total : items.length
-    const pages = data.pages ?? Math.max(1, Math.ceil(total / PER_PAGE))
-    return { items, total, pages, failed: false }
+    if (brand) v1.set('brand', brand)
+    let res = await fetch(`${API_BASE}/api/v1/search/?${v1}`, { next: { revalidate: 3600 } })
+    if (!res.ok) {
+      const leg = new URLSearchParams({
+        category,
+        limit: String(limit),
+        page: String(page),
+      })
+      if (brand) leg.set('brand', brand)
+      res = await fetch(`${API_BASE}/products?${leg}`, { next: { revalidate: 3600 } })
+    }
+    if (!res.ok) return { results: [], count: 0 }
+    const data = await res.json()
+    const results = data.hits ?? data.items ?? data.products ?? data.results ?? []
+    return {
+      results,
+      count: data.total ?? data.count ?? results.length,
+    }
   } catch {
-    return { items: [], total: 0, pages: 1, failed: true }
+    return { results: [], count: 0 }
   }
+}
+
+/** Fetch products for "drives" by querying Drives, VFD, and Variable Frequency Drive; merge and dedupe by part_number. */
+async function fetchDrivesProducts(page: number, brand?: string) {
+  const limitPerCategory = 200
+  const [r1, r2, r3] = await Promise.all(
+    DRIVES_CATEGORY_ALIASES.map((cat) =>
+      fetchProducts(cat, 1, brand, limitPerCategory)
+    )
+  )
+  const byPartNumber = new Map<string, Record<string, unknown>>()
+  for (const r of [r1.results, r2.results, r3.results]) {
+    for (const p of r) {
+      const key = String(p.part_number ?? '')
+      if (key && !byPartNumber.has(key)) byPartNumber.set(key, p)
+    }
+  }
+  const merged = Array.from(byPartNumber.values())
+  const count = merged.length
+  const start = (page - 1) * PER_PAGE
+  const results = merged.slice(start, start + PER_PAGE)
+  return { results, count }
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { slug } = await params
   const { page: pageStr, brand } = await searchParams
   const categoryName = slugToCategoryName(slug)
-  if (!categoryName) return notFound()
+  if (!categoryName) notFound()
+
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.debug('[CategoryPage] category=%s slug=%s brand=%s', categoryName, slug, brand || '(none)')
+  }
 
   const page = Math.max(1, parseInt(pageStr || '1', 10))
-  const { items, total, pages, failed } = await fetchCategoryProducts(decodeURIComponent(slug), page, brand || undefined)
+  const { results, count } =
+    slug === 'drives'
+      ? await fetchDrivesProducts(page, brand || undefined)
+      : await fetchProducts(categoryName, page, brand || undefined)
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -89,54 +130,30 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">{categoryName}</h1>
           <p className="text-slate-600">
-            Discover {categoryName} products with datasheets, availability, and fast RFQ support.
+            Industrial automation components in the {categoryName} category. Browse specifications, datasheets and request quotes.
           </p>
         </div>
 
-        {failed ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-10 text-center">
-            <p className="text-amber-900 font-semibold">Having trouble loading data</p>
-            <p className="mt-1 text-sm text-amber-800">Please try again or contact us instantly on WhatsApp.</p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Link
-                href={`/categories/${slug}${page > 1 ? `?page=${page}` : ''}${brand ? `${page > 1 ? '&' : '?'}brand=${encodeURIComponent(brand)}` : ''}`}
-                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
-              >
-                Try again
-              </Link>
-              <a
-                href={`https://wa.me/201000629229?text=${encodeURIComponent(`Hello, I need help finding ${categoryName} parts`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100"
-              >
-                WhatsApp instantly
-              </a>
-            </div>
-          </div>
-        ) : items.length > 0 ? (
+        {results.length > 0 ? (
           <>
-            <p className="mb-4 text-sm text-slate-500">
-              Showing {items.length} of {total} products
-            </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {items.map((p: Record<string, unknown>) => (
-                <ProductCard key={String(p.part_number ?? '')} {...productToCardProps(p as never)} productBasePath="/part-number" />
+              {results.map((p: Record<string, unknown>) => (
+                <ProductCard key={String(p.part_number ?? '')} {...productToCardProps(p as never)} productBasePath="/products" />
               ))}
             </div>
-            {pages > 1 && (
+            {count > PER_PAGE && (
               <div className="mt-8 flex justify-center gap-2">
                 {page > 1 && (
                   <Link
-                    href={`/categories/${slug}${page > 2 ? `?page=${page - 1}` : ''}${brand ? `&brand=${encodeURIComponent(brand)}` : ''}`}
+                    href={`/category/${slug}${page > 2 ? `?page=${page - 1}` : ''}${brand ? `&brand=${encodeURIComponent(brand)}` : ''}`}
                     className="px-4 py-2 rounded-lg border border-slate-200 hover:bg-white text-slate-700"
                   >
                     Previous
                   </Link>
                 )}
-                {page < pages && (
+                {page * PER_PAGE < count && (
                   <Link
-                    href={`/categories/${slug}?page=${page + 1}${brand ? `&brand=${encodeURIComponent(brand)}` : ''}`}
+                    href={`/category/${slug}?page=${page + 1}${brand ? `&brand=${encodeURIComponent(brand)}` : ''}`}
                     className="px-4 py-2 rounded-lg bg-primary-500 text-white hover:bg-primary-600"
                   >
                     Next
@@ -147,21 +164,17 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           </>
         ) : (
           <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-            <p className="text-slate-700 mb-1">No products found in this category yet.</p>
-            <p className="text-sm text-slate-500">Try a nearby category or request a quote for the exact part number.</p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Link
-                href={`/rfq?part_number=${encodeURIComponent(categoryName)}`}
-                className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-600"
-              >
-                ⚡ Get Price
-              </Link>
-              <Link href="/search" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                Search all products
-              </Link>
-            </div>
+            <p className="text-slate-600 mb-4">No products found in this category yet.</p>
+            <Link href="/search" className="text-primary-600 font-medium hover:underline">Search all products</Link>
           </div>
         )}
+
+        <div className="mt-10 pt-8 border-t border-slate-200">
+          <p className="text-sm text-slate-600">
+            Browse <Link href="/products" className="text-primary-600 hover:underline">all products</Link> or use{' '}
+            <Link href="/product-finder" className="text-primary-600 hover:underline">Product Finder</Link> to filter by specifications.
+          </p>
+        </div>
       </div>
     </div>
   )

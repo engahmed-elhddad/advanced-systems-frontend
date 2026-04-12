@@ -15,6 +15,7 @@
 playwright-report/
 test-results/
 build-log.txt
+.migration_backup_app/
 visual-tests/results/
 
 # next.js

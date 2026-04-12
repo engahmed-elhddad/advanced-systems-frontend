@@ -29,6 +29,58 @@ export interface ApiProduct {
  * Map an API product object to ProductCard props.
  * Uses API-provided image_url directly.
  */
+/** Map ORM-shaped product JSON (list/detail API) to ApiProduct. */
+export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
+  const images = (p.images as Array<{ url?: string; is_primary?: boolean }> | undefined) || []
+  const primary = images.find((i) => i.is_primary)?.url || images[0]?.url
+  const br = p.brand as { name?: string } | undefined
+  const cat = p.category as { name?: string } | undefined
+  return {
+    id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
+    part_number: String(p.part_number ?? ''),
+    brand: br?.name,
+    manufacturer: br?.name,
+    category: cat?.name,
+    description: String(p.description ?? ''),
+    short_description: String(p.short_description ?? ''),
+    image_url: primary || String(p.image_url ?? ''),
+    stock_quantity: Number(p.stock_quantity ?? 0),
+    availability: String(p.availability ?? ''),
+    price_usd: (p.price_usd as number) ?? null,
+    series: p.series != null ? String(p.series) : null,
+  }
+}
+
+/** Normalize a Meilisearch / search API hit to ApiProduct for cards. */
+export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct {
+  const img =
+    (hit.primary_image as string) ||
+    (hit.image_url as string) ||
+    (hit.image as string) ||
+    ''
+  const hid = hit.id
+  const parsedId =
+    typeof hid === 'number' && Number.isFinite(hid)
+      ? hid
+      : typeof hid === 'string' && /^\d+$/.test(hid)
+        ? Number(hid)
+        : undefined
+  return {
+    id: parsedId,
+    part_number: String(hit.part_number ?? ''),
+    brand: String(hit.brand_name ?? hit.brand ?? ''),
+    manufacturer: String(hit.brand_name ?? ''),
+    category: String(hit.category_name ?? hit.category ?? ''),
+    description: String(hit.short_description ?? hit.description ?? ''),
+    short_description: String(hit.short_description ?? ''),
+    image_url: img,
+    stock_quantity: typeof hit.stock_quantity === 'number' ? hit.stock_quantity : 0,
+    availability: String(hit.availability ?? ''),
+    price_usd: typeof hit.price_usd === 'number' ? hit.price_usd : null,
+    series: hit.series != null ? String(hit.series) : null,
+  }
+}
+
 export function productToCardProps(p: ApiProduct): ProductCardProps {
   const manufacturer =
     typeof p.brand === 'string' ? p.brand : (p.brand?.name ?? p.manufacturer)
@@ -58,6 +110,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
 
   return {
     part_number: p.part_number,
+    product_id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
     brand,
     manufacturer,
     category: categoryDisplay,

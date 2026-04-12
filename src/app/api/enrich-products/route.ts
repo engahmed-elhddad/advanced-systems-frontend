@@ -1,11 +1,12 @@
-import { apiFetch } from '@/lib/api'
 import { NextResponse } from "next/server"
 
 const API =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
 
-// Admin key is kept server-side only (no NEXT_PUBLIC_ prefix).
-const ADMIN_API_KEY = process.env.ADMIN_API_KEY ?? "ADVANCED_SYSTEMS_ADMIN"
+function serverAdminApiKey(): string | undefined {
+  const k = process.env.ADMIN_API_KEY?.trim()
+  return k || undefined
+}
 
 /**
  * POST /api/enrich-products
@@ -14,10 +15,17 @@ const ADMIN_API_KEY = process.env.ADMIN_API_KEY ?? "ADVANCED_SYSTEMS_ADMIN"
  * ``ADMIN_API_KEY`` stays server-side and is never exposed to the browser.
  */
 export async function POST() {
+  const adminKey = serverAdminApiKey()
+  if (!adminKey) {
+    return NextResponse.json(
+      { error: "ADMIN_API_KEY is not configured on the server" },
+      { status: 503 }
+    )
+  }
   try {
-    const res = await apiFetch(`${API}/admin/enrich-products`, {
+    const res = await fetch(`${API}/admin/enrich-products`, {
       method: "POST",
-      headers: { "api-key": ADMIN_API_KEY },
+      headers: { "api-key": adminKey },
       signal: AbortSignal.timeout(30000),
     })
 

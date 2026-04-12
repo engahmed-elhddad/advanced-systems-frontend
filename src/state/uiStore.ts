@@ -5,8 +5,9 @@ interface UIState {
   setViewMode: (mode: 'grid' | 'table') => void
   rfqModalOpen: boolean
   rfqModalPartNumber: string | null
+  rfqModalProductId: number | null
   rfqListMode: boolean
-  openRFQModal: (partNumber?: string) => void
+  openRFQModal: (partNumber?: string, productId?: number | null) => void
   openRFQListModal: () => void
   closeRFQModal: () => void
 }
@@ -16,11 +17,17 @@ export const useUIStore = create<UIState>((set) => ({
   setViewMode: (mode) => set({ viewMode: mode }),
   rfqModalOpen: false,
   rfqModalPartNumber: null,
+  rfqModalProductId: null,
   rfqListMode: false,
-  openRFQModal: (partNumber) =>
-    set({ rfqModalOpen: true, rfqModalPartNumber: partNumber ?? null, rfqListMode: false }),
+  openRFQModal: (partNumber, productId) =>
+    set({
+      rfqModalOpen: true,
+      rfqModalPartNumber: partNumber ?? null,
+      rfqModalProductId: productId ?? null,
+      rfqListMode: false,
+    }),
   openRFQListModal: () =>
-    set({ rfqModalOpen: true, rfqModalPartNumber: null, rfqListMode: true }),
+    set({ rfqModalOpen: true, rfqModalPartNumber: null, rfqModalProductId: null, rfqListMode: true }),
   closeRFQModal: () =>
-    set({ rfqModalOpen: false, rfqModalPartNumber: null, rfqListMode: false }),
+    set({ rfqModalOpen: false, rfqModalPartNumber: null, rfqModalProductId: null, rfqListMode: false }),
 }))

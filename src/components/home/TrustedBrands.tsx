@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { getBrandHref } from '@/lib/brandUtils'
-import { API_BASE_URL } from '@/app/lib/constants'
+import { API_BASE_URL } from '@/lib/constants'
 
 interface BrandItem {
   name: string
@@ -42,7 +42,7 @@ export function TrustedBrands() {
     let cancelled = false
     setLoading(true)
     setError(false)
-    apiFetch(`${API_BASE_URL}/brands`)
+    apiFetch(`${API_BASE_URL}/api/v1/brands/`)
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return

@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { SearchBar } from '@/features/search/components/SearchBar'
+import { SearchBar } from '@/components/search/SearchBar'
+import { cn } from '@/lib/utils'
 
 const PLACEHOLDER = 'Search industrial part numbers'
 const EXAMPLES = ['6EP1333', '3RT1015', 'XCK-M115', '6ES7214']
@@ -14,46 +15,45 @@ const POPULAR_SEARCHES = [
   'S8VK-G24024',
 ]
 
-/** Hero search: same SearchBar as header with variant="hero" (height 56px, glow, larger font). Autocomplete and routing identical. */
+/** Hero search — large glass surface + gradient submit (header uses compact pill). */
 export function HeroSearch({ variant = 'default' }: { variant?: 'default' | 'hero' }) {
   const isHero = variant === 'hero'
   return (
-    <div className="mx-auto max-w-2xl">
-      <div
-        className={
-          isHero
-            ? 'rounded-xl border-0 bg-transparent shadow-none'
-            : 'rounded-xl border border-gray-200 bg-white px-6 py-4 shadow-sm'
-        }
+    <div className={cn('mx-auto w-full', isHero ? 'max-w-3xl lg:max-w-[48rem]' : 'max-w-2xl')}>
+      <SearchBar
+        variant={isHero ? 'hero' : 'header'}
+        placeholder={PLACEHOLDER}
+        showSuggestions
+        debounceMs={300}
+        minLength={1}
+        suggestionLimit={10}
+        searchPath="/search"
+        productPath="/products"
+        brandPath="/brands"
+        categoryPath="/categories"
+        className="w-full"
+      />
+      <p
+        className={cn(
+          'mt-4 text-center text-[0.8125rem] leading-relaxed',
+          isHero ? 'text-white/50' : 'text-white/40',
+        )}
       >
-        <SearchBar
-          variant="hero"
-          placeholder={PLACEHOLDER}
-          showSuggestions
-          debounceMs={300}
-          minLength={2}
-          suggestionLimit={8}
-          searchPath="/search"
-          productPath="/products"
-          brandPath="/brand"
-          categoryPath="/categories"
-          className="border-0 shadow-none p-0"
-        />
-      </div>
-      <p className={`mt-2 text-center text-xs ${isHero ? 'text-slate-400' : 'text-gray-500'}`}>
-        Examples: <span className={isHero ? 'font-mono text-slate-300' : 'font-mono text-gray-600'}>{EXAMPLES.join(', ')}</span>
+        <span className="font-medium text-white/55">Examples</span>
+        <span className="mx-1.5 text-white/30">·</span>
+        <span className={cn('font-mono text-[0.78rem] tracking-tight', isHero ? 'text-white/75' : 'text-white/65')}>
+          {EXAMPLES.join(', ')}
+        </span>
       </p>
       {isHero && (
-        <div className="mt-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 text-center">
-            Popular Searches
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
+        <div className="mt-8">
+          <p className="mb-3.5 text-center text-label-caps text-white/38">Popular searches</p>
+          <div className="flex flex-wrap justify-center gap-2.5">
             {POPULAR_SEARCHES.map((part) => (
               <Link
                 key={part}
                 href={`/search?q=${encodeURIComponent(part)}`}
-                className="rounded-lg bg-white/10 px-3 py-1 text-sm text-slate-200 hover:bg-white/20 transition-colors font-mono"
+                className="rounded-full border border-white/[0.09] bg-white/[0.05] px-4 py-2 font-mono text-[0.72rem] text-white/82 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-300/25 hover:bg-white/[0.09] hover:text-white hover:shadow-[0_8px_24px_-6px_rgba(255,122,0,0.2)]"
               >
                 {part}
               </Link>

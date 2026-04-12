@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { GLOSSARY_TERMS } from '@/app/lib/knowledge-hub/content'
+import { GLOSSARY_TERMS } from '@/lib/knowledge-hub/content'
 
 export async function generateStaticParams() {
   return GLOSSARY_TERMS.map((t) => ({ slug: t.slug }))

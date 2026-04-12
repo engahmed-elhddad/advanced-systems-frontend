@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/api'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { API_BASE_URL } from '@/app/lib/constants'
+import { API_BASE_URL } from '@/lib/constants'
 
 interface TrendingPart {
   part_number: string
@@ -14,12 +14,21 @@ interface TrendingPart {
 }
 
 async function fetchTrending(): Promise<TrendingPart[]> {
-  try {
-    const res = await apiFetch(`${API_BASE_URL}/search/trending?limit=12`)
-    if (!res.ok) return []
+  const parse = async (res: Response) => {
     const data = await res.json()
     const list = data?.parts ?? []
     return Array.isArray(list) ? list : []
+  }
+  try {
+    const res = await apiFetch(`${API_BASE_URL}/api/v1/search/trending?limit=12`)
+    if (res.ok) return await parse(res)
+  } catch {
+    /* */
+  }
+  try {
+    const res = await apiFetch(`${API_BASE_URL}/search/trending?limit=12`)
+    if (!res.ok) return []
+    return await parse(res)
   } catch {
     return []
   }
@@ -36,17 +45,19 @@ export function TrendingParts() {
     }).finally(() => {
       if (!cancelled) setLoading(false)
     })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   if (loading) {
     return (
-      <section className="py-16">
+      <section className="py-20">
         <div className="mx-auto max-w-7xl px-6">
-          <h2 className="mb-6 text-2xl font-bold text-gray-900">Trending Industrial Parts</h2>
+          <h2 className="mb-10 text-3xl font-bold tracking-tight text-white sm:text-4xl">Trending part numbers</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-20 rounded-lg bg-gray-100 animate-pulse" />
+              <div key={i} className="h-24 animate-pulse rounded-xl border border-white/10 bg-white/5" />
             ))}
           </div>
         </div>
@@ -57,25 +68,21 @@ export function TrendingParts() {
   if (!parts.length) return null
 
   return (
-    <section className="py-16">
+    <section className="py-20">
       <div className="mx-auto max-w-7xl px-6">
-        <h2 className="mb-6 text-2xl font-bold text-gray-900">Trending Industrial Parts</h2>
+        <h2 className="mb-10 text-3xl font-bold tracking-tight text-white sm:text-4xl">Trending part numbers</h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
           {parts.map((item) => (
             <Link
               key={item.part_number}
               href={`/products/${encodeURIComponent(item.part_number)}`}
-              className="rounded-lg border border-gray-200 bg-white p-3 transition hover:border-gray-300 hover:shadow-sm"
+              className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl transition-all duration-300 hover:scale-[1.03] hover:border-violet-400/25 hover:bg-white/[0.08]"
             >
-              <p className="font-mono text-sm font-semibold text-gray-900 truncate" title={item.part_number}>
+              <p className="truncate font-mono text-sm font-semibold text-white" title={item.part_number}>
                 {item.part_number}
               </p>
-              {item.brand && (
-                <p className="mt-0.5 text-xs text-gray-500 truncate">{item.brand}</p>
-              )}
-              {item.category && (
-                <p className="text-xs text-gray-400 truncate">{item.category}</p>
-              )}
+              {item.brand && <p className="mt-1 truncate text-xs text-white/50">{item.brand}</p>}
+              {item.category && <p className="truncate text-xs text-white/35">{item.category}</p>}
             </Link>
           ))}
         </div>

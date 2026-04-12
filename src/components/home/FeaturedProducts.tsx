@@ -20,7 +20,7 @@ export async function FeaturedProducts() {
           <ProductCard
             key={p.id ?? p.part_number}
             {...productToCardProps(p)}
-            productBasePath="/part-number"
+            productBasePath="/products"
           />
         ))}
       </div>

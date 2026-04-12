@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { ChevronDown, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useClickOutside } from '@/hooks/useClickOutside'
+import { useClickOutside } from '@/lib/hooks/useClickOutside'
 
 export interface SelectOption {
   value: string

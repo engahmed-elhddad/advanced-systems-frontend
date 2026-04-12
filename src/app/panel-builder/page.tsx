@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { generatePanelBom, getPanelBuilderOptions, submitBomRfq } from '@/lib/api'
-import { API_BASE_URL } from '@/app/lib/constants'
+import { API_BASE_URL } from '@/lib/constants'
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || API_BASE_URL
 
@@ -71,10 +71,10 @@ export default function PanelBuilderPage() {
 
   useEffect(() => {
     getPanelBuilderOptions()
-      .then((data: { applications?: { id: string; label: string }[]; control_types?: { id: string; label: string }[]; voltages?: string[] } | null) => {
-        if (data?.applications?.length) setOptions(o => ({ ...o, applications: data.applications! }))
-        if (data?.control_types?.length) setOptions(o => ({ ...o, control_types: data.control_types! }))
-        if (data?.voltages?.length) setOptions(o => ({ ...o, voltages: data.voltages! }))
+      .then((data: any) => {
+        if (data?.applications?.length) setOptions(o => ({ ...o, applications: data.applications }))
+        if (data?.control_types?.length) setOptions(o => ({ ...o, control_types: data.control_types }))
+        if (data?.voltages?.length) setOptions(o => ({ ...o, voltages: data.voltages }))
       })
       .catch(() => {})
   }, [])

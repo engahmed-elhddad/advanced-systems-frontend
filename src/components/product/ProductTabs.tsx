@@ -30,7 +30,7 @@ export function ProductTabs({
   crossRefs = {},
   imageUrl,
   apiBase,
-  productBasePath = '/part-number',
+  productBasePath = '/products',
 }: ProductTabsProps) {
   const [active, setActive] = useState<TabId>('description')
 

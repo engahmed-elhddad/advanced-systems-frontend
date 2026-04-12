@@ -5,7 +5,7 @@ import { apiFetch } from '@/lib/api'
 import { useState, useEffect } from 'react'
 import { ProductCard } from '@/components/products/ProductCard'
 import { productToCardProps } from '@/lib/productMappers'
-import { API_BASE_URL } from '@/app/lib/constants'
+import { API_BASE_URL } from '@/lib/constants'
 
 const CARD_MIN_WIDTH = 280
 
@@ -15,28 +15,41 @@ export function TrendingProducts() {
 
   useEffect(() => {
     let cancelled = false
-    apiFetch(`${API_BASE_URL}/products?limit=12`)
-      .then((res) => res.json())
+    const apply = (data: Record<string, unknown>) => {
+      const list = (data?.items ?? data?.products ?? data?.results ?? []) as unknown[]
+      setProducts(Array.isArray(list) ? (list as Record<string, unknown>[]) : [])
+    }
+    apiFetch(`${API_BASE_URL}/api/v1/products/?page=1&size=12`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('v1 products'))))
       .then((data) => {
         if (cancelled) return
-        const list = data?.products ?? data?.results ?? []
-        setProducts(Array.isArray(list) ? list : [])
+        apply(data as Record<string, unknown>)
       })
+      .catch(() =>
+        apiFetch(`${API_BASE_URL}/products?limit=12`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (cancelled) return
+            apply(data as Record<string, unknown>)
+          })
+      )
       .catch(() => {})
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   if (loading) {
     return (
-      <section className="py-16">
+      <section className="py-20">
         <div className="mx-auto max-w-7xl px-6">
-          <h2 className="mb-6 text-2xl font-bold text-gray-900">Trending Industrial Components</h2>
+          <h2 className="mb-10 text-3xl font-bold tracking-tight text-white sm:text-4xl">Trending components</h2>
           <div className="flex gap-6 overflow-hidden py-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-64 min-w-[280px] flex-shrink-0 rounded-lg bg-gray-100 animate-pulse" />
+              <div key={i} className="h-64 min-w-[280px] flex-shrink-0 animate-pulse rounded-xl border border-white/10 bg-white/5" />
             ))}
           </div>
         </div>
@@ -49,30 +62,22 @@ export function TrendingProducts() {
   const cardPropsList = products.map((p) => productToCardProps(p as never))
 
   return (
-    <section className="py-16">
+    <section className="py-20">
       <div className="mx-auto max-w-7xl px-6">
-        <h2 className="mb-6 text-2xl font-bold text-gray-900">Trending Industrial Components</h2>
-        <div className="overflow-hidden w-full">
+        <h2 className="mb-10 text-3xl font-bold tracking-tight text-white sm:text-4xl">Trending components</h2>
+        <div className="w-full overflow-hidden">
           <div
-            className="flex gap-6 animate-scroll hover:[animation-play-state:paused]"
+            className="flex animate-scroll gap-6 hover:[animation-play-state:paused]"
             style={{ width: 'max-content' }}
           >
             {cardPropsList.map((props, idx) => (
-              <div
-                key={`${props.part_number}-${idx}`}
-                className="flex-shrink-0"
-                style={{ minWidth: CARD_MIN_WIDTH }}
-              >
-                <ProductCard {...props} productBasePath="/part-number" />
+              <div key={`${props.part_number}-${idx}`} className="flex-shrink-0" style={{ minWidth: CARD_MIN_WIDTH }}>
+                <ProductCard {...props} productBasePath="/products" />
               </div>
             ))}
             {cardPropsList.map((props, idx) => (
-              <div
-                key={`dup-${props.part_number}-${idx}`}
-                className="flex-shrink-0"
-                style={{ minWidth: CARD_MIN_WIDTH }}
-              >
-                <ProductCard {...props} productBasePath="/part-number" />
+              <div key={`dup-${props.part_number}-${idx}`} className="flex-shrink-0" style={{ minWidth: CARD_MIN_WIDTH }}>
+                <ProductCard {...props} productBasePath="/products" />
               </div>
             ))}
           </div>

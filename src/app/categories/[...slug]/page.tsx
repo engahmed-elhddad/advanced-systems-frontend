@@ -6,7 +6,7 @@ import React, { useEffect, useState, useCallback, useMemo, Suspense } from "reac
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ChevronRight, SlidersHorizontal, X } from "lucide-react"
-import { API_BASE_URL, normalizeCategoryQueryForApi } from "@/app/lib/constants"
+import { API_BASE_URL, normalizeCategoryQueryForApi } from "@/lib/constants"
 import { ProductGrid } from "@/components/products/ProductGrid"
 import {
   FilterChip,
@@ -586,7 +586,7 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
               />
             ) : (
               <>
-                <ProductGrid products={products} productBasePath="/part-number" columns="compact" />
+                <ProductGrid products={products} productBasePath="/products" columns="compact" />
                 <Pagination
                   page={pageParam}
                   totalPages={totalPages}

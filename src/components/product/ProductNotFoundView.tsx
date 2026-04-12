@@ -104,7 +104,7 @@ export function ProductNotFoundView({
           <div className="max-w-4xl mx-auto mt-12 pt-10 border-t border-gray-200">
             <RelatedProducts
               products={similarProducts}
-              productBasePath="/part-number"
+              productBasePath="/products"
               imageUrl={(item) => item.image_url || ''}
               title="Similar Products"
             />

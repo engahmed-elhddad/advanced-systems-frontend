@@ -1,25 +1,13 @@
-import type { MetadataRoute } from 'next'
-import { SITE_URL } from '@/app/lib/constants'
+import type { MetadataRoute } from "next"
 
 export default function robots(): MetadataRoute.Robots {
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://advancedsystems-int.com"
   return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: [
-          '/admin/',
-          '/api/',
-          '/account/',
-          '/preview',
-          '/search',
-          '/rfq/dashboard',
-          '/login',
-        ],
-      },
-    ],
-    sitemap: [
-      `${SITE_URL}/sitemap.xml`,
-    ],
+    rules: {
+      userAgent: "*",
+      allow: "/",
+      disallow: ["/admin/", "/api/"],
+    },
+    sitemap: [`${base}/sitemap.xml`, `${base}/sitemap-products.xml`],
   }
 }

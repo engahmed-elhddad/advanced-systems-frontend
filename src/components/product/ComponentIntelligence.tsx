@@ -53,7 +53,7 @@ const riskColor: Record<string, string> = {
 export function ComponentIntelligence({
   partNumber,
   apiBase,
-  productBasePath = '/part-number',
+  productBasePath = '/products',
 }: ComponentIntelligenceProps) {
   const [data, setData] = useState<ComponentIntelligenceData | null>(null)
   const [loading, setLoading] = useState(true)

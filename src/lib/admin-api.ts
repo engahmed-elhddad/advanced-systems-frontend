@@ -196,6 +196,8 @@ export type AnalyticsDailyPoint = {
   date: string;
   visits: number;
   leads: number;
+  rfqs?: number;
+  unique_visitors?: number;
 };
 
 export type AnalyticsSummary = {
@@ -203,7 +205,14 @@ export type AnalyticsSummary = {
   product_views: number;
   quote_clicks: number;
   whatsapp_clicks: number;
+  rfq_submits: number;
   conversion_rate: number;
+  /** Distinct `visitor_id` with `page_view` in period (first-party tracking). */
+  unique_visitors: number;
+  /** RFQ rows created in period (`rfqs` table). */
+  total_rfqs_period: number;
+  /** `total_rfqs_period` / `unique_visitors` when visitors > 0. */
+  rfq_conversion_rate: number;
   daily: AnalyticsDailyPoint[];
 };
 

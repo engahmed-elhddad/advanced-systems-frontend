@@ -9,6 +9,10 @@ export interface RFQCreateInput {
   contact_name?: string
   country?: string
   phone?: string
+  product_id?: number
+  /** Set automatically by submitPublicRFQ when analytics consent is accepted */
+  visitor_id?: string
+  utm_source?: string
 }
 
 export interface RFQResponse {

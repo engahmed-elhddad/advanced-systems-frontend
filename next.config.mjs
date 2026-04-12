@@ -16,7 +16,12 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { source: '/product/:path*', destination: '/part-number/:path*', permanent: true },
+      // Single canonical product URL: /products/[part_number]
+      { source: '/product/:path*', destination: '/products/:path*', permanent: true },
+      { source: '/part-number/:path*', destination: '/products/:path*', permanent: true },
+      { source: '/p/:path*', destination: '/products/:path*', permanent: true },
+      { source: '/en/product/:path*', destination: '/products/:path*', permanent: true },
+      { source: '/ar/product/:path*', destination: '/products/:path*', permanent: true },
     ]
   },
   async rewrites() {

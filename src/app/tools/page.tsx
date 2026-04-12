@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileSpreadsheet, Search, Wrench } from 'lucide-react'
+import { Camera, FileSpreadsheet, Search, Wrench } from 'lucide-react'
 
 export const metadata = {
   title: 'Industrial Engineering Tools | Advanced Systems',
@@ -7,6 +7,12 @@ export const metadata = {
 }
 
 const tools = [
+  {
+    title: 'Scan Component',
+    description: 'Upload a product image. Vision AI detects part numbers for industrial components.',
+    href: '/tools/scan-component',
+    icon: Camera,
+  },
   {
     title: 'BOM Upload',
     description: 'Upload Excel or CSV BOM. Match parts, get datasheets and create RFQ.',
@@ -32,7 +38,7 @@ export default function ToolsPage() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-slate-900 mb-2">Industrial Engineering Tools</h1>
       <p className="text-slate-600 mb-10">
-        Tools for industrial automation component identification and procurement.
+        AI-powered tools for industrial automation component identification and procurement.
       </p>
       <div className="grid sm:grid-cols-2 gap-6">
         {tools.map((t) => {

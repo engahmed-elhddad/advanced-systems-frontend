@@ -4,10 +4,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { Plus, Search, Pencil, Trash2, Boxes } from 'lucide-react'
-import { AdminLayout } from '@/components/admin/layout/AdminLayout'
 import { Badge, Button, Card, Input, Skeleton } from '@/components/ui'
 import { getApiErrorMessage } from '@/lib/api'
-import { useAdminProducts, useDeleteAdminProduct, type AdminProductStatus } from '@/hooks/useProducts'
+import { useAdminProducts, useDeleteAdminProduct, type AdminProductStatus } from '@/features/products/hooks/useProducts'
 import toast from 'react-hot-toast'
 
 const FALLBACK_IMAGE = 'https://placehold.co/80x80/111827/9CA3AF?text=No+Img'
@@ -59,7 +58,6 @@ export default function AdminProductsListPage() {
   }
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -73,7 +71,8 @@ export default function AdminProductsListPage() {
           </Button>
         </div>
 
-        <Card className="border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+        <Card hover={false} className="p-0" padding="none">
+          <div className="p-4">
           <Input
             placeholder="Search by product, brand, or category"
             aria-label="Search products"
@@ -81,19 +80,20 @@ export default function AdminProductsListPage() {
             onChange={(e) => setQuery(e.target.value)}
             leftIcon={<Search className="h-4 w-4" />}
           />
+          </div>
         </Card>
 
-        <Card className="overflow-hidden border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-          <div className="overflow-x-auto">
+        <Card hover={false} className="p-0" padding="none">
+          <div className="overflow-x-auto p-4">
             <table className="min-w-full border-separate border-spacing-y-2 text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wider text-gray-300">
-                  <th className="px-4 py-2">Image</th>
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Brand</th>
-                  <th className="px-4 py-2">Category</th>
-                  <th className="px-4 py-2">Status</th>
-                  <th className="px-4 py-2">Actions</th>
+                <tr className="text-left text-xs uppercase tracking-wider text-white/45">
+                  <th className="px-4 py-3 font-semibold">Image</th>
+                  <th className="px-4 py-3 font-semibold">Name</th>
+                  <th className="px-4 py-3 font-semibold">Brand</th>
+                  <th className="px-4 py-3 font-semibold">Category</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -115,9 +115,9 @@ export default function AdminProductsListPage() {
                   filtered.map((product) => (
                     <tr
                       key={product.id}
-                      className="rounded-lg bg-white/5 text-gray-100 transition-all duration-300 hover:scale-[1.02] hover:bg-white/10 hover:shadow-[0_0_24px_rgba(255,122,0,0.12)]"
+                      className="group text-white/90 transition-all duration-300 [&>td]:bg-white/[0.04] [&>td]:backdrop-blur-sm hover:[&>td]:bg-white/[0.09]"
                     >
-                      <td className="rounded-l-lg px-4 py-3">
+                      <td className="rounded-l-xl px-4 py-3.5">
                         <Image
                           src={product.imageUrl || FALLBACK_IMAGE}
                           alt={product.name}
@@ -128,13 +128,15 @@ export default function AdminProductsListPage() {
                           className="h-12 w-12 rounded-md border border-white/10 object-cover"
                         />
                       </td>
-                      <td className="px-4 py-3 font-medium text-white">{product.name}</td>
-                      <td className="px-4 py-3 text-gray-300">{product.brand}</td>
-                      <td className="px-4 py-3 text-gray-300">{product.category}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant={statusVariant(product.status)}>{product.status}</Badge>
+                      <td className="px-4 py-3.5 font-medium text-white">{product.name}</td>
+                      <td className="px-4 py-3.5 text-white/60">{product.brand}</td>
+                      <td className="px-4 py-3.5 text-white/60">{product.category}</td>
+                      <td className="px-4 py-3.5">
+                        <Badge variant={statusVariant(product.status)}>
+                          {product.status}
+                        </Badge>
                       </td>
-                      <td className="rounded-r-lg px-4 py-3">
+                      <td className="rounded-r-xl px-4 py-3.5">
                         <div className="flex items-center gap-2">
                           <Button asChild size="sm" variant="secondary">
                             <Link href={`/admin/products/${product.id}`} aria-label={`Edit ${product.name}`}>
@@ -162,6 +164,5 @@ export default function AdminProductsListPage() {
           </div>
         </Card>
       </div>
-    </AdminLayout>
   )
 }

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { SITE_URL } from "@/app/lib/constants"
+import { SITE_URL } from "@/lib/constants"
 
 export const metadata = {
   title: "Suppliers | Advanced Systems – Industrial Automation",

@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Advanced Systems — Industrial Automation Marketplace',
-  description: 'Source PLCs, drives, sensors, and industrial automation components from leading manufacturers. Fast quote, global shipping.',
+  description: 'Source PLCs, drives, sensors, and industrial automation components from 500+ manufacturers. Fast quote, global shipping.',
 }
 
 export default function LocaleHomePage() {

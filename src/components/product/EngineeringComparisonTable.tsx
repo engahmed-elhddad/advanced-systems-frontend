@@ -34,7 +34,7 @@ function getVal(specs: Record<string, unknown> | undefined, keys: string[]): str
 export function EngineeringComparisonTable({
   currentProduct,
   alternatives,
-  productBasePath = '/part-number',
+  productBasePath = '/products',
 }: EngineeringComparisonTableProps) {
   if (!alternatives?.length) return null
 

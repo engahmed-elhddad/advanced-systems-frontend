@@ -1,10 +1,9 @@
-import { apiFetch } from '@/lib/api'
 async function getCross(part){
 
     const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
     
-    const res=await apiFetch(
-    `${API}/api/v1/products/${part}`,
+    const res=await fetch(
+    `${API}/product/${part}`,
     {cache:"no-store"}
     )
     
@@ -41,7 +40,7 @@ async function getCross(part){
     {cross.map((c,i)=>(
     <a
     key={i}
-    href={`/products/${c.alternative_part}`}
+    href={`/product/${c.alternative_part}`}
     className="border p-6 rounded-lg hover:shadow"
     >
     

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getCategories } from '@/lib/api'
-import { CATEGORIES, normalizeCategoryQueryForApi } from '@/app/lib/constants'
+import { CATEGORIES, normalizeCategoryQueryForApi } from '@/lib/constants'
 import { getCategoryIcon } from '@/lib/categoryIcons'
 
 type Cat = { name: string; slug?: string; count?: number; product_count?: number }

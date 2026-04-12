@@ -3,9 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { Search, Inbox } from 'lucide-react'
-import { AdminLayout } from '@/components/admin/layout/AdminLayout'
 import { Badge, Button, Card, Skeleton } from '@/components/ui'
-import { useRFQs, type AdminRfq, type RfqUiStatus } from '@/hooks/useRFQs'
+import { useRFQs, type AdminRfq, type RfqUiStatus } from '@/features/rfq/hooks/useRFQs'
 import { getApiErrorMessage } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -14,15 +13,15 @@ const RFQ_STATUS_TABS: Array<RfqUiStatus | 'All'> = ['All', 'New', 'Contacted', 
 function statusBadge(status: RfqUiStatus) {
   switch (status) {
     case 'New':
-      return { variant: 'new' as const, className: '' }
+      return 'new' as const
     case 'Contacted':
-      return { variant: 'pending' as const, className: '' }
+      return 'contacted' as const
     case 'Quoted':
-      return { variant: 'default' as const, className: 'bg-purple-100 text-purple-700' }
+      return 'quoted' as const
     case 'Closed':
-      return { variant: 'success' as const, className: '' }
+      return 'closed' as const
     default:
-      return { variant: 'default' as const, className: '' }
+      return 'default' as const
   }
 }
 
@@ -68,7 +67,6 @@ export default function AdminRfqsPage() {
   }, [rfqsQuery.data?.items, query, activeTab])
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -112,8 +110,8 @@ export default function AdminRfqsPage() {
           })}
         </div>
 
-        <Card className="border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-          <div className="hidden grid-cols-6 gap-3 px-4 pb-2 text-xs uppercase tracking-wider text-gray-400 md:grid">
+        <Card hover={false} className="p-0" padding="none">
+          <div className="hidden grid-cols-6 gap-3 px-5 pb-3 pt-4 text-xs font-semibold uppercase tracking-wider text-white/45 md:grid">
             <span>Name</span>
             <span>Product</span>
             <span>Quantity</span>
@@ -122,34 +120,35 @@ export default function AdminRfqsPage() {
             <span className="text-right">Actions</span>
           </div>
 
+          <div className="space-y-3 p-4 pt-0">
           {rfqsQuery.isLoading ? (
             <SkeletonRows />
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
-              <Inbox className="h-7 w-7 text-gray-400" />
-              <p className="text-base text-gray-200">No RFQs yet</p>
-              <p className="text-sm text-gray-400">Try another status or search keyword.</p>
+              <Inbox className="h-7 w-7 text-white/40" />
+              <p className="text-base text-white/90">No RFQs yet</p>
+              <p className="text-sm text-white/45">Try another status or search keyword.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {filtered.map((rfq: AdminRfq) => {
-                const b = statusBadge(rfq.status)
+                const variant = statusBadge(rfq.status)
                 return (
                   <div
                     key={rfq.id}
-                    className="grid grid-cols-1 gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:bg-white/10 hover:shadow-[0_0_26px_rgba(255,255,255,0.08)] md:grid-cols-6 md:items-center"
+                    className="grid grid-cols-1 gap-3 rounded-xl bg-white/[0.04] px-4 py-3.5 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/[0.08] hover:shadow-[0_0_28px_rgba(255,122,0,0.1),0_0_40px_rgba(168,85,247,0.08)] md:grid-cols-6 md:items-center"
                   >
                     <div className="text-sm font-medium text-white">{rfq.name}</div>
-                    <div className="text-sm text-gray-200">{rfq.product}</div>
-                    <div className="text-sm text-gray-300">{rfq.quantity}</div>
+                    <div className="text-sm text-white/80">{rfq.product}</div>
+                    <div className="text-sm text-white/55">{rfq.quantity}</div>
                     <div>
-                      <Badge variant={b.variant} className={b.className}>
+                      <Badge variant={variant}>
                         {rfq.status}
                       </Badge>
                     </div>
-                    <div className="text-sm text-gray-300">{rfq.date}</div>
+                    <div className="text-sm text-white/55">{rfq.date}</div>
                     <div className="md:text-right">
-                      <Button asChild size="sm" variant="secondary" className="bg-white/10 text-white border-white/15 hover:bg-white/20">
+                      <Button asChild size="sm" variant="secondary">
                         <Link href={`/admin/rfqs/${rfq.id}`} aria-label={`View RFQ ${rfq.id}`}>
                           View
                         </Link>
@@ -160,8 +159,8 @@ export default function AdminRfqsPage() {
               })}
             </div>
           )}
+          </div>
         </Card>
       </div>
-    </AdminLayout>
   )
 }

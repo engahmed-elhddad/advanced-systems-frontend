@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { BookOpen } from 'lucide-react'
-import { ENGINEERING_GUIDES } from '@/app/lib/knowledge-hub/content'
+import { ENGINEERING_GUIDES } from '@/lib/knowledge-hub/content'
 
 const CATEGORY_LABELS: Record<string, string> = {
   motors: 'Motors',

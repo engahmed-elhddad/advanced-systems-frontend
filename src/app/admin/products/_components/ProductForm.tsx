@@ -9,7 +9,7 @@ import type {
   AdminProductFormInput,
   AdminProductSpec,
   AdminProductStatus,
-} from '@/hooks/useProducts'
+} from '@/features/products/hooks/useProducts'
 
 type ProductFormValues = AdminProductFormInput
 
@@ -92,6 +92,7 @@ export function ProductForm({
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wider text-gray-300">Core Details</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input
+            variant="dark"
             label="Name"
             value={form.name}
             onChange={(e) => patch({ name: e.target.value })}
@@ -151,11 +152,13 @@ export function ProductForm({
             form.specs.map((spec, index) => (
               <div key={index} className="grid grid-cols-1 gap-3 rounded-lg border border-white/10 bg-white/5 p-3 md:grid-cols-[1fr_1fr_auto]">
                 <Input
+                  variant="dark"
                   placeholder="Key (e.g. Voltage)"
                   value={spec.key}
                   onChange={(e) => patchSpec(index, { key: e.target.value })}
                 />
                 <Input
+                  variant="dark"
                   placeholder="Value (e.g. 24V DC)"
                   value={spec.value}
                   onChange={(e) => patchSpec(index, { value: e.target.value })}
@@ -163,6 +166,7 @@ export function ProductForm({
                 <Button
                   type="button"
                   variant="destructive"
+                  surface="dark"
                   size="sm"
                   aria-label={`Remove spec row ${index + 1}`}
                   onClick={() => removeSpec(index)}
@@ -199,11 +203,12 @@ export function ProductForm({
               className="hidden"
               onChange={(e) => onPickImage(e.target.files?.[0])}
             />
-            <Button type="button" size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+            <Button type="button" size="sm" variant="secondary" surface="dark" onClick={() => fileInputRef.current?.click()}>
               <Upload className="h-4 w-4" />
               Upload Image
             </Button>
             <Input
+              variant="dark"
               label="Image URL"
               placeholder="https://..."
               value={form.imageUrl}
@@ -217,6 +222,7 @@ export function ProductForm({
         <Card className="border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-300">Datasheet</h2>
           <Input
+            variant="dark"
             label="Datasheet URL"
             placeholder="https://..."
             value={form.datasheetUrl}
@@ -227,10 +233,10 @@ export function ProductForm({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" loading={submitting || loading}>
+        <Button type="submit" surface="dark" loading={submitting || loading}>
           {mode === 'create' ? 'Save Product' : 'Save Changes'}
         </Button>
-        <Button asChild type="button" variant="secondary">
+        <Button asChild type="button" variant="secondary" surface="dark">
           <Link href="/admin/products">Cancel</Link>
         </Button>
       </div>

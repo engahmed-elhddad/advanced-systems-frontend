@@ -1,15 +1,17 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       colors: {
+        asi: {
+          primary: "var(--color-primary)",
+          accent: "var(--color-accent)",
+          bg: "var(--color-bg)",
+          surface: "var(--color-surface)",
+          muted: "var(--text-secondary)",
+        },
         // industrial = legacy; prefer primary-* in new code
         industrial: {
           white: "#ffffff",
@@ -68,8 +70,24 @@ const config: Config = {
         sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
+      borderRadius: {
+        "asi-md": "var(--radius-md)",
+        "asi-lg": "var(--radius-lg)",
+      },
       boxShadow: {
-        soft: "0 2px 8px rgba(0, 0, 0, 0.06)",
+        soft: "var(--shadow-soft)",
+        /** Premium marketing surfaces */
+        "premium-sm":
+          "0 1px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 8px 32px -6px rgba(0,0,0,0.45)",
+        "premium-md":
+          "0 1px 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.08), 0 16px 48px -12px rgba(0,0,0,0.5), 0 0 60px -20px rgba(255,122,0,0.12)",
+        "premium-lg":
+          "0 1px 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(255,255,255,0.09), 0 24px 64px -16px rgba(0,0,0,0.55), 0 0 100px -24px rgba(255,122,0,0.16), 0 0 120px -40px rgba(139,92,246,0.1)",
+        "focus-search":
+          "0 1px 0 rgba(255,255,255,0.12) inset, 0 0 0 1px rgba(255,160,80,0.4), 0 0 0 4px rgba(255,122,0,0.14), 0 20px 56px -8px rgba(0,0,0,0.5), 0 0 80px -16px rgba(255,122,0,0.2)",
+        "glow-orange": "0 0 32px rgba(255, 122, 0, 0.22), 0 0 64px rgba(255, 122, 0, 0.08)",
+        "glow-purple": "0 0 40px rgba(147, 51, 234, 0.18), 0 0 80px rgba(147, 51, 234, 0.06)",
+        "glow-subtle": "0 0 24px rgba(255, 255, 255, 0.06)",
         card: "0 4px 12px rgba(0, 0, 0, 0.08)",
         "card-hover": "0 12px 32px rgba(0, 0, 0, 0.12)",
         "primary-sm": "0 2px 8px rgba(16, 185, 129, 0.25)",

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { BookMarked } from 'lucide-react'
-import { GLOSSARY_TERMS } from '@/app/lib/knowledge-hub/content'
+import { GLOSSARY_TERMS } from '@/lib/knowledge-hub/content'
 
 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 

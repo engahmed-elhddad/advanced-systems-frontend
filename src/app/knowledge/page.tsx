@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { BookOpen, FileText, Calculator, BookMarked, Wrench } from 'lucide-react'
-import { ENGINEERING_GUIDES, GLOSSARY_TERMS, TROUBLESHOOTING_GUIDES } from '@/app/lib/knowledge-hub/content'
+import { ENGINEERING_GUIDES, GLOSSARY_TERMS, TROUBLESHOOTING_GUIDES } from '@/lib/knowledge-hub/content'
 
 const SECTIONS = [
   {

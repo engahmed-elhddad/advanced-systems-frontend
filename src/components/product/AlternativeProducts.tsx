@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Eye } from 'lucide-react'
-import { SafeImage } from '@/components/common/SafeImage'
+import { SafeImage } from '@/components/ui/SafeImage'
 
 interface AlternativeItem {
   part_number: string
@@ -38,7 +38,7 @@ function specVal(specs: Record<string, unknown> | undefined, keys: string[]): st
 export function AlternativeProducts({
   alternatives,
   currentProduct,
-  productBasePath = '/part-number',
+  productBasePath = '/products',
   imageUrl,
 }: AlternativeProductsProps) {
   if (!alternatives?.length) return null

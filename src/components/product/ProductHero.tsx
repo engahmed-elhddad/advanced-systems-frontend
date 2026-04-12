@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Copy, Download } from 'lucide-react'
-import { seriesToSlug } from '@/app/lib/constants'
+import { seriesToSlug } from '@/lib/constants'
 import { trackLead, trackWhatsApp } from '@/lib/analytics'
-import { SafeImage } from '@/components/common/SafeImage'
+import { SafeImage } from '@/components/ui/SafeImage'
 
 export interface ProductHeroProduct {
   part_number: string
@@ -53,7 +53,7 @@ export function ProductHero({
   imageAlt,
   apiBase: _apiBase,
   datasheetUrl,
-  productBasePath = '/part-number',
+  productBasePath = '/products',
   brandHref,
   categoryHref,
 }: ProductHeroProps) {

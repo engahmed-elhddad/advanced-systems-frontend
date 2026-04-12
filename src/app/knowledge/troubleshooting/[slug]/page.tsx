@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { TROUBLESHOOTING_GUIDES } from '@/app/lib/knowledge-hub/content'
+import { TROUBLESHOOTING_GUIDES } from '@/lib/knowledge-hub/content'
 
 export async function generateStaticParams() {
   return TROUBLESHOOTING_GUIDES.map((g) => ({ slug: g.slug }))

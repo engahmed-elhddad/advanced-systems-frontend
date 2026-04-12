@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap'
 
 export interface ModalProps {
   open: boolean

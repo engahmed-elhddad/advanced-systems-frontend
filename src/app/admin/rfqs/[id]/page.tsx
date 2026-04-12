@@ -3,25 +3,24 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Clock3, Package2, User2 } from 'lucide-react'
-import { AdminLayout } from '@/components/admin/layout/AdminLayout'
+import { ArrowLeft, Clock3, MessageCircle, Package2, User2 } from 'lucide-react'
 import { Badge, Button, Card, Input, Skeleton } from '@/components/ui'
-import { useAddRFQNote, useRFQ, useRFQTimeline, useUpdateRFQ, useUpdateRFQStatus, type RfqUiStatus } from '@/hooks/useRFQs'
+import { useAddRFQNote, useRFQ, useRFQTimeline, useUpdateRFQ, useUpdateRFQStatus, type RfqUiStatus } from '@/features/rfq/hooks/useRFQs'
 import { getApiErrorMessage } from '@/lib/api'
 import toast from 'react-hot-toast'
 
-function statusBadgeClass(status: RfqUiStatus) {
+function statusBadgeVariant(status: RfqUiStatus) {
   switch (status) {
     case 'New':
-      return { variant: 'new' as const, className: '' }
+      return 'new' as const
     case 'Contacted':
-      return { variant: 'pending' as const, className: '' }
+      return 'contacted' as const
     case 'Quoted':
-      return { variant: 'default' as const, className: 'bg-purple-100 text-purple-700' }
+      return 'quoted' as const
     case 'Closed':
-      return { variant: 'success' as const, className: '' }
+      return 'closed' as const
     default:
-      return { variant: 'default' as const, className: '' }
+      return 'default' as const
   }
 }
 
@@ -37,14 +36,18 @@ export default function AdminRfqDetailsPage() {
   const addNoteMutation = useAddRFQNote()
   const rfq = rfqQuery.data
   const status = rfq?.status ?? 'New'
-  const badge = statusBadgeClass(status)
-  const [noteInput, setNoteInput] = useState('')
+  const badgeVariant = statusBadgeVariant(status)
+  const [newNote, setNewNote] = useState('')
   const [assigneeInput, setAssigneeInput] = useState('')
 
   useEffect(() => {
     setAssigneeInput(rfq?.assignedTo ?? '')
-    setNoteInput(rfq?.notes ?? '')
-  }, [rfq?.assignedTo, rfq?.notes])
+  }, [rfq?.assignedTo])
+
+  const customerWa =
+    rfq?.phone && String(rfq.phone).replace(/\D/g, '').length >= 8
+      ? `https://wa.me/${String(rfq.phone).replace(/\D/g, '')}`
+      : null
 
   const timeline = useMemo(() => timelineQuery.data ?? [], [timelineQuery.data])
 
@@ -55,7 +58,6 @@ export default function AdminRfqDetailsPage() {
   }, [rfqQuery.isError, rfqQuery.error])
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -70,7 +72,7 @@ export default function AdminRfqDetailsPage() {
               RFQ #{rfq?.id ?? '—'}
             </h1>
           </div>
-          <Badge variant={badge.variant} className={badge.className}>
+          <Badge variant={badgeVariant}>
             {status}
           </Badge>
         </div>
@@ -104,7 +106,20 @@ export default function AdminRfqDetailsPage() {
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wider text-gray-400">Phone</dt>
-                <dd className="mt-1 text-sm text-white">{rfq.phone}</dd>
+                <dd className="mt-1 flex flex-wrap items-center gap-2 text-sm text-white">
+                  <span>{rfq.phone}</span>
+                  {customerWa ? (
+                    <a
+                      href={customerWa}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/20"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      WhatsApp
+                    </a>
+                  ) : null}
+                </dd>
               </div>
             </dl>
           </Card>
@@ -194,29 +209,40 @@ export default function AdminRfqDetailsPage() {
           </Card>
 
           <Card className="border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-300">Add Note</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-300">Internal notes</h2>
+            {rfq.notes?.trim() ? (
+              <pre className="mt-3 max-h-40 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/25 p-3 text-xs leading-relaxed text-gray-200">
+                {rfq.notes}
+              </pre>
+            ) : (
+              <p className="mt-3 text-sm text-gray-500">No notes yet.</p>
+            )}
             <textarea
-              aria-label="RFQ note"
-              value={noteInput}
-              onChange={(e) => setNoteInput(e.target.value)}
-              placeholder="Add follow-up details, pricing context, or next action..."
-              className="mt-4 h-32 w-full rounded-xl border border-white/15 bg-black/20 p-3 text-sm text-gray-100 outline-none transition-all duration-300 placeholder:text-gray-500 focus:border-orange-400/50 focus:ring-2 focus:ring-orange-400/30"
+              aria-label="New RFQ note"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              placeholder="Append a follow-up, pricing context, or next action…"
+              className="mt-4 h-28 w-full rounded-xl border border-white/15 bg-black/20 p-3 text-sm text-gray-100 outline-none transition-all duration-300 placeholder:text-gray-500 focus:border-orange-400/50 focus:ring-2 focus:ring-orange-400/30"
             />
             <div className="mt-3">
               <Button
                 size="sm"
                 variant="primary"
                 loading={addNoteMutation.isPending}
+                disabled={!newNote.trim()}
                 onClick={async () => {
+                  const text = newNote.trim()
+                  if (!text) return
                   try {
-                    await addNoteMutation.mutateAsync({ id, note: noteInput })
+                    await addNoteMutation.mutateAsync({ id, note: text })
+                    setNewNote('')
                     toast.success('Note saved')
                   } catch (error) {
                     toast.error(getApiErrorMessage(error, 'Failed to save note'))
                   }
                 }}
               >
-                Save Note
+                Add note
               </Button>
             </div>
           </Card>
@@ -237,7 +263,7 @@ export default function AdminRfqDetailsPage() {
           ) : (
             <div className="mt-4 space-y-2">
               {timeline.map((event) => (
-                <div key={event.id} className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm">
+                <div key={event.id} className="rounded-xl bg-white/[0.04] p-3 text-sm backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.07]">
                   <p className="text-gray-100">
                     <span className="font-medium text-orange-200">{event.eventType.replaceAll('_', ' ')}</span>
                     {' · '}
@@ -253,6 +279,5 @@ export default function AdminRfqDetailsPage() {
           </>
         )}
       </div>
-    </AdminLayout>
   )
 }

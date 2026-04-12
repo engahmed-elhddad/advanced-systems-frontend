@@ -5,8 +5,8 @@ import { apiFetch } from '@/lib/api'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getCategoryIcon } from '@/lib/categoryIcons'
-import { categoryToSlug } from '@/app/lib/constants'
-import { API_BASE_URL } from '@/app/lib/constants'
+import { categoryToSlug } from '@/lib/constants'
+import { API_BASE_URL } from '@/lib/constants'
 
 interface CategoryItem {
   name: string
@@ -45,7 +45,7 @@ export function TopCategories() {
     let cancelled = false
     setLoading(true)
     setError(false)
-    apiFetch(`${API_BASE_URL}/categories`)
+    apiFetch(`${API_BASE_URL}/api/v1/categories/`)
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return

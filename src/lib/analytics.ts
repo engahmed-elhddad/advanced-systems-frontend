@@ -1,157 +1,295 @@
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://localhost:8000";
-const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "";
-const GOOGLE_ADS_LEAD_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL || "";
-const GOOGLE_ADS_WHATSAPP_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_WHATSAPP_LABEL || "";
+import { API_BASE_URL } from '@/lib/constants'
+import {
+  getAnalyticsConsent,
+  getSessionId,
+  getStoredUtm,
+  getVisitorId,
+} from '@/lib/visitor-context'
 
-type BackendEventType = "visit" | "product_view" | "quote_click" | "whatsapp_click";
-type QueuedEvent = { type: BackendEventType; part_number?: string };
+const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || ''
+const GOOGLE_ADS_LEAD_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL || ''
+const GOOGLE_ADS_WHATSAPP_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_WHATSAPP_LABEL || ''
+const GOOGLE_ADS_RFQ_SUBMIT_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_RFQ_SUBMIT_LABEL || ''
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''
 
-const EVENT_ENDPOINT = `${API_BASE}/api/v1/analytics/event`;
-const EVENT_BATCH_SIZE = 10;
-const EVENT_FLUSH_MS = 2000;
+const EVENTS_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/api/v1/events`
 
-let queue: QueuedEvent[] = [];
-let flushTimer: number | null = null;
+export const TRACKING_EVENT_NAMES = [
+  'page_view',
+  'search',
+  'product_view',
+  'pricing_view',
+  'rfq_cta_click',
+  'rfq_submit',
+  'whatsapp_click',
+] as const
 
-function sendEventToBackend(event: QueuedEvent) {
-  if (typeof window === "undefined") return;
-  const payload = JSON.stringify(event);
-  const asBlob = new Blob([payload], { type: "application/json" });
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(EVENT_ENDPOINT, asBlob);
-    return;
+export type TrackingEventName = (typeof TRACKING_EVENT_NAMES)[number]
+
+function stripSensitivePayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const block = ['email', 'password', 'phone', 'message', 'token', 'secret']
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(payload)) {
+    const lk = k.toLowerCase()
+    if (block.some((b) => lk.includes(b))) continue
+    if (typeof v === 'string' && v.length > 500) out[k] = `${v.slice(0, 500)}…`
+    else out[k] = v
   }
-  fetch(EVENT_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: payload,
+  return out
+}
+
+function dispatchToBackend(eventName: TrackingEventName, payload: Record<string, unknown>) {
+  if (getAnalyticsConsent() !== 'accepted') return
+  const visitorId = getVisitorId()
+  const sessionId = getSessionId()
+  if (!visitorId || !sessionId) return
+
+  const utm = getStoredUtm()
+  const merged = stripSensitivePayload({
+    ...(utm.utm_source ? { utm_source: utm.utm_source } : {}),
+    ...(utm.utm_medium ? { utm_medium: utm.utm_medium } : {}),
+    ...(utm.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}),
+    ...payload,
+  })
+
+  const body = JSON.stringify({
+    visitor_id: visitorId,
+    session_id: sessionId,
+    event_name: eventName,
+    payload: merged,
+  })
+
+  void fetch(EVENTS_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
     keepalive: true,
-  }).catch(() => undefined);
+    mode: 'cors',
+  }).catch(() => undefined)
 }
 
-function flushQueue() {
-  const pending = queue.splice(0, EVENT_BATCH_SIZE);
-  if (!pending.length) return;
-  for (const event of pending) sendEventToBackend(event);
-  if (queue.length) scheduleFlush();
+/**
+ * Central first-party event API (requires analytics consent + visitor/session IDs).
+ */
+export function trackEvent(eventName: TrackingEventName, payload?: Record<string, unknown>) {
+  if (typeof window === 'undefined') return
+  dispatchToBackend(eventName, stripSensitivePayload({ ...(payload || {}) }))
 }
 
-function scheduleFlush() {
-  if (typeof window === "undefined") return;
-  if (flushTimer != null) return;
-  flushTimer = window.setTimeout(() => {
-    flushTimer = null;
-    flushQueue();
-  }, EVENT_FLUSH_MS);
+function getUtmContext(): Record<string, string> {
+  const u = getStoredUtm()
+  const o: Record<string, string> = {}
+  if (u.utm_source) o.utm_source = u.utm_source
+  if (u.utm_medium) o.utm_medium = u.utm_medium
+  if (u.utm_campaign) o.utm_campaign = u.utm_campaign
+  return o
 }
 
-function queueBackendEvent(type: BackendEventType, partNumber?: string) {
-  if (typeof window === "undefined") return;
-  queue.push({ type, ...(partNumber ? { part_number: partNumber } : {}) });
-  if (queue.length >= EVENT_BATCH_SIZE) {
-    flushQueue();
-    return;
-  }
-  scheduleFlush();
-}
-
-function getUtmContext() {
-  if (typeof window === "undefined") return {};
-  const params = new URLSearchParams(window.location.search);
-  const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
-  const payload: Record<string, string> = {};
-  for (const key of keys) {
-    const value = params.get(key);
-    if (value) payload[key] = value;
-  }
-  return payload;
-}
-
-export function track(event: string, data?: Record<string, any>) {
-  if (typeof window === "undefined") return;
-  const payload = { ...getUtmContext(), ...(data || {}) };
-  const posthog = (window as any).posthog;
-  if (posthog && typeof posthog.capture === "function") {
-    posthog.capture(event, payload);
+/** GA4 + PostHog + Meta custom — use for funnels and dashboards. */
+export function track(event: string, data?: Record<string, unknown>) {
+  if (typeof window === 'undefined') return
+  const payload = { ...getUtmContext(), ...(data || {}) }
+  const posthog = (window as unknown as { posthog?: { capture: (e: string, p: object) => void } }).posthog
+  if (posthog && typeof posthog.capture === 'function') {
+    posthog.capture(event, payload)
   }
 
-  const gtag = (window as any).gtag;
-  if (typeof gtag === "function") {
-    gtag("event", event, payload);
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', event, payload)
   }
 
-  const fbq = (window as any).fbq;
-  if (typeof fbq === "function") {
-    fbq("trackCustom", event, payload);
+  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq
+  if (typeof fbq === 'function') {
+    fbq('trackCustom', event, payload)
   }
 }
 
-export function trackLead(data?: Record<string, any>) {
-  track("lead", data);
-  queueBackendEvent("quote_click", data?.part_number);
-  if (typeof window === "undefined") return;
-  const payload = { ...getUtmContext(), ...(data || {}) };
-  const gtag = (window as any).gtag;
-  if (typeof gtag === "function") {
-    gtag("event", "generate_lead", payload);
+export function trackSearch(data: { query?: string; total?: number; page?: number; has_filters?: boolean }) {
+  track('search', data as Record<string, unknown>)
+  trackEvent('search', data as Record<string, unknown>)
+}
+
+/** SPA route changes — one `page_view` per distinct path. */
+export function trackPageView(path: string, title?: string) {
+  if (typeof window === 'undefined') return
+  const p = path || '/'
+  trackEvent('page_view', { page_path: p, ...(title ? { page_title: title } : {}) })
+  track('page_view', { page_path: p, page_title: title })
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function' && GA_MEASUREMENT_ID) {
+    gtag('config', GA_MEASUREMENT_ID, {
+      page_path: p,
+      ...(title ? { page_title: title } : {}),
+    })
+  }
+}
+
+/** @deprecated Use trackPageView — kept for older callers. */
+export function trackVisit() {
+  if (typeof window === 'undefined') return
+  trackPageView(window.location.pathname, typeof document !== 'undefined' ? document.title : undefined)
+}
+
+export type RfqCtaTrackPayload = {
+  source: string
+  part_number?: string
+  product_id?: number | null
+}
+
+export function trackRfqCtaClick(data: RfqCtaTrackPayload) {
+  if (typeof window === 'undefined') return
+  const payload: Record<string, unknown> = {
+    ...getUtmContext(),
+    source: data.source,
+    ...(data.part_number != null ? { part_number: data.part_number } : {}),
+    ...(data.product_id != null ? { product_id: data.product_id } : {}),
+  }
+  track('rfq_cta_click', payload)
+  trackEvent('rfq_cta_click', {
+    source: data.source,
+    ...(data.part_number != null ? { part_number: data.part_number } : {}),
+    ...(data.product_id != null ? { product_id: data.product_id } : {}),
+  })
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'rfq_cta_click', payload)
+  }
+  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq
+  if (typeof fbq === 'function') {
+    fbq('trackCustom', 'rfq_cta_click', payload)
+  }
+}
+
+export type RfqSubmitTrackPayload = {
+  source: string
+  part_number?: string
+  part_numbers?: string[]
+  reference?: string
+  references?: string[]
+  quantity?: number
+  product_id?: number
+}
+
+export function trackRfqSubmit(data: RfqSubmitTrackPayload) {
+  if (typeof window === 'undefined') return
+  const primaryPart =
+    (data.part_number && String(data.part_number).trim()) ||
+    (data.part_numbers && data.part_numbers.length ? String(data.part_numbers[0]).trim() : '') ||
+    undefined
+  const payload: Record<string, unknown> = {
+    ...getUtmContext(),
+    source: data.source,
+    ...(data.part_number != null ? { part_number: data.part_number } : {}),
+    ...(data.part_numbers?.length ? { part_numbers: data.part_numbers, line_count: data.part_numbers.length } : {}),
+    ...(data.reference ? { reference: data.reference } : {}),
+    ...(data.references?.length ? { references: data.references } : {}),
+    ...(data.quantity != null ? { quantity: data.quantity } : {}),
+    ...(data.product_id != null ? { product_id: data.product_id } : {}),
+  }
+
+  track('rfq_submit', payload)
+  trackEvent('rfq_submit', {
+    source: data.source,
+    ...(primaryPart ? { part_number: primaryPart } : {}),
+    ...(data.reference ? { reference: data.reference } : {}),
+    ...(data.quantity != null ? { quantity: data.quantity } : {}),
+    ...(data.product_id != null ? { product_id: data.product_id } : {}),
+  })
+
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'generate_lead', {
+      currency: 'USD',
+      value: 0,
+      method: 'rfq_form',
+      ...payload,
+    })
+    if (GOOGLE_ADS_ID && GOOGLE_ADS_RFQ_SUBMIT_LABEL) {
+      gtag('event', 'conversion', {
+        send_to: `${GOOGLE_ADS_ID}/${GOOGLE_ADS_RFQ_SUBMIT_LABEL}`,
+      })
+    }
+  }
+
+  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq
+  if (typeof fbq === 'function') {
+    fbq('track', 'SubmitApplication', { content_name: 'rfq_submit', ...payload })
+  }
+}
+
+export function trackLead(data?: Record<string, unknown>) {
+  track('lead', data)
+  trackEvent('rfq_cta_click', { source: 'lead_intent', ...(data || {}) })
+  if (typeof window === 'undefined') return
+  const payload = { ...getUtmContext(), ...(data || {}) }
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'generate_lead', payload)
     if (GOOGLE_ADS_ID && GOOGLE_ADS_LEAD_LABEL) {
-      gtag("event", "conversion", {
+      gtag('event', 'conversion', {
         ...payload,
         send_to: `${GOOGLE_ADS_ID}/${GOOGLE_ADS_LEAD_LABEL}`,
-      });
+      })
     }
   }
-  const fbq = (window as any).fbq;
-  if (typeof fbq === "function") fbq("track", "Lead", payload);
+  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq
+  if (typeof fbq === 'function') fbq('track', 'Lead', payload)
 }
 
-export function trackWhatsApp(data?: Record<string, any>) {
-  track("whatsapp_click", data);
-  queueBackendEvent("whatsapp_click", data?.part_number);
-  if (typeof window === "undefined") return;
-  const payload = { ...getUtmContext(), ...(data || {}) };
-  const gtag = (window as any).gtag;
-  if (typeof gtag === "function") {
-    gtag("event", "whatsapp_click", payload);
+export function trackWhatsApp(data?: Record<string, unknown>) {
+  track('whatsapp_click', data)
+  trackEvent('whatsapp_click', {
+    ...(data?.part_number != null ? { part_number: String(data.part_number) } : {}),
+  })
+  if (typeof window === 'undefined') return
+  const payload = { ...getUtmContext(), ...(data || {}) }
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'whatsapp_click', payload)
     if (GOOGLE_ADS_ID && GOOGLE_ADS_WHATSAPP_LABEL) {
-      gtag("event", "conversion", {
+      gtag('event', 'conversion', {
         ...payload,
         send_to: `${GOOGLE_ADS_ID}/${GOOGLE_ADS_WHATSAPP_LABEL}`,
-      });
+      })
     }
   }
-  const fbq = (window as any).fbq;
-  if (typeof fbq === "function") fbq("track", "Contact", payload);
+  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq
+  if (typeof fbq === 'function') fbq('track', 'Contact', payload)
 }
 
-export function trackVisit() {
-  track("visit");
-  queueBackendEvent("visit");
+export function trackPricingView(data: { product_id?: number | null; part_number: string }) {
+  if (typeof window === 'undefined') return
+  const pn = (data.part_number || '').trim()
+  if (!pn) return
+  const payload: Record<string, unknown> = { part_number: pn }
+  if (data.product_id != null && Number.isFinite(data.product_id)) {
+    payload.product_id = data.product_id
+  }
+  track('pricing_view', payload)
+  trackEvent('pricing_view', payload)
 }
 
 export function trackProductView(partNumber: string) {
-  if (typeof window === "undefined") return;
-  const normalized = (partNumber || "").trim();
-  if (!normalized) return;
-  const payload = { ...getUtmContext(), part_number: normalized };
-  track("product_view", payload);
-  const gtag = (window as any).gtag;
-  if (typeof gtag === "function") {
-    gtag("event", "view_item", {
+  if (typeof window === 'undefined') return
+  const normalized = (partNumber || '').trim()
+  if (!normalized) return
+  const payload = { ...getUtmContext(), part_number: normalized }
+  track('product_view', payload)
+  trackEvent('product_view', { part_number: normalized })
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'view_item', {
       ...payload,
       items: [{ item_id: normalized }],
-    });
+    })
   }
-  const fbq = (window as any).fbq;
-  if (typeof fbq === "function") {
-    fbq("track", "ViewContent", {
+  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq
+  if (typeof fbq === 'function') {
+    fbq('track', 'ViewContent', {
       ...payload,
       content_ids: [normalized],
-      content_type: "product",
-    });
+      content_type: 'product',
+    })
   }
-  queueBackendEvent("product_view", normalized);
 }

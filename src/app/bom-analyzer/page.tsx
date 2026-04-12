@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { analyzeBom, submitBomRfq } from '@/lib/api'
-import { API_BASE_URL } from '@/app/lib/constants'
+import { API_BASE_URL } from '@/lib/constants'
 import { FileSpreadsheet, Upload, Loader2, ExternalLink, Package, ChevronRight, MessageCircle, X } from 'lucide-react'
 
 interface BomItem {
@@ -118,7 +118,7 @@ export default function BomAnalyzerPage() {
               {status === 'uploading' ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Analyzing…
+                  Analyzingâ€¦
                 </>
               ) : (
                 <>
@@ -164,8 +164,8 @@ export default function BomAnalyzerPage() {
                         {row.part_number}
                       </td>
                       <td className="px-4 py-3 text-slate-600">{row.quantity}</td>
-                      <td className="px-4 py-3 text-slate-600">{row.brand || '—'}</td>
-                      <td className="px-4 py-3 text-slate-600">{row.category || '—'}</td>
+                      <td className="px-4 py-3 text-slate-600">{row.brand || 'â€”'}</td>
+                      <td className="px-4 py-3 text-slate-600">{row.category || 'â€”'}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${row.availability === 'in_stock' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                           {row.availability === 'in_stock' ? 'In Stock' : 'On Request'}
@@ -183,7 +183,7 @@ export default function BomAnalyzerPage() {
                             PDF
                           </a>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400">â€”</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -202,7 +202,7 @@ export default function BomAnalyzerPage() {
                                 : String(row.specifications).slice(0, 40)}
                           </span>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400">â€”</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -222,7 +222,7 @@ export default function BomAnalyzerPage() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400">â€”</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -288,7 +288,7 @@ export default function BomAnalyzerPage() {
                       {rfqStatus === 'error' && <p className="text-sm text-red-600">Submission failed. Please try again or email us directly.</p>}
                       <div className="flex gap-3 pt-2">
                         <button type="submit" disabled={rfqStatus === 'submitting'} className="flex-1 px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-medium">
-                          {rfqStatus === 'submitting' ? 'Submitting…' : 'Submit RFQ'}
+                          {rfqStatus === 'submitting' ? 'Submittingâ€¦' : 'Submit RFQ'}
                         </button>
                         <button type="button" onClick={() => setRfqModal(false)} className="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700">
                           Cancel

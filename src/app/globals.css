@@ -1,54 +1,141 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* AdvancedSystems — premium dark glass system only */
+:root {
+  --transition-ui: 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Stripe / Apple–adjacent elevation */
+  --shadow-search-idle: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 12px 40px -8px rgba(0, 0, 0, 0.55), 0 40px 80px -24px rgba(0, 0, 0, 0.45);
+  --shadow-search-hero-idle: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 16px 48px -12px rgba(0, 0, 0, 0.6), 0 64px 120px -32px rgba(0, 0, 0, 0.5),
+    0 0 80px -20px rgba(255, 122, 0, 0.14), 0 0 100px -30px rgba(139, 92, 246, 0.1);
+  --shadow-search-focus: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 0 0 1px rgba(255, 160, 80, 0.35),
+    0 0 0 4px rgba(255, 122, 0, 0.12), 0 24px 64px -12px rgba(0, 0, 0, 0.55),
+    0 0 100px -20px rgba(255, 122, 0, 0.22), 0 0 140px -40px rgba(167, 139, 250, 0.15);
+}
+
 @layer base {
-  * { @apply border-industrial-800; }
-  body { @apply bg-industrial-950 text-white; }
-  :root {
-    --header-height: 64px;
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-feature-settings: 'rlig' 1, 'calt' 1, 'ss01' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    line-height: 1.6;
+  }
+  @media (pointer: coarse) {
+    button,
+    [type='button'],
+    [type='submit'],
+    a {
+      touch-action: manipulation;
+    }
+  }
+  ::selection {
+    background-color: rgba(255, 122, 0, 0.35);
+    color: #fff;
+  }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid rgba(255, 122, 0, 0.7);
+    outline-offset: 2px;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-500 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  .btn-secondary {
-    @apply bg-industrial-800 hover:bg-industrial-700 border border-industrial-600 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2;
-  }
-  .btn-outline {
-    @apply border border-primary-500 text-primary-400 hover:bg-primary-600 hover:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200;
-  }
-  .card {
-    @apply bg-industrial-900 border border-industrial-800 rounded-xl overflow-hidden;
-  }
-  .badge-available {
-    @apply bg-green-900/50 text-green-400 border border-green-700 text-xs font-semibold px-2 py-0.5 rounded-full;
-  }
-  .badge-limited {
-    @apply bg-yellow-900/50 text-yellow-400 border border-yellow-700 text-xs font-semibold px-2 py-0.5 rounded-full;
-  }
-  .badge-unavailable {
-    @apply bg-red-900/50 text-red-400 border border-red-700 text-xs font-semibold px-2 py-0.5 rounded-full;
-  }
-  .input-field {
-    @apply bg-industrial-800 border border-industrial-600 rounded-lg px-4 py-3 text-white placeholder-industrial-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all w-full;
-  }
-  .section-title {
-    @apply text-2xl font-bold text-white;
-  }
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary-400 to-blue-300 bg-clip-text text-transparent;
+  .page-container {
+    @apply mx-auto max-w-7xl px-4 sm:px-5 lg:px-8;
   }
 }
 
 @layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: theme("colors.industrial.600") transparent;
+  .glass-panel {
+    @apply rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl;
   }
-  .text-balance { text-wrap: balance; }
+  /** Soft bloom behind focal UI (search, CTAs) */
+  .glow-ambient-search {
+    background: radial-gradient(
+      ellipse 85% 70% at 50% 45%,
+      rgba(255, 122, 0, 0.16) 0%,
+      rgba(139, 92, 246, 0.08) 42%,
+      transparent 72%
+    );
+  }
+  .text-display-tight {
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  .text-label-caps {
+    letter-spacing: 0.14em;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.45s ease-out both;
+}
+
+/* Alias used by ProductGrid */
+.animate-fadeIn {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.75rem;
+}
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes hero-rotate-3d {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+.animate-hero-rotate-3d {
+  animation: hero-rotate-3d 20s linear infinite;
+}
+@media (max-width: 1024px) {
+  .animate-hero-rotate-3d {
+    animation: none !important;
+  }
 }

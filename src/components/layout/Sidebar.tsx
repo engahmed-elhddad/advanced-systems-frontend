@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/state/useUIStore'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useMediaQuery } from '@/lib/hooks/useMediaQuery'
 
 export interface SidebarProps {
   children: React.ReactNode

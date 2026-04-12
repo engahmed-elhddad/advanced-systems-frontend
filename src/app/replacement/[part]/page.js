@@ -1,4 +1,3 @@
-import { apiFetch } from '@/lib/api'
 // ==========================
 // GET REPLACEMENT PARTS
 // ==========================
@@ -6,8 +5,8 @@ async function getReplacement(part) {
 
     const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
   
-    const res = await apiFetch(
-      `${API}/api/v1/products/${encodeURIComponent(part)}`,
+    const res = await fetch(
+      `${API}/product/${encodeURIComponent(part)}`,
       { cache: "no-store" }
     )
   
@@ -49,7 +48,7 @@ async function getReplacement(part) {
             {replacements.slice(0,20).map((p)=>(
               <li key={p}>
                 <a
-                  href={`/products/${p}`}
+                  href={`/product/${p}`}
                   className="text-blue-600 hover:underline"
                 >
                   {p}

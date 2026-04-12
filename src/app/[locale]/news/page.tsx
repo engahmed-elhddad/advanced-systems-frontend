@@ -1,4 +1,3 @@
-import { apiFetch } from '@/lib/api'
 import Link from 'next/link'
 import { Newspaper } from 'lucide-react'
 
@@ -27,7 +26,7 @@ export default async function NewsPage({ params }: Props) {
 
   let items: { slug: string; title_en?: string; title_ar?: string; summary_en?: string; published_date?: string; category?: string }[] = []
   try {
-    const res = await apiFetch(`${API}/api/news?limit=30`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API}/api/news?limit=30`, { next: { revalidate: 3600 } })
     if (res.ok) {
       const data = await res.json()
       items = data.items || []

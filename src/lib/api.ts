@@ -1,4 +1,6 @@
 import axios from "axios";
+import type { RFQCreateInput, RFQResponse } from "@/types/rfq";
+import { submitPublicRFQ } from "@/lib/rfqSubmit";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -48,7 +50,7 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
 // Products
 export const productsApi = {
   list: (params?: Record<string, any>) => api.get("/api/v1/products/", { params }),
-  featured: (limit = 12) => api.get("/api/products", { params: { limit, page: 1 } }),
+  featured: (limit = 12) => api.get("/api/v1/products/featured", { params: { limit } }),
   bySlug: (slug: string) => api.get(`/api/v1/products/slug/${slug}`),
   byPartNumber: (pn: string) => api.get(`/api/v1/products/part/${encodeURIComponent(pn)}`),
   related: (id: number) => api.get(`/api/v1/products/${id}/related`),
@@ -58,7 +60,7 @@ export const productsApi = {
 export const getProducts = (params?: Record<string, any>) =>
   productsApi.list(params).then((r) => r.data);
 
-/** GET /api/products?limit=N - parses data.products (replaces /api/v1/featured) */
+/** Featured products: v1 first, legacy monolith only as fallback */
 export const getFeaturedProducts = async (limit = 12) => {
   try {
     const r = await productsApi.featured(limit)
@@ -66,9 +68,16 @@ export const getFeaturedProducts = async (limit = 12) => {
     const products = data?.products ?? data?.items ?? (Array.isArray(data) ? data : [])
     return Array.isArray(products) ? products : []
   } catch {
-    const r = await api.get("/api/products", { params: { limit, page: 1 } })
-    const d = r.data
-    return d?.products ?? d?.items ?? []
+    try {
+      const r = await api.get("/api/v1/products/", { params: { page: 1, size: limit, is_featured: true } })
+      const d = r.data
+      const items = d?.items ?? []
+      return Array.isArray(items) ? items : []
+    } catch {
+      const r = await api.get("/api/products", { params: { limit, page: 1 } })
+      const d = r.data
+      return d?.products ?? d?.items ?? []
+    }
   }
 }
 
@@ -128,11 +137,19 @@ export async function searchProductsSimple(
 // Brands
 export const brandsApi = {
   list: () => api.get("/api/v1/brands/"),
-  bySlug: (slug: string) => api.get(`/api/v1/brands/${slug}`),
+  bySlug: (slug: string) => api.get(`/api/v1/brands/${encodeURIComponent(slug)}`),
+  categoriesForSlug: (slug: string) =>
+    api.get(`/api/v1/brands/${encodeURIComponent(slug)}/categories`),
 };
 
 export const getBrands = () =>
   brandsApi.list().then((r) => r.data);
+
+export const getBrandBySlug = (slug: string) =>
+  brandsApi.bySlug(slug).then((r) => r.data);
+
+export const getBrandCategories = (slug: string) =>
+  brandsApi.categoriesForSlug(slug).then((r) => r.data);
 
 // Categories
 export const categoriesApi = {
@@ -150,36 +167,60 @@ export const rfqApi = {
   getByRef: (ref: string) => api.get(`/api/v1/rfq/${ref}`),
 };
 
-export const submitRFQ = (data: any) =>
-  rfqApi.submit(data).then((r) => r.data);
+export const submitRFQ = (data: RFQCreateInput): Promise<RFQResponse> =>
+  submitPublicRFQ(data);
 
 /** Instant RFQ */
-export const submitInstantRFQ = (data: {
+export const submitInstantRFQ = async (data: {
   part_number: string
   quantity?: number
   email: string
   company?: string
   message?: string
-}) =>
-  api.post("/api/rfq/instant", {
+}) => {
+  const body = {
     part_number: data.part_number,
     quantity: data.quantity ?? 1,
     email: data.email,
     company: data.company || undefined,
     message: data.message || undefined,
-  }).then((r) => r.data)
+  }
+  try {
+    const r = await api.post("/api/v1/rfq/instant", body)
+    return r.data
+  } catch {
+    const r = await api.post("/api/rfq/instant", body)
+    return r.data
+  }
+}
 
-export const getMyRfqs = (email: string) =>
-  api.get("/api/rfq/my", { params: { email } }).then((r) => r.data)
+export const getMyRfqs = async (email: string) => {
+  try {
+    const r = await api.get("/api/v1/rfq/instant/by-email", { params: { email } })
+    return r.data
+  } catch {
+    const r = await api.get("/api/rfq/my", { params: { email } })
+    return r.data
+  }
+}
 
 /** Vision AI: detect part number from image */
-export const detectProductFromImage = (file: File) => {
+export const detectProductFromImage = async (file: File) => {
   const fd = new FormData()
   fd.append("file", file)
-  return api.post("/api/product-detect", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-    timeout: 30000,
-  }).then((r) => r.data)
+  try {
+    const r = await api.post("/api/v1/product-detect", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 30000,
+    })
+    return r.data
+  } catch {
+    const r = await api.post("/api/product-detect", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 30000,
+    })
+    return r.data
+  }
 }
 
 /** BOM RFQ */
@@ -190,7 +231,23 @@ export const submitBomRfq = (data: {
   contact_name?: string
   country?: string
   message?: string
-}) => api.post("/api/bom/rfq", data).then((r) => r.data)
+}) => {
+  const tryV1 = () =>
+    api.post("/api/v1/bom/rfq", {
+      items: data.items.map((i) => ({
+        part_number: i.part_number,
+        quantity: i.quantity ?? 1,
+      })),
+      email: data.email,
+      company: data.company,
+      contact_name: data.contact_name,
+      country: data.country,
+      message: data.message,
+    })
+  return tryV1()
+    .then((r) => r.data)
+    .catch(() => api.post("/api/bom/rfq", data).then((r) => r.data))
+}
 
 /** Panel Builder */
 export const generatePanelBom = (params: {
@@ -198,35 +255,55 @@ export const generatePanelBom = (params: {
   motor_power_kw?: number
   voltage?: string
   control_type?: string
-}) =>
-  api.post("/api/panel-builder/generate", {
+}) => {
+  const body = {
     application: params.application ?? "motor_control",
     motor_power_kw: params.motor_power_kw ?? 5.5,
     voltage: params.voltage ?? "400V AC",
     control_type: params.control_type ?? "direct_on_line",
-  }).then((r) => r.data)
+  }
+  return api
+    .post("/api/v1/panel-builder/generate", body)
+    .then((r) => r.data)
+    .catch(() => api.post("/api/panel-builder/generate", body).then((r) => r.data))
+}
 
 export const getPanelBuilderOptions = () =>
-  api.get("/api/panel-builder/options").then((r) => r.data)
+  api
+    .get("/api/v1/panel-builder/options")
+    .then((r) => r.data)
+    .catch(() => api.get("/api/panel-builder/options").then((r) => r.data))
 
 // BOM Analyzer
 export const analyzeBom = (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
   return api
-    .post("/api/bom/analyze", formData, {
+    .post("/api/v1/bom/analyze", formData, {
       headers: { "Content-Type": "multipart/form-data" },
       timeout: 120000,
     })
-    .then((r) => r.data);
+    .then((r) => r.data)
+    .catch(() =>
+      api
+        .post("/api/bom/analyze", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          timeout: 120000,
+        })
+        .then((r) => r.data)
+    );
 };
 
 // Currency
 export const currencyApi = {
-  detect: () => api.get("/api/currency/detect"),
+  detect: () =>
+    api.get("/api/v1/currency/detect").catch(() => api.get("/api/currency/detect")),
   convert: (amount: number, to: string) =>
-    api.get("/api/currency/convert", { params: { amount, to } }),
-  rate: () => api.get("/api/currency/rate"),
+    api
+      .get("/api/v1/currency/convert", { params: { amount, to } })
+      .catch(() => api.get("/api/currency/convert", { params: { amount, to } })),
+  rate: () =>
+    api.get("/api/v1/currency/rate").catch(() => api.get("/api/currency/rate")),
 };
 
 // Admin

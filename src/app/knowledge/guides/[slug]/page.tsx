@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ENGINEERING_GUIDES } from '@/app/lib/knowledge-hub/content'
+import { ENGINEERING_GUIDES } from '@/lib/knowledge-hub/content'
 
 const CATEGORY_LABELS: Record<string, string> = {
   motors: 'Motors',

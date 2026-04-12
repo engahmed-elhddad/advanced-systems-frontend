@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Wrench } from 'lucide-react'
-import { TROUBLESHOOTING_GUIDES } from '@/app/lib/knowledge-hub/content'
+import { TROUBLESHOOTING_GUIDES } from '@/lib/knowledge-hub/content'
 
 export default function TroubleshootingListPage() {
   return (

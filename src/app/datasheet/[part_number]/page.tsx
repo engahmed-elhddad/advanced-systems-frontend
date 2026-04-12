@@ -1,10 +1,9 @@
-import { apiFetch } from '@/lib/api'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { FileText, Download, ExternalLink, ArrowLeft } from 'lucide-react'
-import { categoryToSlug } from '@/app/lib/constants'
+import Image from 'next/image'
+import { FileText, Download, ExternalLink, ArrowLeft, Package } from 'lucide-react'
+import { categoryToSlug } from '@/lib/constants'
 import type { Metadata } from 'next'
-import { SafeImage } from '@/components/common/SafeImage'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://advancedsystems-int.com'
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
@@ -15,10 +14,10 @@ interface Props {
 
 async function fetchProduct(partNumber: string) {
   try {
-    const res = await apiFetch(`${API_BASE}/api/v1/products/${encodeURIComponent(partNumber)}`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE}/product/${encodeURIComponent(partNumber)}`, { next: { revalidate: 3600 } })
     if (res.ok) return res.json()
     if (res.status === 404) {
-      const orRes = await apiFetch(`${API_BASE}/api/v1/products/part/${encodeURIComponent(partNumber)}/or-generate`, { next: { revalidate: 3600 } })
+      const orRes = await fetch(`${API_BASE}/api/v1/products/part/${encodeURIComponent(partNumber)}/or-generate`, { next: { revalidate: 3600 } })
       if (orRes.ok) return orRes.json()
     }
     return null
@@ -29,7 +28,7 @@ async function fetchProduct(partNumber: string) {
 
 async function fetchAlternatives(partNumber: string) {
   try {
-    const res = await apiFetch(`${API_BASE}/api/v1/products/${encodeURIComponent(partNumber)}/cross-references?limit=6`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE}/product/${encodeURIComponent(partNumber)}/cross-references?limit=6`, { next: { revalidate: 3600 } })
     if (!res.ok) return []
     const data = await res.json()
     return data?.alternatives ?? []
@@ -126,7 +125,7 @@ export default async function DatasheetPage({ params }: Props) {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
       { '@type': 'ListItem', position: 2, name: 'Products', item: `${SITE_URL}/products` },
-      { '@type': 'ListItem', position: 3, name: pn, item: `${SITE_URL}/products/${encodeURIComponent(pn)}` },
+      { '@type': 'ListItem', position: 3, name: pn, item: `${SITE_URL}/product/${encodeURIComponent(pn)}` },
       { '@type': 'ListItem', position: 4, name: 'Datasheet', item: `${SITE_URL}/datasheet/${encodeURIComponent(pn)}` },
     ],
   }
@@ -139,7 +138,7 @@ export default async function DatasheetPage({ params }: Props) {
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/datasheet/${encodeURIComponent(pn)}` },
     author: { '@type': 'Organization', name: brandName || 'Manufacturer' },
     about: { '@type': 'Product', name: pn, brand: brandName ? { '@type': 'Brand', name: brandName } : undefined },
-    isPartOf: { '@type': 'WebPage', name: `${pn} Product`, url: `${SITE_URL}/products/${encodeURIComponent(pn)}` },
+    isPartOf: { '@type': 'WebPage', name: `${pn} Product`, url: `${SITE_URL}/product/${encodeURIComponent(pn)}` },
     ...(fullDatasheetUrl && {
       associatedMedia: { '@type': 'MediaObject', contentUrl: fullDatasheetUrl, encodingFormat: 'application/pdf' },
     }),
@@ -156,11 +155,11 @@ export default async function DatasheetPage({ params }: Props) {
           <span className="mx-2">/</span>
           {categoryName && (
             <>
-              <Link href={categoryToSlug(String(categoryName)) ? `/categories/${categoryToSlug(String(categoryName))}` : `/search?category=${encodeURIComponent(categoryToSlug(String(categoryName)) || categoryName)}`} className="hover:text-primary-600">{categoryName}</Link>
+              <Link href={categoryToSlug(String(categoryName)) ? `/category/${categoryToSlug(String(categoryName))}` : `/search?category=${encodeURIComponent(categoryName)}`} className="hover:text-primary-600">{categoryName}</Link>
               <span className="mx-2">/</span>
             </>
           )}
-          <Link href={`/products/${encodeURIComponent(pn)}`} className="hover:text-primary-600">{pn}</Link>
+          <Link href={`/product/${encodeURIComponent(pn)}`} className="hover:text-primary-600">{pn}</Link>
           <span className="mx-2">/</span>
           <span className="text-slate-900 font-medium">Datasheet</span>
         </nav>
@@ -227,7 +226,7 @@ export default async function DatasheetPage({ params }: Props) {
 
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <Link
-                  href={`/products/${encodeURIComponent(pn)}`}
+                  href={`/product/${encodeURIComponent(pn)}`}
                   className="inline-flex items-center gap-2 text-primary-600 hover:underline font-medium"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -271,13 +270,21 @@ export default async function DatasheetPage({ params }: Props) {
               <h3 className="font-semibold text-slate-900 mb-4">Product</h3>
               <Link href={`/products/${encodeURIComponent(pn)}`} className="block group">
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 rounded-lg bg-slate-100 shrink-0 overflow-hidden">
-                    <SafeImage
-                      src={product.image_url ? (product.image_url.startsWith('http') ? product.image_url : `${API_BASE}${product.image_url}`) : ''}
-                      alt={pn}
-                      className="h-full w-full object-contain p-2 group-hover:scale-105 transition-transform"
-                    />
-                  </div>
+                  {product.image_url ? (
+                    <div className="relative w-20 h-20 rounded-lg bg-slate-100 shrink-0 overflow-hidden">
+                      <Image
+                        src={product.image_url.startsWith('http') ? product.image_url : `${API_BASE}${product.image_url}`}
+                        alt={pn}
+                        fill
+                        className="object-contain p-2 group-hover:scale-105 transition-transform"
+                        sizes="80px"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                      <Package className="w-8 h-8 text-slate-400" />
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <span className="font-mono font-semibold text-slate-900 group-hover:text-primary-600">{pn}</span>
                     {brandName && <p className="text-sm text-slate-500">{brandName}</p>}
@@ -300,7 +307,7 @@ export default async function DatasheetPage({ params }: Props) {
                   {alternatives.slice(0, 5).map((alt: { part_number?: string; brand?: string; category?: string }) => (
                     <Link
                       key={alt.part_number}
-                      href={`/products/${encodeURIComponent(alt.part_number!)}`}
+                      href={`/product/${encodeURIComponent(alt.part_number!)}`}
                       className="block py-2 border-b border-slate-100 last:border-0 hover:text-primary-600"
                     >
                       <span className="font-mono font-medium">{alt.part_number}</span>

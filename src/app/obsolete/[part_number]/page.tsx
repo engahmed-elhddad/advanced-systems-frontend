@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { getProductOrGenerate, apiFetch } from '@/lib/api'
-import { categoryToSlug } from '@/app/lib/constants'
+import Image from 'next/image'
+import { Package, ArrowLeft } from 'lucide-react'
+import { getProductOrGenerate } from '@/lib/api'
+import { categoryToSlug } from '@/lib/constants'
 import { getBrandHref } from '@/lib/brandUtils'
 import type { Metadata } from 'next'
-import { SafeImage } from '@/components/common/SafeImage'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://advancedsystems-int.com'
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
@@ -24,7 +24,7 @@ async function fetchProduct(partNumber: string) {
 
 async function fetchAlternatives(partNumber: string) {
   try {
-    const res = await apiFetch(`${API_BASE}/api/v1/products/${encodeURIComponent(partNumber)}/cross-references?limit=12`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE}/product/${encodeURIComponent(partNumber)}/cross-references?limit=12`, { next: { revalidate: 3600 } })
     if (!res.ok) return []
     const data = await res.json()
     return data?.alternatives || []
@@ -82,17 +82,17 @@ export default async function ObsoletePage({ params }: Props) {
           <span className="mx-2">/</span>
           {categoryName && (
             <>
-              <Link href={categoryToSlug(String(categoryName)) ? `/categories/${categoryToSlug(String(categoryName))}` : `/search?category=${encodeURIComponent(categoryToSlug(String(categoryName)) || categoryName)}`} className="hover:text-primary-600">{categoryName}</Link>
+              <Link href={categoryToSlug(String(categoryName)) ? `/category/${categoryToSlug(String(categoryName))}` : `/search?category=${encodeURIComponent(categoryName)}`} className="hover:text-primary-600">{categoryName}</Link>
               <span className="mx-2">/</span>
             </>
           )}
-          <Link href={`/products/${encodeURIComponent(pn)}`} className="hover:text-primary-600">{pn}</Link>
+          <Link href={`/product/${encodeURIComponent(pn)}`} className="hover:text-primary-600">{pn}</Link>
           <span className="mx-2">/</span>
           <span className="text-slate-900 font-medium">Obsolete / Replacements</span>
         </nav>
 
         <div className="max-w-4xl mx-auto">
-          <Link href={`/products/${encodeURIComponent(pn)}`} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-primary-600 mb-6">
+          <Link href={`/product/${encodeURIComponent(pn)}`} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-primary-600 mb-6">
             <ArrowLeft className="w-4 h-4" /> Back to {pn}
           </Link>
 
@@ -115,19 +115,21 @@ export default async function ObsoletePage({ params }: Props) {
             <div>
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Possible Replacements</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {alternatives.map((alt: { part_number: string; image_url?: string; name?: string; brand_name?: string; brand?: string; manufacturer?: string; match_type?: string; description?: string }) => (
+                {alternatives.map((alt: any) => (
                   <Link
                     key={alt.part_number}
-                    href={`/products/${encodeURIComponent(alt.part_number)}`}
+                    href={`/product/${encodeURIComponent(alt.part_number)}`}
                     className="rounded-xl border border-slate-200 bg-white p-4 hover:border-primary-500 hover:shadow-md transition-all flex items-center gap-4"
                   >
-                    <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-slate-100">
-                      <SafeImage
-                        src={imageUrl(alt.image_url || '')}
-                        alt={alt.part_number}
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
+                    {alt.image_url ? (
+                      <div className="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-slate-100">
+                        <Image src={imageUrl(alt.image_url)} alt="" fill className="object-contain" sizes="64px" />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 shrink-0 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <Package className="w-8 h-8 text-slate-400" />
+                      </div>
+                    )}
                     <div className="min-w-0">
                       <p className="font-mono font-semibold text-slate-900 truncate">{alt.part_number}</p>
                       <p className="text-sm text-slate-600 truncate">{alt.brand || alt.manufacturer || '—'}</p>
@@ -139,7 +141,7 @@ export default async function ObsoletePage({ params }: Props) {
           )}
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link href={`/products/${encodeURIComponent(pn)}`} className="text-sm text-primary-600 hover:underline">Product page</Link>
+            <Link href={`/product/${encodeURIComponent(pn)}`} className="text-sm text-primary-600 hover:underline">Product page</Link>
             <Link href={`/datasheet/${encodeURIComponent(pn)}`} className="text-sm text-primary-600 hover:underline">Datasheet</Link>
             <Link href={`/alternatives/${encodeURIComponent(pn)}`} className="text-sm text-primary-600 hover:underline">All alternatives</Link>
             {brandName && <Link href={getBrandHref({ name: brandName })} className="text-sm text-primary-600 hover:underline">{brandName} products</Link>}

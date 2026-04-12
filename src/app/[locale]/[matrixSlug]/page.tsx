@@ -1,4 +1,3 @@
-import { apiFetch } from '@/lib/api'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProductCard } from '@/components/products/ProductCard'
@@ -16,7 +15,7 @@ export async function generateMetadata({ params }: Props) {
   if (RESERVED.has(matrixSlug)) return { title: 'Not Found' }
 
   try {
-    const res = await apiFetch(`${API}/api/matrix/${encodeURIComponent(matrixSlug)}?limit=1`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API}/api/matrix/${encodeURIComponent(matrixSlug)}?limit=1`, { next: { revalidate: 3600 } })
     if (!res.ok) return { title: 'Not Found' }
     const data = await res.json()
     const brand = data.brand || ''
@@ -46,7 +45,7 @@ export default async function MatrixPage({ params }: Props) {
 
   let data: { slug: string; brand: string; category: string; condition?: string; products: unknown[]; total: number; related_news: unknown[] }
   try {
-    const res = await apiFetch(`${API}/api/matrix/${encodeURIComponent(matrixSlug)}?limit=48`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API}/api/matrix/${encodeURIComponent(matrixSlug)}?limit=48`, { next: { revalidate: 3600 } })
     if (!res.ok) notFound()
     data = await res.json()
   } catch {
@@ -73,7 +72,7 @@ export default async function MatrixPage({ params }: Props) {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {((data?.products && Array.isArray(data.products) ? data.products : []) as Record<string, unknown>[]).map((p) => (
-            <ProductCard key={String(p.part_number)} {...productToCardProps(p as never)} productBasePath="/product" />
+            <ProductCard key={String(p.part_number)} {...productToCardProps(p as never)} productBasePath="/products" />
           ))}
         </div>
 

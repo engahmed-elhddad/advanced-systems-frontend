@@ -3,11 +3,10 @@
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { AdminLayout } from '@/components/admin/layout/AdminLayout'
-import { useBrands } from '@/hooks/useBrands'
-import { useCategories } from '@/hooks/useCategories'
+import { useBrands } from '@/features/products/hooks/useBrands'
+import { useCategories } from '@/features/products/hooks/useCategories'
 import { getApiErrorMessage } from '@/lib/api'
-import { useCreateAdminProduct } from '@/hooks/useProducts'
+import { useCreateAdminProduct } from '@/features/products/hooks/useProducts'
 import { Card, Skeleton } from '@/components/ui'
 import { ProductForm } from '../_components/ProductForm'
 import toast from 'react-hot-toast'
@@ -22,7 +21,6 @@ export default function NewAdminProductPage() {
   const categoryOptions = (categoriesQuery.data ?? []).map((c: any) => ({ value: String(c.id), label: String(c.name) }))
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/admin/products" className="inline-flex items-center gap-2 text-sm text-gray-300 transition hover:text-white">
@@ -70,6 +68,5 @@ export default function NewAdminProductPage() {
           />
         )}
       </div>
-    </AdminLayout>
   )
 }

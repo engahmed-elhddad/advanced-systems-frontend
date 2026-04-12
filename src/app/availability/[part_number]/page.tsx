@@ -2,9 +2,9 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MessageCircle, Package, ArrowLeft } from 'lucide-react'
 import { getProductOrGenerate } from '@/lib/api'
-import { categoryToSlug } from '@/app/lib/constants'
+import { categoryToSlug } from '@/lib/constants'
 import { getBrandHref } from '@/lib/brandUtils'
-import { CONTACT_EMAIL, WHATSAPP_NUMBER } from '@/app/lib/constants'
+import { CONTACT_EMAIL, WHATSAPP_NUMBER } from '@/lib/constants'
 import type { Metadata } from 'next'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://advancedsystems-int.com'
@@ -63,17 +63,17 @@ export default async function AvailabilityPage({ params }: Props) {
           <span className="mx-2">/</span>
           {categoryName && (
             <>
-              <Link href={categoryToSlug(String(categoryName)) ? `/categories/${categoryToSlug(String(categoryName))}` : `/search?category=${encodeURIComponent(categoryToSlug(String(categoryName)) || categoryName)}`} className="hover:text-primary-600">{categoryName}</Link>
+              <Link href={categoryToSlug(String(categoryName)) ? `/category/${categoryToSlug(String(categoryName))}` : `/search?category=${encodeURIComponent(categoryName)}`} className="hover:text-primary-600">{categoryName}</Link>
               <span className="mx-2">/</span>
             </>
           )}
-          <Link href={`/products/${encodeURIComponent(pn)}`} className="hover:text-primary-600">{pn}</Link>
+          <Link href={`/product/${encodeURIComponent(pn)}`} className="hover:text-primary-600">{pn}</Link>
           <span className="mx-2">/</span>
           <span className="text-slate-900 font-medium">Availability</span>
         </nav>
 
         <div className="max-w-2xl mx-auto">
-          <Link href={`/products/${encodeURIComponent(pn)}`} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-primary-600 mb-6">
+          <Link href={`/product/${encodeURIComponent(pn)}`} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-primary-600 mb-6">
             <ArrowLeft className="w-4 h-4" /> Back to {pn}
           </Link>
 
@@ -124,7 +124,7 @@ export default async function AvailabilityPage({ params }: Props) {
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-4">
-              <Link href={`/products/${encodeURIComponent(pn)}`} className="text-sm text-primary-600 hover:underline">Product page</Link>
+              <Link href={`/product/${encodeURIComponent(pn)}`} className="text-sm text-primary-600 hover:underline">Product page</Link>
               <Link href={`/datasheet/${encodeURIComponent(pn)}`} className="text-sm text-primary-600 hover:underline">Datasheet</Link>
               <Link href={`/alternatives/${encodeURIComponent(pn)}`} className="text-sm text-primary-600 hover:underline">Alternatives</Link>
               {brandName && <Link href={getBrandHref({ name: brandName })} className="text-sm text-primary-600 hover:underline">{brandName} products</Link>}
