@@ -110,7 +110,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
 
   return {
     part_number: p.part_number,
-    product_id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
+    id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
     brand,
     manufacturer,
     category: categoryDisplay,

@@ -49,6 +49,8 @@ function KeySpecs({
 }
 
 export interface ProductCardProps {
+  /** Canonical product id from API (optional; not required for card UI today). */
+  id?: number
   part_number: string
   brand?: string
   manufacturer?: string
@@ -85,7 +87,6 @@ function ProductCardInner({
   quickSpecs,
   variant = 'default',
   productBasePath = '/products',
-  product_id: _productId,
 }: ProductCardProps) {
   const { format } = useCurrency()
   const { showExactPricing, openLoginModal } = usePricingGate()
