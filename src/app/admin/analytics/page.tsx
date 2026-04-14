@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 import type { ComponentType } from "react"
 import { Activity, BarChart3, ClipboardList, MousePointerClick, RefreshCw, TrendingUp, Users } from "lucide-react"
 import { fetchAnalyticsSummary, type AnalyticsSummary } from "@/lib/admin-api"
-import { Button, Card, Skeleton } from "@/components/ui"
+import { Button, Card, Select, Skeleton } from "@/components/ui"
 
 const AnalyticsTrendsChart = dynamic(
   () => import("./_components/AnalyticsTrendsChart").then((m) => m.AnalyticsTrendsChart),
@@ -79,21 +79,19 @@ export default function AdminAnalyticsPage() {
           <p className="mt-1 text-sm text-white/55">Live visits, product interest, and lead conversion metrics.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-            className="h-10 rounded-xl border border-white/15 bg-white/[0.06] px-3 text-sm text-white backdrop-blur-xl transition-all duration-300 focus:border-orange-400/40 focus:outline-none focus:ring-2 focus:ring-orange-500/30"
-          >
-            <option value={7} className="bg-[#0c1428] text-white">
-              Last 7 days
-            </option>
-            <option value={14} className="bg-[#0c1428] text-white">
-              Last 14 days
-            </option>
-            <option value={30} className="bg-[#0c1428] text-white">
-              Last 30 days
-            </option>
-          </select>
+          <div className="w-[200px]">
+            <Select
+              value={String(days)}
+              onChange={(v) => setDays(Number(v))}
+              options={[
+                { value: '7', label: 'Last 7 days' },
+                { value: '14', label: 'Last 14 days' },
+                { value: '30', label: 'Last 30 days' },
+              ]}
+              placeholder="Date range"
+              triggerClassName="h-10"
+            />
+          </div>
           <Button type="button" variant="secondary" size="sm" leftIcon={<RefreshCw className="h-3.5 w-3.5" />} onClick={load}>
             Refresh
           </Button>

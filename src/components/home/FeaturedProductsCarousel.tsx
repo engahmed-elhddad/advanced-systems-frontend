@@ -10,6 +10,7 @@ import { SafeImage } from '@/components/ui/SafeImage'
 
 interface ProductRow {
   part_number: string
+  slug?: string
   brand?: string
   manufacturer?: string
   category?: string
@@ -49,7 +50,7 @@ async function fetchFeatured(): Promise<ProductRow[]> {
 }
 
 function ProductCard({ p }: { p: ProductRow }) {
-  const partSlug = encodeURIComponent(p.part_number)
+  const partSlug = encodeURIComponent((p.slug || p.part_number).trim())
   const rfqHref = `mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'eng.ahmed@advancedsystems-int.com'}?subject=RFQ%20${encodeURIComponent(p.part_number)}`
 
   return (

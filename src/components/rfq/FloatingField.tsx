@@ -9,18 +9,20 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   inputClassName?: string
 }
 
-export function FloatingInput({ label, error, id, className, inputClassName, ...props }: InputProps) {
+export function FloatingInput({ label, error, id, className, inputClassName, type, ...props }: InputProps) {
   const fid = id || props.name || 'field'
   return (
     <div className={cn('relative', className)}>
       <input
         id={fid}
+        type={type}
         placeholder=" "
         className={cn(
           'peer h-14 min-h-[3rem] w-full rounded-xl border border-white/15 bg-white/[0.07] px-4 pb-2 pt-5 text-base text-white outline-none transition-all duration-200 sm:h-12 sm:min-h-0 sm:text-[15px]',
           'placeholder:text-transparent',
           'focus:border-orange-400/45 focus:ring-2 focus:ring-orange-400/20',
           'disabled:cursor-not-allowed disabled:opacity-50',
+          type === 'password' && 'caret-white',
           inputClassName,
         )}
         {...props}

@@ -16,7 +16,7 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // Single canonical product URL: /products/[part_number]
+      // Canonical product URLs: /products/{slug} (part-number paths redirect server-side)
       { source: '/product/:path*', destination: '/products/:path*', permanent: true },
       { source: '/part-number/:path*', destination: '/products/:path*', permanent: true },
       { source: '/p/:path*', destination: '/products/:path*', permanent: true },

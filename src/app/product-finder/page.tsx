@@ -6,6 +6,9 @@ import Image from 'next/image'
 import { SlidersHorizontal, Search, FileText, Package, GitCompare, X } from 'lucide-react'
 import { API_BASE_URL, CATEGORIES } from '@/lib/constants'
 import { BrandLogo } from '@/components/ui/BrandLogo'
+import { Select } from '@/components/ui/Select'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
+import { SELECT_EMPTY, sentinelToEmpty } from '@/lib/formSentinels'
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || API_BASE_URL
 
@@ -37,6 +40,7 @@ export default function ProductFinderPage() {
     poles: '',
     mounting_type: '',
   })
+  const debouncedFilters = useDebouncedValue(filters, 300)
   const [options, setOptions] = useState<{
     categories: string[]
     current: string[]
@@ -85,11 +89,12 @@ export default function ProductFinderPage() {
     setLoading(true)
     try {
       const params = new URLSearchParams()
-      if (filters.category) params.set('category', filters.category)
-      if (filters.current) params.set('current', filters.current)
-      if (filters.voltage) params.set('voltage', filters.voltage)
-      if (filters.poles) params.set('poles', filters.poles)
-      if (filters.mounting_type) params.set('mounting_type', filters.mounting_type)
+      const f = debouncedFilters
+      if (f.category) params.set('category', f.category)
+      if (f.current) params.set('current', f.current)
+      if (f.voltage) params.set('voltage', f.voltage)
+      if (f.poles) params.set('poles', f.poles)
+      if (f.mounting_type) params.set('mounting_type', f.mounting_type)
       params.set('page', String(page))
       params.set('limit', '24')
       const res = await fetch(`${API}/api/product-finder/search?${params}`)
@@ -101,9 +106,12 @@ export default function ProductFinderPage() {
     } finally {
       setLoading(false)
     }
-  }, [filters, page])
+  }, [debouncedFilters, page])
 
-  useEffect(() => { setPage(1) }, [filters.category, filters.current, filters.voltage, filters.poles, filters.mounting_type])
+  const { category: fc, current: fcur, voltage: fv, poles: fp, mounting_type: fm } = filters
+  useEffect(() => {
+    setPage(1)
+  }, [fc, fcur, fv, fp, fm])
   useEffect(() => { search() }, [search])
 
   const toggleCompare = (pn: string) => {
@@ -154,71 +162,61 @@ export default function ProductFinderPage() {
                 </button>
               </div>
               <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Category</label>
-                  <select
-                    value={filters.category}
-                    onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="">All categories</option>
-                    {options.categories.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Current</label>
-                  <select
-                    value={filters.current}
-                    onChange={e => setFilters(f => ({ ...f, current: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="">Any</option>
-                    {options.current.map(v => (
-                      <option key={v} value={v}>{v}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Voltage</label>
-                  <select
-                    value={filters.voltage}
-                    onChange={e => setFilters(f => ({ ...f, voltage: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="">Any</option>
-                    {options.voltage.map(v => (
-                      <option key={v} value={v}>{v}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Poles</label>
-                  <select
-                    value={filters.poles}
-                    onChange={e => setFilters(f => ({ ...f, poles: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="">Any</option>
-                    {options.poles.map(v => (
-                      <option key={v} value={v}>{v}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Mounting Type</label>
-                  <select
-                    value={filters.mounting_type}
-                    onChange={e => setFilters(f => ({ ...f, mounting_type: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="">Any</option>
-                    {options.mounting_type.map(v => (
-                      <option key={v} value={v}>{v}</option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  variant="light"
+                  label="Category"
+                  placeholder="All categories"
+                  value={filters.category ? filters.category : SELECT_EMPTY}
+                  onChange={(v) => setFilters((f) => ({ ...f, category: sentinelToEmpty(v) }))}
+                  options={[
+                    { value: SELECT_EMPTY, label: 'All categories' },
+                    ...options.categories.map((c) => ({ value: c, label: c })),
+                  ]}
+                />
+                <Select
+                  variant="light"
+                  label="Current"
+                  placeholder="Any"
+                  value={filters.current ? filters.current : SELECT_EMPTY}
+                  onChange={(v) => setFilters((f) => ({ ...f, current: sentinelToEmpty(v) }))}
+                  options={[
+                    { value: SELECT_EMPTY, label: 'Any' },
+                    ...options.current.map((v) => ({ value: v, label: v })),
+                  ]}
+                />
+                <Select
+                  variant="light"
+                  label="Voltage"
+                  placeholder="Any"
+                  value={filters.voltage ? filters.voltage : SELECT_EMPTY}
+                  onChange={(v) => setFilters((f) => ({ ...f, voltage: sentinelToEmpty(v) }))}
+                  options={[
+                    { value: SELECT_EMPTY, label: 'Any' },
+                    ...options.voltage.map((v) => ({ value: v, label: v })),
+                  ]}
+                />
+                <Select
+                  variant="light"
+                  label="Poles"
+                  placeholder="Any"
+                  value={filters.poles ? filters.poles : SELECT_EMPTY}
+                  onChange={(v) => setFilters((f) => ({ ...f, poles: sentinelToEmpty(v) }))}
+                  options={[
+                    { value: SELECT_EMPTY, label: 'Any' },
+                    ...options.poles.map((v) => ({ value: v, label: v })),
+                  ]}
+                />
+                <Select
+                  variant="light"
+                  label="Mounting Type"
+                  placeholder="Any"
+                  value={filters.mounting_type ? filters.mounting_type : SELECT_EMPTY}
+                  onChange={(v) => setFilters((f) => ({ ...f, mounting_type: sentinelToEmpty(v) }))}
+                  options={[
+                    { value: SELECT_EMPTY, label: 'Any' },
+                    ...options.mounting_type.map((v) => ({ value: v, label: v })),
+                  ]}
+                />
                 <button
                   onClick={() => setFilters({ category: '', current: '', voltage: '', poles: '', mounting_type: '' })}
                   className="w-full py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50"

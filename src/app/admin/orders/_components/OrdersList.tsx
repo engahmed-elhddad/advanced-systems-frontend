@@ -1,6 +1,6 @@
 'use client'
 
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
 import type { OrdersListItem } from '@/features/admin/services/adminService'
 import { cn } from '@/lib/utils'
 
@@ -119,6 +119,7 @@ export function OrdersList({
       </div>
 
       <DataTable
+        allowLegacyTable
         columns={columns}
         data={orders as (OrdersListItem & Record<string, unknown>)[]}
         loading={loading}

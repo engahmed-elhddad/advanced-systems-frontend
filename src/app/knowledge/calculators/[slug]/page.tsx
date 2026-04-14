@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Calculator } from 'lucide-react'
+import { Select } from '@/components/ui/Select'
 
 /** Motor current: I = P / (√3 × U × η × cosφ) ≈ P × 1.8 for 400V 3ph */
 function MotorCurrentCalc() {
@@ -34,17 +35,16 @@ function MotorCurrentCalc() {
           className="w-full rounded-lg border border-slate-200 px-3 py-2"
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Phase</label>
-        <select
-          value={phase}
-          onChange={(e) => setPhase(e.target.value as '3ph' | '1ph')}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2"
-        >
-          <option value="3ph">3-phase</option>
-          <option value="1ph">1-phase</option>
-        </select>
-      </div>
+      <Select
+        variant="light"
+        label="Phase"
+        value={phase}
+        onChange={(v) => setPhase(v as '3ph' | '1ph')}
+        options={[
+          { value: '3ph', label: '3-phase' },
+          { value: '1ph', label: '1-phase' },
+        ]}
+      />
       <div className="p-4 rounded-lg bg-primary-50 border border-primary-100">
         <p className="text-sm text-slate-600">Estimated full-load current</p>
         <p className="text-2xl font-bold text-primary-700">{current.toFixed(1)} A</p>

@@ -1,5 +1,9 @@
+'use client'
+
 import { Search, RotateCcw, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Select } from '@/components/ui/Select'
+import { SELECT_EMPTY, sentinelToEmpty } from '@/lib/formSentinels'
 import type { ValidationInsights } from '@/features/admin/services/adminService'
 import type { RowStatusFilter } from '../_hooks/useJobDashboard'
 
@@ -167,35 +171,20 @@ function FieldSelect({
   if (options.length === 0) return null
 
   return (
-    <div className="relative">
-      <select
-        aria-label="Filter by error field"
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value || null)}
-        className={cn(
-          'h-8 appearance-none rounded-[2px] border border-[#E5E7EB] bg-white pl-3 pr-7 text-xs text-[#1A1A1A]',
-          'focus:border-[#0072CE] focus:outline-none focus:ring-1 focus:ring-[#0072CE]/20',
-        )}
-      >
-        <option value="">All fields</option>
-        {options.map((field) => (
-          <option key={field} value={field}>
-            {toFieldLabel(field)}
-          </option>
-        ))}
-      </select>
-      <svg
-        className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-[#6B7280]"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path
-          fillRule="evenodd"
-          d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-          clipRule="evenodd"
-        />
-      </svg>
+    <div className="min-w-[140px]">
+      <Select
+        variant="light"
+        label="Field"
+        placeholder="All fields"
+        value={value ? value : SELECT_EMPTY}
+        onChange={(v) => onChange(sentinelToEmpty(v) || null)}
+        options={[
+          { value: SELECT_EMPTY, label: 'All fields' },
+          ...options.map((field) => ({ value: field, label: toFieldLabel(field) })),
+        ]}
+        triggerClassName="h-8 min-h-0 text-xs py-0"
+        className="[&_label]:sr-only"
+      />
     </div>
   )
 }

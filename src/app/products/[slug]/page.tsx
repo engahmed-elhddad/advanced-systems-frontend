@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { cache } from 'react'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Script from 'next/script'
-import { getProduct, getProducts, apiFetch } from '@/lib/api'
+import { getProductByPartNumber, getProductBySlug, getProducts, apiFetch } from '@/lib/api'
 import { COMPANY_NAME_EN } from '@/lib/company'
 import { normalizeCategoryQueryForApi, SITE_URL } from '@/lib/constants'
 import { canonicalPath } from '@/lib/seo'
@@ -12,7 +12,9 @@ import { normalizeProductVariants } from '@/lib/productVariants'
 import { ProductDetail } from './ProductDetail'
 import { ProductPageSearchStrip } from './ProductPageSearchStrip'
 import { SafeImage } from '@/components/ui/SafeImage'
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+
 const RecommendationSections = dynamic(
   () => import('./RecommendationSections').then((m) => m.RecommendationSections),
   {
@@ -31,7 +33,7 @@ const RecommendationSections = dynamic(
 )
 
 interface Props {
-  params: Promise<{ part_number: string }>
+  params: Promise<{ slug: string }>
 }
 
 function looksLikePartNumber(raw: string): boolean {
@@ -39,19 +41,37 @@ function looksLikePartNumber(raw: string): boolean {
   return u.length >= 5 && /\d/.test(u)
 }
 
-const getProductCached = cache(async (pn: string) => getProduct(decodeURIComponent(pn).trim()))
+function encodeSlugForUrl(slug: string): string {
+  return encodeURIComponent(slug.trim())
+}
+
+const loadBySlug = cache(async (slug: string) => {
+  try {
+    return (await getProductBySlug(slug)) as Record<string, unknown>
+  } catch {
+    return null
+  }
+})
+
+const loadByPart = cache(async (pn: string) => {
+  try {
+    return (await getProductByPartNumber(pn)) as Record<string, unknown>
+  } catch {
+    return null
+  }
+})
 
 export async function generateStaticParams() {
   try {
-    const data = (await getProducts({ page: 1, size: 500, include_unready: true })) as {
-      items?: Array<{ part_number?: string }>
-      products?: Array<{ part_number?: string }>
+    const data = (await getProducts({ page: 1, size: 500 })) as {
+      items?: Array<{ slug?: string; part_number?: string }>
+      products?: Array<{ slug?: string; part_number?: string }>
     }
     const rows = data.items ?? data.products ?? []
     return rows
-      .map((r) => (r.part_number || '').trim())
+      .map((r) => (r.slug || r.part_number || '').trim())
       .filter(Boolean)
-      .map((pn) => ({ part_number: encodeURIComponent(pn) }))
+      .map((s) => ({ slug: encodeURIComponent(s) }))
   } catch {
     return []
   }
@@ -73,7 +93,9 @@ function parseSpecs(product: Record<string, unknown>): Record<string, string> {
     try {
       const parsed = JSON.parse(raw)
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) obj = parsed
-    } catch { /* skip */ }
+    } catch {
+      /* skip */
+    }
   }
   if (Object.keys(obj).length === 0) {
     for (const k of ['voltage', 'current', 'mounting_type', 'protection_rating', 'series']) {
@@ -84,9 +106,10 @@ function parseSpecs(product: Record<string, unknown>): Record<string, string> {
   const result: Record<string, string> = {}
   for (const [k, v] of Object.entries(obj)) {
     if (v == null) continue
-    const val = typeof v === 'object' && 'value' in (v as Record<string, unknown>)
-      ? String((v as Record<string, unknown>).value ?? '')
-      : String(v)
+    const val =
+      typeof v === 'object' && 'value' in (v as Record<string, unknown>)
+        ? String((v as Record<string, unknown>).value ?? '')
+        : String(v)
     if (val.trim()) {
       result[k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())] = val
     }
@@ -113,64 +136,97 @@ function collectGalleryImages(product: Record<string, unknown>): string[] {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { part_number: rawParam } = await params
+  const { slug: rawParam } = await params
   const decoded = decodeURIComponent(rawParam)
 
-  let product: Record<string, unknown> | null = null
-  try { product = await getProductCached(decoded) } catch { product = null }
+  let product: Record<string, unknown> | null = await loadBySlug(decoded)
+  let resolvedViaPart = false
+  if (!product) {
+    product = await loadByPart(decoded)
+    resolvedViaPart = Boolean(product)
+  }
 
   if (!product && !looksLikePartNumber(decoded)) {
     const brand = decoded.replace(/\b\w/g, (l) => l.toUpperCase())
     return {
       title: `${brand} Industrial Automation Parts | Advanced Systems`,
       description: `${brand} PLCs, drives, sensors, and spare parts. Request a quote — fast response.`,
-      alternates: { canonical: canonicalPath(`/products/${encodeURIComponent(rawParam)}`) },
+      alternates: { canonical: canonicalPath(`/products/${encodeSlugForUrl(decoded)}`) },
     }
   }
 
+  if (!product) {
+    return { title: 'Product | Advanced Systems' }
+  }
+
+  const canonicalSlug = String(product.slug ?? decoded).trim() || decoded
   const partNum = String(product?.part_number ?? decoded)
   const productName = String(product?.name ?? partNum).trim() || partNum
   const brandName = String(product?.brand ?? product?.manufacturer ?? 'Industrial')
   const categoryName =
     typeof product?.category === 'string'
       ? product.category
-      : typeof product?.category === 'object' && product?.category && 'name' in (product.category as Record<string, unknown>)
+      : typeof product?.category === 'object' &&
+          product?.category &&
+          'name' in (product.category as Record<string, unknown>)
         ? String((product.category as { name?: unknown }).name ?? '')
         : 'Industrial Parts'
+
+  const metaTitleRaw = String(product.meta_title ?? '').trim()
+  const metaDescRaw = String(product.meta_description ?? '').trim()
   const rawDesc = String(product?.description || `${productName} (${partNum}) — ${brandName}.`).trim()
   const trimmed = rawDesc.length > 110 ? `${rawDesc.slice(0, 110).trim()}…` : rawDesc
-  const description = `${trimmed} Request a quote — typical reply 2–6 hours.`.slice(0, 160)
-  const canonicalUrl = canonicalPath(`/products/${encodeURIComponent(partNum)}`)
+  const fallbackDescription = `${trimmed} Request a quote — typical reply 2–6 hours.`.slice(0, 160)
+  const title =
+    metaTitleRaw ||
+    `${productName} | ${brandName} | ${categoryName}`
+  const description = metaDescRaw || fallbackDescription
+  const canonicalUrl = canonicalPath(`/products/${encodeSlugForUrl(canonicalSlug)}`)
+
+  const ogImage = String(product?.image_url || collectGalleryImages(product)[0] || '/placeholder.png')
 
   return {
-    title: `${productName} | ${brandName} | ${categoryName}`,
+    title,
     description,
     keywords: [productName, partNum, brandName, categoryName, 'industrial automation'],
     alternates: { canonical: canonicalUrl },
     openGraph: {
-      title: `${productName} | ${brandName}`,
+      title: metaTitleRaw || `${productName} | ${brandName}`,
       description,
       url: canonicalUrl,
-      images: [String(product?.image_url || '/placeholder.png')],
+      images: [ogImage],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${productName} | ${brandName}`,
+      title: metaTitleRaw || `${productName} | ${brandName}`,
       description,
-      images: [String(product?.image_url || '/placeholder.png')],
+      images: [ogImage],
     },
     robots: { index: true, follow: true },
   }
 }
 
-export default async function ProductPartNumberPage({ params }: Props) {
-  const { part_number: rawParam } = await params
+export default async function ProductSlugPage({ params }: Props) {
+  const { slug: rawParam } = await params
   const decoded = decodeURIComponent(rawParam)
-  let product: Record<string, unknown> | null = null
-  try { product = await getProductCached(decoded) } catch { product = null }
-  if (!product && !looksLikePartNumber(decoded)) return <BrandPage brandSlug={decoded} />
+
+  let product: Record<string, unknown> | null = await loadBySlug(decoded)
+  let openedViaPartNumber = false
+  if (!product) {
+    product = await loadByPart(decoded)
+    openedViaPartNumber = Boolean(product)
+  }
+
+  if (!product && !looksLikePartNumber(decoded)) {
+    return <BrandPage brandSlug={decoded} />
+  }
   if (!product) return notFound()
+
+  const canonicalSlug = String(product.slug ?? '').trim()
+  if (openedViaPartNumber && canonicalSlug && decoded !== canonicalSlug) {
+    permanentRedirect(`/products/${encodeSlugForUrl(canonicalSlug)}`)
+  }
 
   const partNum = String(product.part_number ?? decoded)
   const productName = String(product.name ?? partNum).trim() || partNum
@@ -189,7 +245,7 @@ export default async function ProductPartNumberPage({ params }: Props) {
   const datasheetUrl = String(product.datasheet_url ?? product.datasheet ?? '')
   const availability = String(product.availability ?? 'on_request')
   const variants = normalizeProductVariants(product)
-  const productUrl = canonicalPath(`/products/${encodeURIComponent(partNum)}`)
+  const productUrl = canonicalPath(`/products/${encodeSlugForUrl(canonicalSlug || decoded)}`)
   const keywordSeed = `${productName} ${brandName} ${categoryName} ${series}`.trim()
   const rawPid = product.id
   const productId =
@@ -270,7 +326,6 @@ export default async function ProductPartNumberPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      {/* Page-local glow (layout already has global gradient) */}
       <div
         className="pointer-events-none absolute left-1/2 top-32 -z-10 h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 rounded-full bg-purple-600/20 blur-[120px]"
         aria-hidden
@@ -355,14 +410,21 @@ export default async function ProductPartNumberPage({ params }: Props) {
 
 async function BrandPage({ brandSlug }: { brandSlug: string }) {
   const brand = decodeURIComponent(brandSlug).replace(/\b\w/g, (l) => l.toUpperCase())
-  let products: Array<{ part_number: string; manufacturer?: string; image_url?: string; description?: string }> = []
+  let products: Array<{
+    part_number: string
+    slug?: string
+    manufacturer?: string
+    image_url?: string
+    description?: string
+  }> = []
   let fetchError = false
   try {
-    const params = new URLSearchParams({ q: '', brand, page: '1', limit: '20' })
+    const params = new URLSearchParams({ page: '1', size: '20', sort: 'relevance' })
+    params.set('brand', brand)
     const res = await apiFetch(`${API_BASE}/api/v1/search/?${params}`, { cache: 'no-store' })
     if (res.ok) {
       const data = await res.json()
-      products = data?.hits ?? data?.results ?? data?.products ?? []
+      products = data?.hits ?? data?.items ?? data?.products ?? []
     } else {
       fetchError = true
     }
@@ -403,28 +465,31 @@ async function BrandPage({ brandSlug }: { brandSlug: string }) {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {products.map((p) => (
-              <Link
-                key={p.part_number}
-                href={`/products/${encodeURIComponent(p.part_number)}`}
-                className="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:border-white/[0.14] hover:shadow-lg hover:shadow-orange-500/10"
-              >
-                <div className="flex aspect-square items-center justify-center overflow-hidden border-b border-white/10 bg-black/20 p-3">
-                  <SafeImage
-                    src={p.image_url}
-                    alt={p.part_number}
-                    className="max-h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col gap-1 p-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">{p.manufacturer || brand}</span>
-                  <span className="truncate font-mono text-sm font-bold text-orange-200 transition-colors group-hover:text-orange-100">
-                    {p.part_number}
-                  </span>
-                  {p.description ? <p className="line-clamp-2 text-xs text-white/50">{p.description}</p> : null}
-                </div>
-              </Link>
-            ))}
+            {products.map((p) => {
+              const pathSeg = encodeURIComponent((p.slug || p.part_number).trim())
+              return (
+                <Link
+                  key={p.part_number}
+                  href={`/products/${pathSeg}`}
+                  className="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:border-white/[0.14] hover:shadow-lg hover:shadow-orange-500/10"
+                >
+                  <div className="flex aspect-square items-center justify-center overflow-hidden border-b border-white/10 bg-black/20 p-3">
+                    <SafeImage
+                      src={p.image_url}
+                      alt={p.part_number}
+                      className="max-h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-1 p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">{p.manufacturer || brand}</span>
+                    <span className="truncate font-mono text-sm font-bold text-orange-200 transition-colors group-hover:text-orange-100">
+                      {p.part_number}
+                    </span>
+                    {p.description ? <p className="line-clamp-2 text-xs text-white/50">{p.description}</p> : null}
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         )}
       </div>

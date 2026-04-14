@@ -9,6 +9,7 @@ import { useCategories } from '@/features/products/hooks/useCategories'
 import { getApiErrorMessage } from '@/lib/api'
 import { useAdminProduct, useUpdateAdminProduct } from '@/features/products/hooks/useProducts'
 import { ProductForm } from '../_components/ProductForm'
+import { ProductInventorySection } from '../_components/ProductInventorySection'
 import toast from 'react-hot-toast'
 
 export default function AdminEditProductPage() {
@@ -80,6 +81,7 @@ export default function AdminEditProductPage() {
               }
             }}
           />
+          <ProductInventorySection productId={product.id} />
         )}
       </div>
   )

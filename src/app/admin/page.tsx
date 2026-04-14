@@ -2,9 +2,11 @@
 
 import Link from "next/link"
 import { useEffect } from "react"
-import { Activity, Database, Package, UploadCloud } from "lucide-react"
+import { Activity, Database, Package, RefreshCw, UploadCloud } from "lucide-react"
+import { useMutation } from "@tanstack/react-query"
 import { Button, Card, Skeleton } from "@/components/ui"
-import { useDashboard } from '@/features/admin/hooks/useDashboard'
+import { useDashboard, useCatalogReadinessSummary } from '@/features/admin/hooks/useDashboard'
+import { api } from '@/lib/api'
 import toast from "react-hot-toast"
 
 const glassTile =
@@ -12,7 +14,17 @@ const glassTile =
 
 export default function AdminDashboard() {
   const dashboardQuery = useDashboard()
+  const readinessQuery = useCatalogReadinessSummary()
   const kpis = dashboardQuery.data
+  const readiness = readinessQuery.data
+
+  const reindexMutation = useMutation({
+    mutationFn: () => api.post('/api/v1/admin/search/reindex'),
+    onSuccess: (res) => {
+      toast.success(typeof res.data?.message === 'string' ? res.data.message : 'Search index rebuilt')
+    },
+    onError: () => toast.error('Reindex failed'),
+  })
 
   useEffect(() => {
     if (dashboardQuery.isError) {
@@ -24,7 +36,9 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-white">Dashboard</h1>
-        <p className="mt-1 text-sm text-white/55">Quick overview of products and recent activity.</p>
+        <p className="mt-1 text-sm text-white/55">
+          Quick overview — public catalog count matches storefront-ready products (search index and PDPs use the same rules).
+        </p>
       </div>
 
       {dashboardQuery.isError && (
@@ -58,7 +72,9 @@ export default function AdminDashboard() {
             {dashboardQuery.isLoading ? (
               <Skeleton className="mt-3 h-6 w-32 rounded-lg bg-white/10" />
             ) : (
-              <p className="mt-3 text-lg font-semibold text-emerald-300">Healthy</p>
+              <p className="mt-3 text-lg font-semibold text-emerald-300">
+                {dashboardQuery.isFetching ? 'Refreshing…' : 'Healthy'}
+              </p>
             )}
           </div>
         </Card>
@@ -79,6 +95,51 @@ export default function AdminDashboard() {
           </div>
         </Card>
       </div>
+
+      <Card hover={false} className="p-0" padding="none" header="Catalog readiness">
+        <div className="space-y-3 p-4 lg:p-5">
+          {readinessQuery.isLoading ? (
+            <Skeleton className="h-24 w-full rounded-xl bg-white/10" />
+          ) : readinessQuery.isError ? (
+            <p className="text-sm text-amber-200/90">Could not load readiness summary (admin session required).</p>
+          ) : (
+            <>
+              <p className="text-sm text-white/55">
+                Active + approved products: <span className="font-semibold text-white">{readiness?.active_approved_count ?? 0}</span>
+                {' · '}
+                Storefront-ready: <span className="font-semibold text-emerald-200">{readiness?.storefront_ready_count ?? 0}</span>
+                {(readiness?.not_storefront_ready_count ?? 0) > 0 ? (
+                  <span className="text-amber-200">
+                    {' '}
+                    ({readiness?.not_storefront_ready_count} not yet publishable)
+                  </span>
+                ) : null}
+              </p>
+              <ul className="grid gap-2 text-sm text-white/70 sm:grid-cols-2">
+                <li>Missing brand: {readiness?.missing_brand ?? 0}</li>
+                <li>Missing category: {readiness?.missing_category ?? 0}</li>
+                <li>Missing description: {readiness?.missing_description ?? 0}</li>
+                <li>Missing images: {readiness?.missing_images ?? 0}</li>
+              </ul>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button asChild size="sm" variant="secondary">
+                  <Link href="/admin/products">Fix in products</Link>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  leftIcon={<RefreshCw className={`h-3.5 w-3.5 ${reindexMutation.isPending ? 'animate-spin' : ''}`} />}
+                  disabled={reindexMutation.isPending}
+                  onClick={() => reindexMutation.mutate()}
+                >
+                  Rebuild search index
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </Card>
 
       <Card hover={false} className="p-0" padding="none" header="KPI Snapshot">
         <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">

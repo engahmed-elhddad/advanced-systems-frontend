@@ -3,6 +3,7 @@ import type { ProductCardProps } from '@/components/products/ProductCard'
 /** Flexible product shape from API (various backend responses) */
 export interface ApiProduct {
   id?: number
+  slug?: string
   part_number: string
   brand?: string | { name?: string } | null
   manufacturer?: string
@@ -37,6 +38,7 @@ export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
   const cat = p.category as { name?: string } | undefined
   return {
     id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
+    slug: p.slug != null ? String(p.slug) : undefined,
     part_number: String(p.part_number ?? ''),
     brand: br?.name,
     manufacturer: br?.name,
@@ -67,6 +69,7 @@ export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct 
         : undefined
   return {
     id: parsedId,
+    slug: hit.slug != null ? String(hit.slug) : undefined,
     part_number: String(hit.part_number ?? ''),
     brand: String(hit.brand_name ?? hit.brand ?? ''),
     manufacturer: String(hit.brand_name ?? ''),
@@ -110,6 +113,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
 
   return {
     part_number: p.part_number,
+    slug: p.slug?.trim() || undefined,
     id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
     brand,
     manufacturer,

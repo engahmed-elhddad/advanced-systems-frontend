@@ -14,6 +14,7 @@ import {
   Select,
   Spinner,
 } from "@/components/ui"
+import { SELECT_EMPTY, sentinelToEmpty } from "@/lib/formSentinels"
 
 function SearchIcon() {
   return (
@@ -398,49 +399,55 @@ function SearchResults() {
           <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Specifications</h3>
           <div className="space-y-3">
             {filterOptions.voltage?.length ? (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Voltage</label>
-                <select
-                  value={voltageParam}
-                  onChange={(e) => { navigate({ voltage: e.target.value || null }); setMobileFiltersOpen(false) }}
-                  className="w-full text-sm rounded-md border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                >
-                  <option value="">Any</option>
-                  {filterOptions.voltage.slice(0, 12).map((v) => (
-                    <option key={v} value={v}>{v}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                variant="light"
+                label="Voltage"
+                placeholder="Any"
+                value={voltageParam ? voltageParam : SELECT_EMPTY}
+                onChange={(v) => {
+                  const raw = sentinelToEmpty(v)
+                  navigate({ voltage: raw || null })
+                  setMobileFiltersOpen(false)
+                }}
+                options={[
+                  { value: SELECT_EMPTY, label: 'Any' },
+                  ...filterOptions.voltage.slice(0, 12).map((v) => ({ value: v, label: v })),
+                ]}
+              />
             ) : null}
             {filterOptions.current?.length ? (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Current</label>
-                <select
-                  value={currentParam}
-                  onChange={(e) => { navigate({ current: e.target.value || null }); setMobileFiltersOpen(false) }}
-                  className="w-full text-sm rounded-md border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                >
-                  <option value="">Any</option>
-                  {filterOptions.current.slice(0, 12).map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                variant="light"
+                label="Current"
+                placeholder="Any"
+                value={currentParam ? currentParam : SELECT_EMPTY}
+                onChange={(v) => {
+                  const raw = sentinelToEmpty(v)
+                  navigate({ current: raw || null })
+                  setMobileFiltersOpen(false)
+                }}
+                options={[
+                  { value: SELECT_EMPTY, label: 'Any' },
+                  ...filterOptions.current.slice(0, 12).map((c) => ({ value: c, label: c })),
+                ]}
+              />
             ) : null}
             {filterOptions.mounting_type?.length ? (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Mounting</label>
-                <select
-                  value={mountingParam}
-                  onChange={(e) => { navigate({ mounting_type: e.target.value || null }); setMobileFiltersOpen(false) }}
-                  className="w-full text-sm rounded-md border border-gray-200 px-3 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                >
-                  <option value="">Any</option>
-                  {filterOptions.mounting_type.slice(0, 10).map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                variant="light"
+                label="Mounting"
+                placeholder="Any"
+                value={mountingParam ? mountingParam : SELECT_EMPTY}
+                onChange={(v) => {
+                  const raw = sentinelToEmpty(v)
+                  navigate({ mounting_type: raw || null })
+                  setMobileFiltersOpen(false)
+                }}
+                options={[
+                  { value: SELECT_EMPTY, label: 'Any' },
+                  ...filterOptions.mounting_type.slice(0, 10).map((m) => ({ value: m, label: m })),
+                ]}
+              />
             ) : null}
           </div>
         </div>

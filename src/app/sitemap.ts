@@ -7,6 +7,35 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   "http://localhost:8000"
 
+/** Paginated storefront product URL segments (slug-first for canonical PDPs). */
+async function fetchAllProductSlugSegments(): Promise<string[]> {
+  const segments: string[] = []
+  let page = 1
+  let hasMore = true
+  const size = 500
+  while (hasMore) {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/v1/search/?page=${page}&size=${size}&sort=newest`,
+        { next: { revalidate: 3600 } }
+      )
+      if (!res.ok) break
+      const data = await res.json()
+      const items = data?.hits ?? data?.items ?? data?.products ?? []
+      for (const p of items) {
+        const s = String((p as { slug?: string; part_number?: string }).slug || (p as { part_number?: string }).part_number || "").trim()
+        if (s) segments.push(s)
+      }
+      hasMore = items.length >= size
+      page += 1
+      if (page > 500) break
+    } catch {
+      hasMore = false
+    }
+  }
+  return segments
+}
+
 /** Fetch all part numbers via paginated SEO API (scales to thousands) */
 async function fetchAllPartNumbers(): Promise<string[]> {
   const partNumbers: string[] = []
@@ -102,18 +131,22 @@ async function fetchNewsSlugs(): Promise<string[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [partNumbers, brands, categorySlugs, seriesSlugs, matrixSlugs, newsSlugs] = await Promise.all([
-    fetchAllPartNumbers(),
-    fetchBrands(),
-    fetchCategorySlugs(),
-    fetchSeriesSlugs(),
-    fetchMatrixSlugs(),
-    fetchNewsSlugs(),
-  ])
+  const [productSegments, partNumbers, brands, categorySlugs, seriesSlugs, matrixSlugs, newsSlugs] =
+    await Promise.all([
+      fetchAllProductSlugSegments(),
+      fetchAllPartNumbers(),
+      fetchBrands(),
+      fetchCategorySlugs(),
+      fetchSeriesSlugs(),
+      fetchMatrixSlugs(),
+      fetchNewsSlugs(),
+    ])
 
-  /** Single canonical product URLs (see next.config redirects for legacy /part-number, /product, /p). */
-  const canonicalProductPages = partNumbers.map((pn) => ({
-    url: `${base}/products/${encodeURIComponent(pn)}`,
+  const pdpSegments = productSegments.length ? productSegments : partNumbers
+
+  /** Canonical product URLs use slugs when available (legacy part-number URLs redirect). */
+  const canonicalProductPages = pdpSegments.map((seg) => ({
+    url: `${base}/products/${encodeURIComponent(seg)}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.9,

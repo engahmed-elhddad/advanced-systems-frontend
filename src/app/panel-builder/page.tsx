@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { generatePanelBom, getPanelBuilderOptions, submitBomRfq } from '@/lib/api'
 import { API_BASE_URL } from '@/lib/constants'
+import { Select } from '@/components/ui/Select'
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || API_BASE_URL
 
@@ -155,18 +156,13 @@ export default function PanelBuilderPage() {
                 Configuration
               </h2>
               <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Application</label>
-                  <select
-                    value={params.application}
-                    onChange={e => setParams(p => ({ ...p, application: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    {options.applications.map(a => (
-                      <option key={a.id} value={a.id}>{a.label}</option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  variant="light"
+                  label="Application"
+                  value={params.application}
+                  onChange={(v) => setParams((p) => ({ ...p, application: v }))}
+                  options={options.applications.map((a) => ({ value: a.id, label: a.label }))}
+                />
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">Motor Power (kW)</label>
                   <input
@@ -180,30 +176,20 @@ export default function PanelBuilderPage() {
                   />
                   <p className="text-xs text-slate-500 mt-0.5">0.18 – 110 kW</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Voltage</label>
-                  <select
-                    value={params.voltage}
-                    onChange={e => setParams(p => ({ ...p, voltage: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    {options.voltages.map(v => (
-                      <option key={v} value={v}>{v}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Control Type</label>
-                  <select
-                    value={params.control_type}
-                    onChange={e => setParams(p => ({ ...p, control_type: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    {options.control_types.map(c => (
-                      <option key={c.id} value={c.id}>{c.label}</option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  variant="light"
+                  label="Voltage"
+                  value={params.voltage}
+                  onChange={(v) => setParams((p) => ({ ...p, voltage: v }))}
+                  options={options.voltages.map((v) => ({ value: v, label: v }))}
+                />
+                <Select
+                  variant="light"
+                  label="Control Type"
+                  value={params.control_type}
+                  onChange={(v) => setParams((p) => ({ ...p, control_type: v }))}
+                  options={options.control_types.map((c) => ({ value: c.id, label: c.label }))}
+                />
                 <button
                   onClick={generateBom}
                   disabled={loading}

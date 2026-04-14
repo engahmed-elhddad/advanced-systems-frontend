@@ -1,16 +1,37 @@
 "use client"
 
-import { apiFetch } from '@/lib/api'
+import { api, apiFetch, getApiErrorMessage } from '@/lib/api'
 import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { adminLightInputClass, adminLightLabelClass, adminLightTextareaClass } from '@/lib/adminFormClasses'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
+import { Select } from '@/components/ui/Select'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
+import toast from 'react-hot-toast'
 
 const API =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
 
 type Brand = { id: number; name: string; slug: string }
 type Category = { id: number; name: string; slug: string }
+
+const CONDITION_OPTIONS = [
+  { value: 'New', label: 'New' },
+  { value: 'Used', label: 'Used' },
+  { value: 'Refurbished', label: 'Refurbished' },
+  { value: 'As Is', label: 'As Is' },
+]
+
+const AVAILABILITY_OPTIONS = [
+  { value: 'In Stock', label: 'In Stock' },
+  { value: 'On Request', label: 'On Request' },
+  { value: 'Limited Stock', label: 'Limited Stock' },
+  { value: 'Out of Stock', label: 'Out of Stock' },
+  { value: 'Pre-Order', label: 'Pre-Order' },
+]
 
 export default function AddProductPage() {
   const ADMIN_KEY = getBrowserAdminApiKey()
@@ -33,6 +54,21 @@ export default function AddProductPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
   const [loadError, setLoadError] = useState("")
+  const [brandModalOpen, setBrandModalOpen] = useState(false)
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false)
+  const [newBrandName, setNewBrandName] = useState("")
+  const [newCategoryName, setNewCategoryName] = useState("")
+  const [creatingBrand, setCreatingBrand] = useState(false)
+  const [creatingCategory, setCreatingCategory] = useState(false)
+
+  const brandSelectOptions = useMemo(
+    () => brands.map((b) => ({ value: String(b.id), label: b.name })),
+    [brands]
+  )
+  const categorySelectOptions = useMemo(
+    () => categories.map((c) => ({ value: String(c.id), label: c.name })),
+    [categories]
+  )
 
   useEffect(() => {
     apiFetch(`${API}/brands`)
@@ -45,8 +81,50 @@ export default function AddProductPage() {
       .catch(() => {/* brands error covers this */})
   }, [])
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  async function submitNewBrand() {
+    const name = newBrandName.trim()
+    if (!name) return
+    setCreatingBrand(true)
+    try {
+      const res = await api.post<{ id: number }>('/api/v1/admin/brands', { name })
+      const id = res.data?.id
+      if (id != null) {
+        setBrands((prev) => [...prev, { id, name, slug: name.toLowerCase().replace(/\s+/g, '-') }])
+        setForm((f) => ({ ...f, brand_id: String(id) }))
+      }
+      toast.success('Brand created')
+      setBrandModalOpen(false)
+      setNewBrandName('')
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, 'Failed to create brand (admin login may be required)'))
+    } finally {
+      setCreatingBrand(false)
+    }
+  }
+
+  async function submitNewCategory() {
+    const name = newCategoryName.trim()
+    if (!name) return
+    setCreatingCategory(true)
+    try {
+      const res = await api.post<{ id: number }>('/api/v1/admin/categories', { name })
+      const id = res.data?.id
+      if (id != null) {
+        setCategories((prev) => [...prev, { id, name, slug: name.toLowerCase().replace(/\s+/g, '-') }])
+        setForm((f) => ({ ...f, category_id: String(id) }))
+      }
+      toast.success('Category created')
+      setCategoryModalOpen(false)
+      setNewCategoryName('')
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, 'Failed to create category (admin login may be required)'))
+    } finally {
+      setCreatingCategory(false)
+    }
   }
 
   function addSpec() {
@@ -129,13 +207,16 @@ export default function AddProductPage() {
 
       setStatus("success")
       setMessage(`Product ${product.part_number} created successfully (ID: ${productId})`)
+      toast.success(`Product ${product.part_number} created`)
       setForm({ part_number: "", brand_id: "", category_id: "", series: "", description: "", condition: "New", quantity: "0", availability: "On Request", lead_time: "" })
       setSpecs([])
       setImageFile(null)
       setDatasheetFile(null)
     } catch (err: unknown) {
       setStatus("error")
-      setMessage(err instanceof Error ? err.message : "Unknown error")
+      const m = err instanceof Error ? err.message : "Unknown error"
+      setMessage(m)
+      toast.error(m)
     }
   }
 
@@ -169,42 +250,44 @@ export default function AddProductPage() {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
             <h2 className="text-base font-semibold text-slate-800 border-b border-slate-100 pb-2">Basic Information</h2>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Part Number <span className="text-red-500">*</span></label>
+              <label className={adminLightLabelClass}>Part Number <span className="text-red-500">*</span></label>
               <input required name="part_number" value={form.part_number} onChange={handleChange}
                 placeholder="e.g. 6ES7318-3EL01-0AB0"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className={adminLightInputClass}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Brand</label>
-                <select name="brand_id" value={form.brand_id} onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
-                  <option value="">— Select Brand —</option>
-                  {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                <select name="category_id" value={form.category_id} onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
-                  <option value="">— Select Category —</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Series</label>
-              <input name="series" value={form.series} onChange={handleChange}
-                placeholder="e.g. SIMATIC S7-400"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              <Select
+                variant="light"
+                label="Brand"
+                placeholder="— Select Brand —"
+                value={form.brand_id}
+                onChange={(v) => setForm((prev) => ({ ...prev, brand_id: v }))}
+                options={brandSelectOptions}
+                addNew={{ label: '+ Add new brand', onClick: () => setBrandModalOpen(true) }}
+              />
+              <Select
+                variant="light"
+                label="Category"
+                placeholder="— Select Category —"
+                value={form.category_id}
+                onChange={(v) => setForm((prev) => ({ ...prev, category_id: v }))}
+                options={categorySelectOptions}
+                addNew={{ label: '+ Add new category', onClick: () => setCategoryModalOpen(true) }}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+              <label className={adminLightLabelClass}>Series</label>
+              <input name="series" value={form.series} onChange={handleChange}
+                placeholder="e.g. SIMATIC S7-400"
+                className={adminLightInputClass}
+              />
+            </div>
+            <div>
+              <label className={adminLightLabelClass}>Description</label>
               <textarea name="description" value={form.description} onChange={handleChange}
                 rows={3} placeholder="Product description…"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+                className={adminLightTextareaClass}
               />
             </div>
           </section>
@@ -213,39 +296,32 @@ export default function AddProductPage() {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
             <h2 className="text-base font-semibold text-slate-800 border-b border-slate-100 pb-2">Stock & Availability</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Select
+                variant="light"
+                label="Condition"
+                value={form.condition}
+                onChange={(v) => setForm((prev) => ({ ...prev, condition: v }))}
+                options={CONDITION_OPTIONS}
+              />
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Condition</label>
-                <select name="condition" value={form.condition} onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
-                  <option>New</option>
-                  <option>Used</option>
-                  <option>Refurbished</option>
-                  <option>As Is</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                <label className={adminLightLabelClass}>Quantity</label>
                 <input name="quantity" type="number" min="0" value={form.quantity} onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className={adminLightInputClass}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Availability</label>
-                <select name="availability" value={form.availability} onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
-                  <option>In Stock</option>
-                  <option>On Request</option>
-                  <option>Limited Stock</option>
-                  <option>Out of Stock</option>
-                  <option>Pre-Order</option>
-                </select>
-              </div>
+              <Select
+                variant="light"
+                label="Availability"
+                value={form.availability}
+                onChange={(v) => setForm((prev) => ({ ...prev, availability: v }))}
+                options={AVAILABILITY_OPTIONS}
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Lead Time</label>
+              <label className={adminLightLabelClass}>Lead Time</label>
               <input name="lead_time" value={form.lead_time} onChange={handleChange}
                 placeholder="e.g. 3-5 business days"
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className={adminLightInputClass}
               />
             </div>
           </section>
@@ -266,11 +342,11 @@ export default function AddProductPage() {
               <div key={i} className="flex gap-3 items-center">
                 <input value={s.key} onChange={e => updateSpec(i, "key", e.target.value)}
                   placeholder="Key (e.g. Voltage)"
-                  className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className={`${adminLightInputClass} flex-1`}
                 />
                 <input value={s.value} onChange={e => updateSpec(i, "value", e.target.value)}
                   placeholder="Value (e.g. 24V DC)"
-                  className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className={`${adminLightInputClass} flex-1`}
                 />
                 <button type="button" onClick={() => removeSpec(i)}
                   className="text-red-400 hover:text-red-600 transition px-2">✕</button>
@@ -297,11 +373,38 @@ export default function AddProductPage() {
             </div>
           </section>
 
-          <button type="submit" disabled={status === "loading"}
-            className="w-full py-3.5 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm transition">
-            {status === "loading" ? "Saving…" : "Save Product"}
-          </button>
+          <Button type="submit" variant="primary" fullWidth disabled={status === "loading"} loading={status === "loading"}>
+            Save Product
+          </Button>
         </form>
+
+        <Modal open={brandModalOpen} onClose={() => setBrandModalOpen(false)} title="New brand" size="sm">
+          <div className="space-y-3 py-2">
+            <Input label="Brand name" value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder="e.g. Siemens" />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="secondary" onClick={() => setBrandModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" variant="primary" loading={creatingBrand} onClick={() => void submitNewBrand()}>
+                Create
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        <Modal open={categoryModalOpen} onClose={() => setCategoryModalOpen(false)} title="New category" size="sm">
+          <div className="space-y-3 py-2">
+            <Input label="Category name" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="e.g. PLCs" />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="secondary" onClick={() => setCategoryModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" variant="primary" loading={creatingCategory} onClick={() => void submitNewCategory()}>
+                Create
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </div>
   )

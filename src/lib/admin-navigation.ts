@@ -54,7 +54,11 @@ export const adminNavSections: AdminNavSection[] = [
   {
     title: 'Brands & Categories',
     icon: Tag,
-    links: [{ href: '/admin/suppliers', label: 'Suppliers', desc: 'Manage supplier list' }],
+    links: [
+      { href: '/admin/brands', label: 'Brands', desc: 'Add, edit, delete brands' },
+      { href: '/admin/categories', label: 'Categories', desc: 'Add, edit, delete categories' },
+      { href: '/admin/suppliers', label: 'Suppliers', desc: 'Manage supplier list' },
+    ],
   },
   {
     title: 'Analytics',

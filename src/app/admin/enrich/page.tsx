@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as adminService from '@/features/admin/services/adminService'
 import * as productCatalog from '@/features/products/services'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import type { Product } from '@/types/product'
@@ -181,6 +181,7 @@ export default function AdminEnrichPage() {
 
         {/* Products table */}
         <DataTable
+          allowLegacyTable
           columns={columns}
           data={products as (Product & Record<string, unknown>)[]}
           loading={productsQuery.isLoading}

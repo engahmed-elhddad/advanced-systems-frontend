@@ -4,6 +4,23 @@
 
 /* AdvancedSystems — premium dark glass system only */
 :root {
+  /* Tokens for ui/Select, Modal, Toast (dark shell — matches marketing layout) */
+  --color-fg: #f8fafc;
+  --color-fg-muted: #94a3b8;
+  --color-foreground: #f8fafc;
+  --color-foreground-muted: #94a3b8;
+  --color-background: rgba(10, 22, 41, 0.5);
+  --color-background-secondary: rgba(15, 23, 42, 0.96);
+  --color-background-tertiary: rgba(30, 41, 59, 0.92);
+  --color-input-background: rgba(15, 23, 42, 0.72);
+  --color-border: rgba(255, 255, 255, 0.14);
+  --color-ring: rgba(255, 138, 51, 0.55);
+  --color-destructive: #f87171;
+  --color-primary: #ff7a00;
+  --color-primary-foreground: #0a1629;
+  --radius-3: 0.5rem;
+  --text-14: 0.875rem;
+
   --transition-ui: 320ms cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   /* Stripe / Apple–adjacent elevation */
@@ -30,6 +47,25 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     line-height: 1.6;
+  }
+
+  /* Glass inputs: keep typed text & password dots visible (incl. WebKit autofill) */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.88) inset;
+    -webkit-text-fill-color: #f8fafc !important;
+    caret-color: #f8fafc;
+    transition: background-color 9999s ease-out 0s;
+  }
+
+  input[type='password'] {
+    caret-color: #f8fafc;
+  }
+
+  /* Native dropdowns on dark panels (Windows / Chrome list contrast) */
+  select.as-dark-native-select {
+    color-scheme: dark;
   }
   @media (pointer: coarse) {
     button,

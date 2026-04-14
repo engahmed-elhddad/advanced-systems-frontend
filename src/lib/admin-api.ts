@@ -15,12 +15,25 @@ async function parseJsonSafe(res: { json: () => Promise<any> }) {
   }
 }
 
+function backendErrorMessage(payload: Record<string, unknown>): string {
+  const d = payload?.detail;
+  if (typeof d === "string" && d.trim()) return d;
+  if (Array.isArray(d) && d.length > 0) {
+    const first = d[0] as Record<string, unknown> | string;
+    if (typeof first === "string") return first;
+    if (first && typeof first === "object" && typeof first.msg === "string") return first.msg;
+  }
+  const m = payload?.message;
+  if (typeof m === "string" && m.trim()) return m;
+  return "Request failed";
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
   const headers: Record<string, string> = { ...getAuthHeaders(), ...(init?.headers as Record<string, string> | undefined) };
   const res = await apiFetch(`${API}${path}`, { ...init, headers });
   const payload = await parseJsonSafe(res);
   if (!res.ok) {
-    const message = payload?.message || payload?.detail || "Request failed";
+    const message = backendErrorMessage(payload && typeof payload === "object" ? (payload as Record<string, unknown>) : {});
     return { ok: false, message, status: res.status };
   }
   return { ok: true, data: payload as T };
@@ -218,4 +231,72 @@ export type AnalyticsSummary = {
 
 export async function fetchAnalyticsSummary(days = 14) {
   return request<AnalyticsSummary>(`/api/v1/analytics/summary?days=${days}`);
+}
+
+// —— Brands & categories (admin catalog) ——————————————————————————
+
+export type AdminBrandRow = {
+  id: number;
+  name: string;
+  slug: string;
+  logo_url?: string | null;
+  description?: string | null;
+  website?: string | null;
+  country?: string | null;
+  product_count?: number;
+};
+
+export type AdminCategoryRow = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  icon?: string | null;
+  image_url?: string | null;
+  parent_id?: number | null;
+  product_count?: number;
+};
+
+export async function fetchAdminBrands() {
+  return request<AdminBrandRow[]>(`/api/v1/admin/brands`);
+}
+
+export async function createAdminBrand(body: Record<string, unknown>) {
+  return request<AdminBrandRow>(`/api/v1/admin/brands`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateAdminBrand(id: number, body: Record<string, unknown>) {
+  return request<AdminBrandRow>(`/api/v1/admin/brands/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteAdminBrand(id: number) {
+  return request<{ message: string }>(`/api/v1/admin/brands/${id}`, { method: "DELETE" });
+}
+
+export async function fetchAdminCategories() {
+  return request<AdminCategoryRow[]>(`/api/v1/admin/categories`);
+}
+
+export async function createAdminCategory(body: Record<string, unknown>) {
+  return request<AdminCategoryRow>(`/api/v1/admin/categories`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateAdminCategory(id: number, body: Record<string, unknown>) {
+  return request<AdminCategoryRow>(`/api/v1/admin/categories/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteAdminCategory(id: number) {
+  return request<{ message: string }>(`/api/v1/admin/categories/${id}`, { method: "DELETE" });
 }

@@ -4,13 +4,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { Sparkles, PackageSearch, Zap } from 'lucide-react'
-import { getProducts } from '@/lib/api'
+import { getProducts } from '@/features/products/services'
 import { useUIStore } from '@/state/uiStore'
 import { trackRfqCtaClick } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 
 type ProductHit = {
   part_number: string
+  slug?: string
   name?: string
   brand?: string
   category?: string
@@ -68,7 +69,7 @@ function HorizontalRow({
             )}
           >
             <Link
-              href={`/products/${encodeURIComponent(item.part_number)}`}
+              href={`/products/${encodeURIComponent((item.slug || item.part_number).trim())}`}
               className="group flex flex-1 flex-col"
             >
               <div className="relative flex aspect-[4/3] items-center justify-center border-b border-white/10 bg-black/20 p-4">
@@ -139,7 +140,16 @@ export function RecommendationSections({
     ])
       .then(([categoryRes, brandRes]) => {
         if (!active) return
-        const merged = [...(categoryRes.items || []), ...(brandRes.items || [])] as ProductHit[]
+        const raw = [...(categoryRes.items || []), ...(brandRes.items || [])] as Record<string, unknown>[]
+        const merged: ProductHit[] = raw.map((p) => ({
+          part_number: String(p.part_number ?? ''),
+          slug: p.slug != null ? String(p.slug) : undefined,
+          name: p.name != null ? String(p.name) : undefined,
+          brand: String(p.brand ?? p.brand_name ?? ''),
+          category: String(p.category ?? p.category_name ?? ''),
+          description: p.description != null ? String(p.description) : undefined,
+          image_url: String(p.image_url ?? p.primary_image ?? ''),
+        }))
         const dedup = new Map<string, ProductHit>()
         for (const p of merged) {
           const pn = (p.part_number || '').trim()

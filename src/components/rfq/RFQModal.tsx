@@ -19,6 +19,8 @@ import {
 } from '@/lib/rfqExperience'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import { Select } from '@/components/ui/Select'
+import { SELECT_EMPTY, sentinelToEmpty } from '@/lib/formSentinels'
 
 const schema = z.object({
   contact_name: z.string().min(1, 'Name is required'),
@@ -345,24 +347,18 @@ export function RFQModal({ product, onClose }: RFQModalProps) {
                 onChange={(e) => setCompany(e.target.value)}
                 inputClassName="h-12"
               />
-              <div className="relative">
-                <select
-                  id="modal-country"
-                  name="country"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="h-12 w-full rounded-xl border border-white/15 bg-white/[0.07] px-4 pb-1 pt-5 text-sm text-white outline-none focus:border-orange-400/45 focus:ring-2 focus:ring-orange-400/20"
-                >
-                  <option value="" className="bg-[#0f172a]">
-                    Country (optional)
-                  </option>
-                  {['Egypt', 'Saudi Arabia', 'UAE', 'Kuwait', 'Other'].map((c) => (
-                    <option key={c} value={c} className="bg-[#0f172a]">
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="modal-country"
+                label="Country (optional)"
+                placeholder="Country (optional)"
+                value={country ? country : SELECT_EMPTY}
+                onChange={(v) => setCountry(sentinelToEmpty(v))}
+                options={[
+                  { value: SELECT_EMPTY, label: 'Country (optional)' },
+                  ...['Egypt', 'Saudi Arabia', 'UAE', 'Kuwait', 'Other'].map((c) => ({ value: c, label: c })),
+                ]}
+                triggerClassName="h-12"
+              />
             </div>
             <FloatingTextarea
               id="modal-msg"

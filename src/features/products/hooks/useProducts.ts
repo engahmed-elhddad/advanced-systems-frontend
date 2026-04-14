@@ -1,6 +1,9 @@
+import axios from 'axios'
+import toast from 'react-hot-toast'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import { useDataTableQuery } from '@/lib/dataTable/useDataTableQuery'
 import * as productService from '@/features/products/services'
 import type { Product, ProductListParams } from '@/types/product'
 
@@ -138,7 +141,26 @@ function normalizeProduct(row: any): AdminProduct {
     imageUrl: String(row?.image_url || row?.main_image_url || row?.images?.[0]?.url || ''),
     datasheetUrl: String(row?.datasheet_url || ''),
     status: fromApiStatus(row),
+    _etag: typeof row?._etag === 'string' && row._etag.trim() ? row._etag : undefined,
   }
+}
+
+/** Product ids from bulk-delete 412 `detail.conflicts` if present */
+export function conflictProductIdsFromError(err: unknown): number[] {
+  if (!axios.isAxiosError(err)) return []
+  const d = err.response?.data as { detail?: unknown } | undefined
+  const detail = d?.detail
+  if (!detail || typeof detail !== 'object' || Array.isArray(detail)) return []
+  const conflicts = (detail as { conflicts?: unknown }).conflicts
+  if (!Array.isArray(conflicts)) return []
+  const ids: number[] = []
+  for (const c of conflicts) {
+    if (c && typeof c === 'object' && 'id' in c) {
+      const n = Number((c as { id: unknown }).id)
+      if (Number.isFinite(n)) ids.push(n)
+    }
+  }
+  return ids
 }
 
 async function requestFirstSuccess<T>(paths: string[], config?: any): Promise<T> {
@@ -154,23 +176,56 @@ async function requestFirstSuccess<T>(paths: string[], config?: any): Promise<T>
   throw lastErr
 }
 
-async function getAdminProducts(params: { page?: number; size?: number; search?: string }) {
+function unwrapAdminEnvelope(raw: unknown): { inner: Record<string, unknown>; meta: Record<string, unknown> } {
+  if (raw && typeof raw === 'object' && 'data' in raw) {
+    const o = raw as { data: Record<string, unknown>; meta?: Record<string, unknown> }
+    return { inner: o.data ?? {}, meta: o.meta ?? {} }
+  }
+  return { inner: (raw as Record<string, unknown>) ?? {}, meta: {} }
+}
+
+async function getAdminProducts(
+  params: { page?: number; size?: number; search?: string },
+  signal?: AbortSignal,
+) {
   const page = params.page ?? 1
   const size = params.size ?? 50
   const search = params.search?.trim() || undefined
 
-  const data = await requestFirstSuccess<any>(
-    ['/api/v1/admin/products', '/api/v1/products/'],
-    {
-      method: 'GET',
-      params: { page, per_page: size, size, search },
-    }
-  )
-
-  const rows = data?.items ?? data?.products ?? data?.results ?? []
-  const items = Array.isArray(rows) ? rows.map(normalizeProduct) : []
-  const total = Number(data?.total ?? items.length)
-  return { items, total }
+  try {
+    const res = await api.get('/api/v1/admin/products', {
+      params: { page, per_page: size, size, search, sort: 'newest' },
+      signal,
+    })
+    const { inner: data, meta } = unwrapAdminEnvelope(res.data)
+    const rows = data?.items ?? data?.products ?? data?.results ?? []
+    const items = Array.isArray(rows) ? rows.map(normalizeProduct) : []
+    const total = Number(data?.total ?? items.length)
+    const dataVersion = typeof meta.data_version === 'string' ? meta.data_version : undefined
+    return { items, total, dataVersion }
+  } catch (err) {
+    const isCanceled =
+      signal?.aborted ||
+      (typeof err === 'object' &&
+        err !== null &&
+        (err as { code?: string; name?: string }).code === 'ERR_CANCELED')
+    if (isCanceled) throw err
+    return requestFirstSuccess<{ items?: unknown[]; products?: unknown[]; results?: unknown[]; total?: number }>(
+      ['/api/v1/products/'],
+      {
+        method: 'GET',
+        params: { page, per_page: size, size, search },
+        signal,
+      },
+    ).then((raw) => {
+      const { inner: data, meta } = unwrapAdminEnvelope(raw)
+      const rows = data?.items ?? data?.products ?? data?.results ?? []
+      const items = Array.isArray(rows) ? rows.map(normalizeProduct) : []
+      const total = Number(data?.total ?? items.length)
+      const dataVersion = typeof meta.data_version === 'string' ? meta.data_version : undefined
+      return { items, total, dataVersion }
+    })
+  }
 }
 
 async function getAdminProductById(id: number): Promise<AdminProduct | null> {
@@ -223,19 +278,17 @@ async function updateAdminProduct(id: number, input: AdminProductFormInput) {
   )
 }
 
-async function deleteAdminProduct(id: number) {
+async function deleteAdminProduct(id: number, etag: string) {
   return requestFirstSuccess<any>(
     [`/api/v1/admin/products/${id}`, `/api/v1/products/${id}`],
-    { method: 'DELETE' }
+    { method: 'DELETE', headers: { 'If-Match': etag } }
   )
 }
 
 export function useAdminProducts(params: { page?: number; size?: number; search?: string }) {
-  return useQuery({
+  return useDataTableQuery({
     queryKey: ['admin-products', params],
-    queryFn: () => getAdminProducts(params),
-    placeholderData: keepPreviousData,
-    staleTime: 30_000,
+    queryFn: ({ signal }) => getAdminProducts(params, signal),
     gcTime: 5 * 60_000,
   })
 }
@@ -273,11 +326,39 @@ export function useUpdateAdminProduct() {
   })
 }
 
+type AdminProductsCache = { items: AdminProduct[]; total: number; dataVersion?: string }
+
 export function useDeleteAdminProduct() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: deleteAdminProduct,
-    onSuccess: () => {
+    mutationFn: ({ id, etag }: { id: number; etag: string }) => deleteAdminProduct(id, etag),
+    onMutate: async ({ id: deletedId }) => {
+      await queryClient.cancelQueries({ queryKey: ['admin-products'] })
+      const snapshots = queryClient.getQueriesData<AdminProductsCache>({ queryKey: ['admin-products'] })
+      snapshots.forEach(([key, data]) => {
+        if (!data?.items) return
+        queryClient.setQueryData<AdminProductsCache>(key, {
+          ...data,
+          items: data.items.filter((p) => p.id !== deletedId),
+          total: Math.max(0, Number(data.total ?? data.items.length) - 1),
+          dataVersion: undefined,
+        })
+      })
+      return { snapshots }
+    },
+    onError: (err, _vars, ctx) => {
+      ctx?.snapshots?.forEach(([key, data]) => {
+        if (data !== undefined) queryClient.setQueryData(key, data)
+      })
+      if (axios.isAxiosError(err)) {
+        const s = err.response?.status
+        if (s === 412 || s === 428) {
+          toast.error('This item was modified or deleted. Refresh and try again.')
+          void queryClient.invalidateQueries({ queryKey: ['admin-products'] })
+        }
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
     },

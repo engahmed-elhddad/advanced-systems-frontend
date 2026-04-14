@@ -16,19 +16,20 @@ export async function GET() {
 
   while (hasMore) {
     try {
-      const params = new URLSearchParams({ page: String(page), size: String(size) })
-      let res = await fetch(`${API_BASE}/api/v1/products/?${params}`, {
+      const params = new URLSearchParams({
+        page: String(page),
+        size: String(size),
+        sort: 'newest',
+      })
+      const res = await fetch(`${API_BASE}/api/v1/search/?${params}`, {
         next: { revalidate: 3600 },
       })
-      if (!res.ok) {
-        const leg = new URLSearchParams({ q: '', page: String(page), limit: String(size) })
-        res = await fetch(`${API_BASE}/search?${leg}`, { next: { revalidate: 3600 } })
-      }
+      if (!res.ok) break
       const data = await res.json()
-      const items = data?.items ?? data?.results ?? data?.products ?? []
+      const items = data?.hits ?? data?.items ?? data?.products ?? []
       for (const p of items) {
-        const pn = p.part_number || p.slug || String(p.id)
-        if (pn) urls.push(`${BASE}/products/${encodeURIComponent(pn)}`)
+        const seg = String(p.slug || p.part_number || p.id || '').trim()
+        if (seg) urls.push(`${BASE}/products/${encodeURIComponent(seg)}`)
       }
       hasMore = items.length >= size
       page++

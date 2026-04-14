@@ -60,8 +60,52 @@ export { MailIcon } from './MailIcon'
 export { SafeImage } from './SafeImage'
 export { Modal } from './Modal'
 export type { ModalProps } from './Modal'
+/** TanStack enterprise `DataTable` — `getRowId: (row) => string`, optional server mode, selection, CSV. */
 export { DataTable } from './DataTable'
-export type { DataTableColumn, DataTableProps } from './DataTable'
+export type {
+  DataTableBulkAction,
+  DataTableBulkToolbarContext,
+  DataTableColumnMeta,
+  DataTableIdentifiableRow,
+  DataTableProps,
+  DataTableSavedViewListItem,
+  DataTableViewConfig,
+} from './DataTable'
+export { DataTableErrorBoundary, type DataTableErrorReportPayload } from './DataTableErrorBoundary'
+export { DataTableThemeProvider, useDataTableTheme, type DataTableThemeTokens } from './DataTableThemeContext'
+export { invariant } from '@/lib/dataTable/invariant'
+export { classifyTableError, type DataTableErrorKind } from '@/lib/dataTable/classifyTableError'
+/** @deprecated Column-key grid — import from `@/components/ui/DataTableLegacy` (see file JSDoc). */
+export {
+  DataTableLegacy,
+  DataTable as DataTableColumnKey,
+  type DataTableLegacyColumn,
+  type DataTableLegacyProps,
+  type DataTableColumn,
+  type DataTableProps as LegacyDataTableProps,
+} from './DataTableLegacy'
+export {
+  buildCsvContent,
+  CSV_EXPORT_WARN_ROW_LIMIT,
+  exportRowsToCSV,
+  type CsvExportColumn,
+} from '@/lib/dataTable/exportRowsToCSV'
+export { createGetRowId } from '@/lib/dataTable/createGetRowId'
+export { dataTableTheme } from '@/lib/dataTable/dataTableTheme'
+export { useDebouncedTableInput } from '@/lib/dataTable/useDebouncedTableInput'
+export { useDataTableQuery } from '@/lib/dataTable/useDataTableQuery'
+export { createScopedStorageKey, type ScopedStorageKeyOptions } from '@/lib/dataTable/createScopedStorageKey'
+export {
+  readEnvelope,
+  writeEnvelope,
+  removeIfExpired,
+  safeGetItem,
+  safeSetItem,
+  safeRemoveItem,
+} from '@/lib/dataTable/dataTableStorageManager'
+export { filterColumnsByRoles, canUseBulkAction } from '@/lib/dataTable/dataTableRbac'
+export type { DataTableEvent, DataTableEventType } from '@/lib/dataTable/dataTableEvents'
+export { formatDataTableSentryEvent, type SentryLikeTablePayload } from '@/lib/dataTable/formatDataTableSentryEvent'
 export { Skeleton, SkeletonLine } from './Skeleton'
 export type { SkeletonProps } from './Skeleton'
 export { ToastViewport, ToastViewport as Toast } from './Toast'

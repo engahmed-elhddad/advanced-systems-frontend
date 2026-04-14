@@ -13,6 +13,8 @@ import { RfqPageTrustSection } from '@/components/rfq/RfqPageTrustSection'
 import { trackRfqCtaClick, trackWhatsApp } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import { formatVariantConditionLabel, mergeVariantIntoMessage } from '@/lib/productVariants'
+import { Select } from '@/components/ui/Select'
+import { SELECT_EMPTY, sentinelToEmpty } from '@/lib/formSentinels'
 
 const schema = z.object({
   part_number: z.string().min(1, 'Part number or product name is required'),
@@ -285,25 +287,22 @@ export default function RFQPage() {
               error={showErr('phone') ? errors.phone : undefined}
               inputClassName="h-14"
             />
-            <div className="relative">
-              <select
+            <div
+              onBlur={() => setTouched((t) => ({ ...t, country: true }))}
+              className="[&_label]:text-[10px] [&_label]:font-semibold [&_label]:uppercase [&_label]:tracking-wider [&_label]:text-white/50"
+            >
+              <Select
                 id="country"
-                name="country"
-                value={form.country}
-                onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-                onBlur={() => setTouched((t) => ({ ...t, country: true }))}
-                className="h-14 w-full appearance-none rounded-xl border border-white/15 bg-white/[0.07] px-4 pb-2 pt-5 text-[15px] text-white outline-none transition-all focus:border-orange-400/45 focus:ring-2 focus:ring-orange-400/20"
-              >
-                <option value="">Country (optional)</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c} className="bg-[#0f172a] text-white">
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="country" className="pointer-events-none absolute left-4 top-2 text-[10px] font-semibold uppercase tracking-wider text-white/50">
-                Region
-              </label>
+                label="Region"
+                placeholder="Country (optional)"
+                value={form.country ? form.country : SELECT_EMPTY}
+                onChange={(v) => setForm((f) => ({ ...f, country: sentinelToEmpty(v) }))}
+                options={[
+                  { value: SELECT_EMPTY, label: 'Country (optional)' },
+                  ...COUNTRIES.map((c) => ({ value: c, label: c })),
+                ]}
+                triggerClassName="h-14 text-[15px]"
+              />
             </div>
           </div>
 

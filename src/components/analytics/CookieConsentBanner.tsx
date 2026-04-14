@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   getAnalyticsConsent,
@@ -10,24 +10,32 @@ import {
 } from '@/lib/visitor-context'
 
 export function CookieConsentBanner() {
-  const [consent, setConsent] = useState<AnalyticsConsent>(() =>
-    typeof window === 'undefined' ? 'pending' : getAnalyticsConsent(),
-  )
+  const [ready, setReady] = useState(false)
+  const [consent, setConsent] = useState<AnalyticsConsent>('pending')
 
-  if (consent !== 'pending') return null
+  useEffect(() => {
+    setConsent(getAnalyticsConsent())
+    setReady(true)
+  }, [])
 
-  function accept() {
+  const accept = useCallback(() => {
     setAnalyticsConsent('accepted')
     ensureTrackingIdentity()
     setConsent('accepted')
-    window.dispatchEvent(new Event('as-consent-change'))
-  }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('as-consent-change'))
+    }
+  }, [])
 
-  function reject() {
+  const reject = useCallback(() => {
     setAnalyticsConsent('rejected')
     setConsent('rejected')
-    window.dispatchEvent(new Event('as-consent-change'))
-  }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('as-consent-change'))
+    }
+  }, [])
+
+  if (!ready || consent !== 'pending') return null
 
   return (
     <div

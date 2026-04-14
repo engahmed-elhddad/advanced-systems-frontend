@@ -12,19 +12,20 @@ interface RawListResponse {
 }
 
 export async function getProducts(params: ProductListParams = {}): Promise<ProductListResponse> {
-  const query: Record<string, string | number | boolean> = {
-    page: params.page ?? 1,
-    size: params.size ?? 24,
-  }
-  if (params.brand) query.brand = params.brand.trim().toLowerCase()
-  if (params.category) query.category = params.category.trim().toLowerCase()
-  if (params.sort) query.sort = params.sort
-  if (params.search) query.search = params.search.trim()
-  if (params.include_unready != null) query.include_unready = params.include_unready
-
-  const res = await api.get<RawListResponse>('/api/v1/products/', { params: query })
+  const sp = new URLSearchParams()
+  sp.set('page', String(params.page ?? 1))
+  sp.set('size', String(params.size ?? 24))
+  const sortRaw = (params.sort || 'relevance').toLowerCase()
+  const sort =
+    sortRaw === 'popular' || sortRaw === 'newest' || sortRaw === 'relevance' ? sortRaw : 'relevance'
+  sp.set('sort', sort)
+  if (params.search?.trim()) sp.set('q', params.search.trim())
+  if (params.brand?.trim()) sp.set('brand', params.brand.trim())
+  if (params.category?.trim()) sp.set('category', params.category.trim())
+  const qs = sp.toString()
+  const res = await api.get<RawListResponse>(`/api/v1/search/${qs ? `?${qs}` : ''}`)
   const d = res.data
-  const items = d.items ?? d.products ?? d.results ?? []
+  const items = d.items ?? d.products ?? d.results ?? d.hits ?? []
   return {
     items,
     products: items,

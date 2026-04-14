@@ -3,13 +3,15 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as adminService from '@/features/admin/services/adminService'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import type { RFQDetail } from '@/types/rfq'
 import { formatRfqStatusLabel } from '@/lib/rfqExperience'
+import toast from 'react-hot-toast'
 
 const STATUS_BADGE_MAP: Record<string, 'pending' | 'info' | 'success' | 'default' | 'error'> = {
   pending: 'pending',
@@ -47,7 +49,9 @@ export default function AdminRFQPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-rfqs'] })
       queryClient.invalidateQueries({ queryKey: ['admin-rfq-stats'] })
       setSelected(null)
+      toast.success('RFQ updated')
     },
+    onError: () => toast.error('Failed to update RFQ'),
   })
 
   const openEdit = useCallback((rfq: RFQDetail) => {
@@ -188,6 +192,7 @@ export default function AdminRFQPage() {
 
         {/* Table */}
         <DataTable
+          allowLegacyTable
           columns={columns}
           data={rfqs as (RFQDetail & Record<string, unknown>)[]}
           loading={rfqsQuery.isLoading}
@@ -237,20 +242,18 @@ export default function AdminRFQPage() {
                 className="w-full border border-[#E5E7EB] rounded-[2px] px-3 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#0072CE] focus:ring-1 focus:ring-[#0072CE]/20 resize-none"
               />
             </div>
-            <div className="w-full">
-              <label className="mb-1 block text-xs font-medium text-[#6B7280]">Status</label>
-              <select
-                value={formState.status}
-                onChange={(e) => setFormState((s) => ({ ...s, status: e.target.value }))}
-                className="w-full border border-[#E5E7EB] rounded-[2px] px-3 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#0072CE] focus:ring-1 focus:ring-[#0072CE]/20"
-              >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="quoted">Quoted (sends email)</option>
-                <option value="closed">Closed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
+            <Select
+              label="Status"
+              value={formState.status}
+              onChange={(v) => setFormState((s) => ({ ...s, status: v }))}
+              options={[
+                { value: 'pending', label: 'Pending' },
+                { value: 'in_progress', label: 'In Progress' },
+                { value: 'quoted', label: 'Quoted (sends email)' },
+                { value: 'closed', label: 'Closed' },
+                { value: 'cancelled', label: 'Cancelled' },
+              ]}
+            />
 
             {updateMutation.isError && (
               <p className="text-[#EF4444] text-xs">Failed to update RFQ. Please try again.</p>

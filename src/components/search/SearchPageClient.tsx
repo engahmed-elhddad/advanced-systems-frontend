@@ -476,7 +476,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     }
                     options={sortOptions}
                     placeholder="Sort"
-                    className="[&_button]:border-white/15 [&_button]:bg-white/[0.07] [&_button]:text-white"
+                    className="border-white/15 bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                   />
                 </div>
                 <p className="text-sm text-white/55 sm:order-1" aria-live="polite" aria-busy={loading}>
@@ -576,6 +576,12 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     >
                       Reset all
                     </button>
+                    <Link
+                      href="/products"
+                      className="rounded-full border border-white/20 bg-white/[0.08] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:border-orange-400/40 hover:bg-orange-500/10"
+                    >
+                      Browse catalog
+                    </Link>
                     <Link
                       href={qUrl.trim() ? `/rfq?part=${encodeURIComponent(qUrl.trim())}` : '/rfq'}
                       className="rounded-full bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/30 transition-all duration-300 hover:brightness-110"

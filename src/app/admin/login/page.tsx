@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 caret-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
                 placeholder="admin@example.com"
               />
             </div>
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 caret-gray-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
               />
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}

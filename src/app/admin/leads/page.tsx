@@ -1,13 +1,16 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as adminService from '@/features/admin/services/adminService'
 import type { CrmLead, CrmLeadStatus } from '@/features/admin/services/adminService'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { Select } from '@/components/ui/Select'
+import { adminLightInputClass, adminLightTextareaClass, adminLightLabelClass } from '@/lib/adminFormClasses'
+import toast from 'react-hot-toast'
 import { LeadDetailsDrawer } from '@/app/admin/leads/LeadDetailsDrawer'
 import { nextActionBadge, urgencyChipClass } from '@/features/admin/crmNextAction'
 
@@ -69,8 +72,15 @@ function LeadActivityTimeline({ leadId }: { leadId: number }) {
   )
 }
 
-const inputClass =
-  'w-full rounded-[2px] border border-[#E5E7EB] px-3 py-2 text-sm text-[#1A1A1A] focus:border-[#0072CE] focus:outline-none focus:ring-1 focus:ring-[#0072CE]/20'
+const inputClass = adminLightInputClass
+const textareaClass = adminLightTextareaClass
+const labelClass = adminLightLabelClass
+
+const SORT_OPTIONS: { value: adminService.AdminLeadSort; label: string }[] = [
+  { value: 'score_desc', label: 'Score · high → low' },
+  { value: 'last_activity_desc', label: 'Last activity · recent first' },
+  { value: 'last_activity_asc', label: 'Last activity · stale first' },
+]
 
 type FormState = {
   name: string
@@ -115,16 +125,44 @@ function priorityRowClass(row: CrmLead & Record<string, unknown>): string | unde
   return tier
 }
 
+const LEADS_SORT_STORAGE_KEY = 'admin-leads-sort-v1'
+
+function readStoredLeadSort(): adminService.AdminLeadSort {
+  if (typeof window === 'undefined') return 'score_desc'
+  try {
+    const raw = sessionStorage.getItem(LEADS_SORT_STORAGE_KEY)
+    if (
+      raw === 'score_desc' ||
+      raw === 'last_activity_desc' ||
+      raw === 'last_activity_asc' ||
+      raw === 'created_at_desc'
+    ) {
+      return raw
+    }
+  } catch {
+    /* ignore */
+  }
+  return 'score_desc'
+}
+
 export default function AdminLeadsPage() {
   const queryClient = useQueryClient()
   const [filterStatus, setFilterStatus] = useState('')
   const [attentionOnly, setAttentionOnly] = useState(false)
-  const [sortBy, setSortBy] = useState<adminService.AdminLeadSort>('score_desc')
+  const [sortBy, setSortBy] = useState<adminService.AdminLeadSort>(() => readStoredLeadSort())
   const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null)
   const [selected, setSelected] = useState<CrmLead | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [drawerLeadId, setDrawerLeadId] = useState<number | null>(null)
   const [drawerSnapshot, setDrawerSnapshot] = useState<CrmLead | null>(null)
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(LEADS_SORT_STORAGE_KEY, sortBy)
+    } catch {
+      /* ignore */
+    }
+  }, [sortBy])
 
   const statsQuery = useQuery({
     queryKey: ['admin-leads-stats'],
@@ -161,19 +199,27 @@ export default function AdminLeadsPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-leads-stats'] })
       setModalMode(null)
       setForm(emptyForm)
+      toast.success('Lead created')
     },
+    onError: () => toast.error('Failed to create lead'),
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, body }: { id: number; body: adminService.CrmLeadUpdateInput }) =>
       adminService.updateAdminLead(id, body),
-    onSuccess: (_data, { id }) => {
+    onSuccess: (_data, { id, body }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-leads'] })
       queryClient.invalidateQueries({ queryKey: ['admin-leads-stats'] })
       queryClient.invalidateQueries({ queryKey: ['admin-lead-activity', id] })
       queryClient.invalidateQueries({ queryKey: ['admin-lead-detail', id] })
       closeModal()
+      if (body?.link_latest_rfq_by_email) {
+        toast.success('Linked latest RFQ by email')
+      } else {
+        toast.success('Lead updated')
+      }
     },
+    onError: () => toast.error('Failed to update lead'),
   })
 
   const deleteMutation = useMutation({
@@ -186,7 +232,9 @@ export default function AdminLeadsPage() {
         setDrawerSnapshot(null)
       }
       closeModal()
+      toast.success('Lead deleted')
     },
+    onError: () => toast.error('Failed to delete lead'),
   })
 
   const closeModal = useCallback(() => {
@@ -490,27 +538,22 @@ export default function AdminLeadsPage() {
               Needs attention only
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-white/40">Sort</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as adminService.AdminLeadSort)}
-              className="rounded-xl border border-white/12 bg-white/[0.06] px-3 py-2 text-xs text-white shadow-inner backdrop-blur-md"
-            >
-              <option value="score_desc" className="bg-[#0b1220]">
-                Score · high → low
-              </option>
-              <option value="last_activity_desc" className="bg-[#0b1220]">
-                Last activity · recent first
-              </option>
-              <option value="last_activity_asc" className="bg-[#0b1220]">
-                Last activity · stale first
-              </option>
-            </select>
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-[min(100%,280px)] sm:flex-none">
+            <span className="shrink-0 text-[11px] font-medium uppercase tracking-wider text-white/40">Sort</span>
+            <div className="min-w-0 flex-1">
+              <Select
+                value={sortBy}
+                onChange={(v) => setSortBy(v as adminService.AdminLeadSort)}
+                options={SORT_OPTIONS}
+                placeholder="Sort"
+                triggerClassName="h-9 min-h-0 text-xs"
+              />
+            </div>
           </div>
         </div>
 
         <DataTable
+          allowLegacyTable
           variant="dark"
           columns={columns}
           data={items as (CrmLead & Record<string, unknown>)[]}
@@ -553,32 +596,32 @@ export default function AdminLeadsPage() {
         >
           <div className="max-h-[70vh] space-y-3 overflow-y-auto py-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#6B7280]">Name *</label>
+              <label className={labelClass}>Name *</label>
               <input className={inputClass} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-[#6B7280]">Company</label>
+                <label className={labelClass}>Company</label>
                 <input className={inputClass} value={form.company} onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-[#6B7280]">Role</label>
+                <label className={labelClass}>Role</label>
                 <input className={inputClass} value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))} />
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-[#6B7280]">Email</label>
+                <label className={labelClass}>Email</label>
                 <input type="email" className={inputClass} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-[#6B7280]">Phone</label>
+                <label className={labelClass}>Phone</label>
                 <input type="tel" className={inputClass} value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-[#6B7280]">Source</label>
+                <label className={labelClass}>Source</label>
                 <input
                   className={inputClass}
                   placeholder="LinkedIn, WhatsApp, referral…"
@@ -587,22 +630,16 @@ export default function AdminLeadsPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-[#6B7280]">Status</label>
-                <select
-                  className={inputClass}
+                <Select
+                  label="Status"
                   value={form.status}
-                  onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as CrmLeadStatus }))}
-                >
-                  {STATUS_ORDER.map((s) => (
-                    <option key={s} value={s}>
-                      {labelStatus(s)}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setForm((f) => ({ ...f, status: v as CrmLeadStatus }))}
+                  options={STATUS_ORDER.map((s) => ({ value: s, label: labelStatus(s) }))}
+                />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#6B7280]">Visitor ID (analytics)</label>
+              <label className={labelClass}>Visitor ID (analytics)</label>
               <input
                 className={inputClass}
                 placeholder="UUID from first-party tracking — links behavioral score"
@@ -614,7 +651,7 @@ export default function AdminLeadsPage() {
               </p>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#6B7280]">RFQ reference</label>
+              <label className={labelClass}>RFQ reference</label>
               <input
                 className={inputClass}
                 placeholder="e.g. RFQ-20260406-AB12"
@@ -624,9 +661,9 @@ export default function AdminLeadsPage() {
               <p className="mt-1 text-[11px] text-[#9CA3AF]">Must match an existing RFQ reference.</p>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#6B7280]">Notes</label>
+              <label className={labelClass}>Notes</label>
               <textarea
-                className={`${inputClass} min-h-[100px] resize-y`}
+                className={textareaClass}
                 value={form.notes}
                 onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                 placeholder="Conversation log, next step, objections…"

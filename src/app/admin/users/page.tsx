@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api'
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { getAuthHeaders } from "@/lib/admin-auth"
+import { Select } from '@/components/ui/Select'
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
@@ -131,19 +132,18 @@ export default function AdminUsersPage() {
                   className="w-full px-3 py-2 rounded-lg border border-gray-200"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                <select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser((u) => ({ ...u, role: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200"
-                >
-                  <option value="user">user</option>
-                  <option value="manager">manager</option>
-                  <option value="admin">admin</option>
-                  <option value="supplier">supplier</option>
-                </select>
-              </div>
+              <Select
+                variant="light"
+                label="Role"
+                value={newUser.role}
+                onChange={(v) => setNewUser((u) => ({ ...u, role: v }))}
+                options={[
+                  { value: 'user', label: 'user' },
+                  { value: 'manager', label: 'manager' },
+                  { value: 'admin', label: 'admin' },
+                  { value: 'supplier', label: 'supplier' },
+                ]}
+              />
               {error && <p className="text-sm text-red-600">{error}</p>}
               <div className="flex gap-2">
                 <button

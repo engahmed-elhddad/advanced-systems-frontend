@@ -8,7 +8,14 @@ export interface PaginationProps {
   onPageChange: (page: number) => void
   className?: string
   showLabel?: boolean
+  /** `dark` matches admin glass shell */
+  variant?: 'default' | 'dark'
 }
+
+const btnDefault =
+  'inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-35'
+const btnDark =
+  'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/[0.14] disabled:pointer-events-none disabled:opacity-35'
 
 export function Pagination({
   page,
@@ -16,8 +23,13 @@ export function Pagination({
   onPageChange,
   className,
   showLabel = true,
+  variant = 'default',
 }: PaginationProps) {
   if (totalPages <= 1) return null
+
+  const btn = variant === 'dark' ? btnDark : btnDefault
+  const labelCls =
+    variant === 'dark' ? 'min-w-[8.5rem] px-3 text-sm tabular-nums text-white/70' : 'min-w-[8.5rem] px-3 text-sm tabular-nums text-slate-600'
 
   return (
     <div
@@ -29,24 +41,20 @@ export function Pagination({
         type="button"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
-        className="btn-secondary p-2 disabled:opacity-30 disabled:cursor-not-allowed"
+        className={btn}
         aria-label="Previous page"
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="h-4 w-4" />
       </button>
-      {showLabel && (
-        <span className="text-sm text-gray-500 px-4">
-          Page {page} of {totalPages}
-        </span>
-      )}
+      {showLabel ? <span className={labelCls}>Page {page} of {totalPages}</span> : null}
       <button
         type="button"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
-        className="btn-secondary p-2 disabled:opacity-30 disabled:cursor-not-allowed"
+        className={btn}
         aria-label="Next page"
       >
-        <ChevronRight className="w-4 h-4" />
+        <ChevronRight className="h-4 w-4" />
       </button>
     </div>
   )

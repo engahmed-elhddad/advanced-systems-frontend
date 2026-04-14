@@ -5,9 +5,12 @@ import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Loader2, Search } from 'lucide-react'
 import { ProductGrid } from '@/components/products/ProductGrid'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { Select } from '@/components/ui/Select'
 import { productsApi, searchApi, getBrandCategories } from '@/lib/api'
 import { ormProductToApiProduct, searchHitToApiProduct } from '@/lib/productMappers'
 import { cn } from '@/lib/utils'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
+import { SELECT_EMPTY, sentinelToEmpty } from '@/lib/formSentinels'
 
 export type BrandDetail = {
   id: number
@@ -28,18 +31,13 @@ export function BrandStorefront({ brand, slug }: { brand: BrandDetail; slug: str
   const [categoryId, setCategoryId] = useState<number | ''>('')
   const [availability, setAvailability] = useState<string>('')
   const [searchInput, setSearchInput] = useState('')
-  const [debouncedQ, setDebouncedQ] = useState('')
+  const debouncedQ = useDebouncedValue(searchInput.trim(), 300)
   const [page, setPage] = useState(1)
   const [products, setProducts] = useState<Array<Record<string, unknown>>>([])
   const [total, setTotal] = useState(0)
   const [pages, setPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [source, setSource] = useState<string>('')
-
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedQ(searchInput.trim()), 320)
-    return () => clearTimeout(t)
-  }, [searchInput])
 
   useEffect(() => {
     setPage(1)
@@ -200,46 +198,34 @@ export function BrandStorefront({ brand, slug }: { brand: BrandDetail; slug: str
               <p className="mt-1.5 text-[11px] text-white/40">Powered by Meilisearch when available; otherwise database search.</p>
             </div>
             <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-[280px]">
-              <div>
-                <label htmlFor="bf-cat" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-white/45">
-                  Category
-                </label>
-                <select
-                  id="bf-cat"
-                  value={categoryId === '' ? '' : String(categoryId)}
-                  onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : '')}
-                  className="h-12 w-full rounded-xl border border-white/12 bg-black/20 px-3 text-sm text-white outline-none focus:border-orange-400/40"
-                >
-                  <option value="">All categories</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-[#0f172a]">
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="bf-av" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-white/45">
-                  Availability
-                </label>
-                <select
-                  id="bf-av"
-                  value={availability}
-                  onChange={(e) => setAvailability(e.target.value)}
-                  className="h-12 w-full rounded-xl border border-white/12 bg-black/20 px-3 text-sm text-white outline-none focus:border-orange-400/40"
-                >
-                  <option value="">Any</option>
-                  <option value="in_stock" className="bg-[#0f172a]">
-                    In stock
-                  </option>
-                  <option value="on_request" className="bg-[#0f172a]">
-                    On request
-                  </option>
-                  <option value="available" className="bg-[#0f172a]">
-                    Available
-                  </option>
-                </select>
-              </div>
+              <Select
+                id="bf-cat"
+                label="Category"
+                placeholder="All categories"
+                value={categoryId === '' ? SELECT_EMPTY : String(categoryId)}
+                onChange={(v) => setCategoryId(v === SELECT_EMPTY ? '' : Number(v))}
+                options={[
+                  { value: SELECT_EMPTY, label: 'All categories' },
+                  ...categories.map((c) => ({ value: String(c.id), label: c.name })),
+                ]}
+                triggerClassName="h-12"
+                className="[&_label]:mb-1.5 [&_label]:block [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-wider [&_label]:text-white/45"
+              />
+              <Select
+                id="bf-av"
+                label="Availability"
+                placeholder="Any"
+                value={availability ? availability : SELECT_EMPTY}
+                onChange={(v) => setAvailability(sentinelToEmpty(v))}
+                options={[
+                  { value: SELECT_EMPTY, label: 'Any' },
+                  { value: 'in_stock', label: 'In stock' },
+                  { value: 'on_request', label: 'On request' },
+                  { value: 'available', label: 'Available' },
+                ]}
+                triggerClassName="h-12"
+                className="[&_label]:mb-1.5 [&_label]:block [&_label]:text-[10px] [&_label]:font-bold [&_label]:uppercase [&_label]:tracking-wider [&_label]:text-white/45"
+              />
             </div>
           </div>
         </div>

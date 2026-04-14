@@ -4,6 +4,8 @@ import { submitPublicRFQ } from "@/lib/rfqSubmit";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+const TENANT_HEADER = (process.env.NEXT_PUBLIC_TENANT_ID || "").trim();
+
 export const api = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
@@ -13,6 +15,9 @@ api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("admin_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (TENANT_HEADER) {
+    config.headers["X-Tenant-Id"] = TENANT_HEADER;
   }
   return config;
 });
@@ -26,6 +31,9 @@ export function apiFetch(
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("admin_token");
     if (token) headers.set("Authorization", `Bearer ${token}`);
+  }
+  if (TENANT_HEADER) {
+    headers.set("X-Tenant-Id", TENANT_HEADER);
   }
   return fetch(input, { ...init, headers });
 }
@@ -43,6 +51,10 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
     const detail = (data as Record<string, unknown>).detail;
     if (typeof detail === "string") return detail;
     if (Array.isArray(detail) && detail.length) return String(detail[0]);
+    if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+      const msg = (detail as Record<string, unknown>).message;
+      if (typeof msg === "string" && msg.trim()) return msg;
+    }
   }
   return fallback;
 }
@@ -51,7 +63,7 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
 export const productsApi = {
   list: (params?: Record<string, any>) => api.get("/api/v1/products/", { params }),
   featured: (limit = 12) => api.get("/api/v1/products/featured", { params: { limit } }),
-  bySlug: (slug: string) => api.get(`/api/v1/products/slug/${slug}`),
+  bySlug: (slug: string) => api.get(`/api/v1/products/slug/${encodeURIComponent(slug)}`),
   byPartNumber: (pn: string) => api.get(`/api/v1/products/part/${encodeURIComponent(pn)}`),
   related: (id: number) => api.get(`/api/v1/products/${id}/related`),
 };
@@ -321,7 +333,8 @@ export const adminApi = {
   products: {
     create: (data: any) => api.post("/api/v1/admin/products", data),
     update: (id: number, data: any) => api.put(`/api/v1/admin/products/${id}`, data),
-    delete: (id: number) => api.delete(`/api/v1/admin/products/${id}`),
+    delete: (id: number, headers?: { "If-Match"?: string }) =>
+      api.delete(`/api/v1/admin/products/${id}`, { headers: headers ?? {} }),
     uploadImage: (id: number, file: File, isPrimary = false) => {
       const fd = new FormData();
       fd.append("file", file);

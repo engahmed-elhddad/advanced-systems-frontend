@@ -8,9 +8,8 @@ import { cn } from '@/lib/utils'
 import { ProductGrid } from '@/components/products/ProductGrid'
 import { IndustrialFilterSidebar } from '@/components/products/IndustrialFilterSidebar'
 import { ProductGridSkeleton, FilterChip, Select } from '@/components/ui'
-import { getProducts } from '@/features/products/services'
 import { searchBrowse, getBrowseFacets } from '@/features/search/services'
-import { ormProductToApiProduct, searchHitToApiProduct } from '@/lib/productMappers'
+import { searchHitToApiProduct } from '@/lib/productMappers'
 import type { Brand, Category } from '@/types/product'
 
 const PAGE_SIZE = 30
@@ -47,6 +46,7 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
     specs: {},
   })
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const qUrl = searchParams.get('q') ?? ''
   const [qInput, setQInput] = useState(qUrl)
@@ -67,14 +67,6 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
     [searchParams]
   )
   const specTokens = useMemo(() => parseSpecTokens(searchParams), [searchParams])
-
-  const hasMeiliFilters =
-    !!qUrl.trim() ||
-    brandIds.length > 0 ||
-    categoryIds.length > 0 ||
-    seriesVals.length > 0 ||
-    availabilityVals.length > 0 ||
-    specTokens.length > 0
 
   const replaceUrl = useCallback(
     (next: URLSearchParams) => {
@@ -364,7 +356,7 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
                 }
                 options={sortOptions}
                 placeholder="Sort"
-                className="[&_button]:border-white/15 [&_button]:bg-white/5 [&_button]:text-white"
+                className="border-white/15 bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
               />
             </div>
           </div>
@@ -387,13 +379,19 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
             </div>
           )}
 
+          {loadError ? (
+            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100" role="alert">
+              {loadError}
+            </div>
+          ) : null}
+
           <div
             className="flex items-center justify-between gap-2 text-sm text-slate-400"
             aria-live="polite"
             aria-busy={loading}
           >
             <span className={cn(loading && 'animate-pulse')}>
-              {loading ? 'Updating results…' : <>{total.toLocaleString()} products match</>}
+              {loading ? 'Updating results…' : loadError ? '—' : <>{total.toLocaleString()} products match</>}
             </span>
           </div>
 
@@ -401,7 +399,7 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
             <div className="transition-opacity duration-300">
               <ProductGridSkeleton count={12} />
             </div>
-          ) : rows.length > 0 ? (
+          ) : loadError ? null : rows.length > 0 ? (
             <>
               <ProductGrid products={rows} productBasePath="/products" />
               {pages > 1 && (

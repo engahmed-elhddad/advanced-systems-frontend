@@ -74,6 +74,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={describedBy}
             className={cn(
               'h-full w-full min-h-0 border-0 bg-transparent text-white outline-none placeholder:text-white/40',
+              type === 'password' && 'caret-white',
               comfortable ? 'min-h-[48px] text-base sm:min-h-0 sm:text-sm' : 'text-sm',
               className
             )}

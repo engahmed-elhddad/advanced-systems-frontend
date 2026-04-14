@@ -51,6 +51,8 @@ function KeySpecs({
 export interface ProductCardProps {
   /** Canonical product id from API (optional; not required for card UI today). */
   id?: number
+  /** URL segment for `/products/{slug}`; falls back to part_number when omitted. */
+  slug?: string
   part_number: string
   brand?: string
   manufacturer?: string
@@ -75,6 +77,7 @@ const shellClass =
   'group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:border-orange-400/25 hover:shadow-[0_0_32px_rgba(255,122,0,0.1)] focus-within:border-orange-400/35 focus-within:shadow-[0_0_28px_rgba(255,122,0,0.12)]'
 
 function ProductCardInner({
+  slug,
   part_number,
   brand,
   manufacturer,
@@ -99,6 +102,7 @@ function ProductCardInner({
   const isInList = mounted && listItems.some((i) => i.part_number === part_number)
   const inStock = availability === 'in_stock' || stock_quantity > 0
   const compact = variant === 'compact'
+  const pathSegment = encodeURIComponent((slug || part_number).trim())
   const maker = brand ?? manufacturer ?? 'Brand on request'
   const hasSpecs = Boolean(
     quickSpecs?.coil_voltage?.trim() ||
@@ -111,7 +115,7 @@ function ProductCardInner({
   return (
     <div className={cn(shellClass, !compact && 'shadow-lg shadow-black/20')}>
       <Link
-        href={`${productBasePath}/${encodeURIComponent(part_number)}`}
+        href={`${productBasePath}/${pathSegment}`}
         className={`relative block overflow-hidden border-b border-white/[0.06] bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-inset ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
       >
         <div className="absolute inset-0">
@@ -137,7 +141,7 @@ function ProductCardInner({
       <div className={compact ? 'flex flex-1 flex-col p-3' : 'flex flex-1 flex-col p-4'}>
         <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">{maker}</p>
         <Link
-          href={`${productBasePath}/${encodeURIComponent(part_number)}`}
+          href={`${productBasePath}/${pathSegment}`}
           className="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]"
         >
           <h3 className="mt-0.5 break-all font-mono text-base font-semibold leading-snug text-white transition-colors duration-300 group-hover:text-orange-200">
@@ -178,7 +182,7 @@ function ProductCardInner({
 
         <div className="mt-auto flex items-center gap-2 border-t border-white/10 pt-3">
           <Link
-            href={`${productBasePath}/${encodeURIComponent(part_number)}`}
+            href={`${productBasePath}/${pathSegment}`}
             className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition-all duration-300 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]"
           >
             View product

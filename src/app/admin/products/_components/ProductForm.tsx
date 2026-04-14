@@ -4,7 +4,10 @@ import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ImagePlus, Plus, Trash2, FileText, Upload } from 'lucide-react'
-import { Button, Card, Input, Select } from '@/components/ui'
+import { useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { Button, Card, Input, Modal, Select } from '@/components/ui'
+import { api, getApiErrorMessage } from '@/lib/api'
 import type {
   AdminProductFormInput,
   AdminProductSpec,
@@ -36,9 +39,16 @@ export function ProductForm({
   categoryOptions,
   onSubmit,
 }: ProductFormProps) {
+  const queryClient = useQueryClient()
   const [form, setForm] = useState<ProductFormValues>(initialValue)
   const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [brandModalOpen, setBrandModalOpen] = useState(false)
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false)
+  const [newBrandName, setNewBrandName] = useState('')
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [creatingBrand, setCreatingBrand] = useState(false)
+  const [creatingCategory, setCreatingCategory] = useState(false)
 
   const previewImage = useMemo(() => form.imageUrl || FALLBACK_IMAGE, [form.imageUrl])
 
@@ -86,6 +96,44 @@ export function ProductForm({
     reader.readAsDataURL(file)
   }
 
+  async function submitNewBrand() {
+    const name = newBrandName.trim()
+    if (!name) return
+    setCreatingBrand(true)
+    try {
+      const res = await api.post<{ id: number }>('/api/v1/admin/brands', { name })
+      const id = res.data?.id
+      await queryClient.refetchQueries({ queryKey: ['brands'] })
+      if (id != null) patch({ brandId: String(id) })
+      toast.success('Brand created')
+      setBrandModalOpen(false)
+      setNewBrandName('')
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, 'Failed to create brand'))
+    } finally {
+      setCreatingBrand(false)
+    }
+  }
+
+  async function submitNewCategory() {
+    const name = newCategoryName.trim()
+    if (!name) return
+    setCreatingCategory(true)
+    try {
+      const res = await api.post<{ id: number }>('/api/v1/admin/categories', { name })
+      const id = res.data?.id
+      await queryClient.refetchQueries({ queryKey: ['categories'] })
+      if (id != null) patch({ categoryId: String(id) })
+      toast.success('Category created')
+      setCategoryModalOpen(false)
+      setNewCategoryName('')
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, 'Failed to create category'))
+    } finally {
+      setCreatingCategory(false)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card className="border border-white/10 bg-white/5 p-6 backdrop-blur-xl lg:p-8">
@@ -105,6 +153,7 @@ export function ProductForm({
             value={form.brandId}
             onChange={(value) => patch({ brandId: value })}
             options={brandOptions}
+            addNew={{ label: '+ Add new brand', onClick: () => setBrandModalOpen(true) }}
           />
 
           <Select
@@ -112,6 +161,7 @@ export function ProductForm({
             value={form.categoryId}
             onChange={(value) => patch({ categoryId: value })}
             options={categoryOptions}
+            addNew={{ label: '+ Add new category', onClick: () => setCategoryModalOpen(true) }}
           />
 
           <Select
@@ -123,13 +173,13 @@ export function ProductForm({
         </div>
 
         <div className="mt-4">
-          <label className="mb-2 block text-sm font-semibold text-[#0B1F3A]">Description</label>
+          <label className="mb-2 block text-sm font-semibold text-gray-200">Description</label>
           <textarea
             value={form.description}
             onChange={(e) => patch({ description: e.target.value })}
             rows={4}
             placeholder="Write a concise product description..."
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-[#0B1F3A] placeholder:text-gray-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/40"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/40"
           />
         </div>
       </Card>
@@ -240,6 +290,48 @@ export function ProductForm({
           <Link href="/admin/products">Cancel</Link>
         </Button>
       </div>
+
+      <Modal open={brandModalOpen} onClose={() => setBrandModalOpen(false)} title="New brand" size="sm">
+        <div className="space-y-3 py-2">
+          <Input
+            variant="dark"
+            label="Brand name"
+            value={newBrandName}
+            onChange={(e) => setNewBrandName(e.target.value)}
+            placeholder="e.g. Siemens"
+            autoFocus
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" surface="dark" onClick={() => setBrandModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" surface="dark" loading={creatingBrand} onClick={() => void submitNewBrand()}>
+              Create
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={categoryModalOpen} onClose={() => setCategoryModalOpen(false)} title="New category" size="sm">
+        <div className="space-y-3 py-2">
+          <Input
+            variant="dark"
+            label="Category name"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            placeholder="e.g. PLCs"
+            autoFocus
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" surface="dark" onClick={() => setCategoryModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" surface="dark" loading={creatingCategory} onClick={() => void submitNewCategory()}>
+              Create
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </form>
   )
 }

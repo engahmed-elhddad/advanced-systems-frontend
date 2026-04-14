@@ -4,7 +4,9 @@ import { apiFetch } from '@/lib/api'
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { cn } from '@/lib/utils'
 import { getAuthHeaders } from "@/lib/admin-auth"
+import { Select } from '@/components/ui/Select'
 
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
@@ -174,15 +176,19 @@ export default function AttributeManagerPage() {
                 <input required value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))}
                   placeholder="e.g. Rated Voltage" className={inputCls} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Data Type</label>
-                <select value={form.data_type} onChange={e => setForm(p => ({ ...p, data_type: e.target.value as DataType }))} className={inputCls}>
-                  <option value="string">String</option>
-                  <option value="number">Number</option>
-                  <option value="boolean">Boolean</option>
-                  <option value="enum">Enum</option>
-                </select>
-              </div>
+              <Select
+                variant="light"
+                label="Data Type"
+                value={form.data_type}
+                onChange={(v) => setForm((p) => ({ ...p, data_type: v as DataType }))}
+                options={[
+                  { value: 'string', label: 'String' },
+                  { value: 'number', label: 'Number' },
+                  { value: 'boolean', label: 'Boolean' },
+                  { value: 'enum', label: 'Enum' },
+                ]}
+                triggerClassName={cn(inputCls, 'h-auto min-h-[42px] w-full justify-between')}
+              />
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Unit</label>
                 <input value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))}

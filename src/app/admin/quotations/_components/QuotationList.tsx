@@ -1,6 +1,6 @@
 'use client'
 
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import type { QuotationListItem } from '@/features/admin/services/adminService'
@@ -119,6 +119,7 @@ export function QuotationList({
       </div>
 
       <DataTable
+        allowLegacyTable
         columns={columns}
         data={quotations as (QuotationListItem & Record<string, unknown>)[]}
         loading={loading}
