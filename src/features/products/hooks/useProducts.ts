@@ -46,6 +46,8 @@ export type AdminProduct = {
   imageUrl: string
   datasheetUrl: string
   status: AdminProductStatus
+  /** Weak ETag from admin list/detail for If-Match deletes */
+  _etag?: string
 }
 
 export type AdminProductFormInput = {

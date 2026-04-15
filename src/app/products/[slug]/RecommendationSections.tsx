@@ -140,7 +140,10 @@ export function RecommendationSections({
     ])
       .then(([categoryRes, brandRes]) => {
         if (!active) return
-        const raw = [...(categoryRes.items || []), ...(brandRes.items || [])] as Record<string, unknown>[]
+        const raw = [...(categoryRes.items || []), ...(brandRes.items || [])] as unknown as Record<
+          string,
+          unknown
+        >[]
         const merged: ProductHit[] = raw.map((p) => ({
           part_number: String(p.part_number ?? ''),
           slug: p.slug != null ? String(p.slug) : undefined,

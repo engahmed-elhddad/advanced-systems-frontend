@@ -9,7 +9,8 @@ import { ProductGrid } from '@/components/products/ProductGrid'
 import { IndustrialFilterSidebar } from '@/components/products/IndustrialFilterSidebar'
 import { ProductGridSkeleton, FilterChip, Select } from '@/components/ui'
 import { searchBrowse, getBrowseFacets } from '@/features/search/services'
-import { searchHitToApiProduct } from '@/lib/productMappers'
+import { getProducts } from '@/features/products/services/catalog'
+import { searchHitToApiProduct, ormProductToApiProduct } from '@/lib/productMappers'
 import type { Brand, Category } from '@/types/product'
 
 const PAGE_SIZE = 30
@@ -47,6 +48,7 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
   })
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [readinessHint, setReadinessHint] = useState(false)
 
   const qUrl = searchParams.get('q') ?? ''
   const [qInput, setQInput] = useState(qUrl)
@@ -67,6 +69,14 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
     [searchParams]
   )
   const specTokens = useMemo(() => parseSpecTokens(searchParams), [searchParams])
+
+  const hasMeiliFilters =
+    !!qUrl.trim() ||
+    brandIds.length > 0 ||
+    categoryIds.length > 0 ||
+    seriesVals.length > 0 ||
+    availabilityVals.length > 0 ||
+    specTokens.length > 0
 
   const replaceUrl = useCallback(
     (next: URLSearchParams) => {
@@ -139,7 +149,6 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
           const res = await getProducts({
             page,
             size: PAGE_SIZE,
-            include_unready: true,
             sort: listSort,
           })
           if (cancelled) return
@@ -147,6 +156,8 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
           setRows(mapped)
           setTotal(res.total ?? 0)
           setPages(res.pages ?? 1)
+          setReadinessHint((res.total ?? 0) === 0)
+          setLoadError(null)
         } else {
           const res = await searchBrowse({
             q: qUrl.trim() || undefined,
@@ -164,12 +175,15 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
           setRows(hits.map((h) => searchHitToApiProduct(h as unknown as Record<string, unknown>) as unknown as Record<string, unknown>))
           setTotal(res.total ?? 0)
           setPages(res.pages ?? 1)
+          setReadinessHint((res.total ?? 0) === 0)
+          setLoadError(null)
         }
       } catch {
         if (!cancelled) {
           setRows([])
           setTotal(0)
           setPages(1)
+          setReadinessHint(true)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -382,6 +396,17 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
           {loadError ? (
             <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100" role="alert">
               {loadError}
+            </div>
+          ) : null}
+
+          {!loading && !loadError && readinessHint && rows.length === 0 ? (
+            <div
+              className="rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+              role="status"
+            >
+              No products found. This may be due to missing catalog data (image, category, brand, description) required for
+              storefront display. Use{' '}
+              <code className="rounded bg-black/30 px-1">GET /api/v1/admin/products/debug-readiness</code> to inspect rows.
             </div>
           ) : null}
 

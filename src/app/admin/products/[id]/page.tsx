@@ -56,32 +56,34 @@ export default function AdminEditProductPage() {
             )}
           </Card>
         ) : (
-          <ProductForm
-            mode="edit"
-            loading={updateMutation.isPending}
-            brandOptions={brandOptions}
-            categoryOptions={categoryOptions}
-            initialValue={{
-              name: product.name,
-              brandId: product.brandId,
-              categoryId: product.categoryId,
-              description: product.description,
-              specs: product.specs,
-              imageUrl: product.imageUrl,
-              datasheetUrl: product.datasheetUrl,
-              status: product.status,
-            }}
-            onSubmit={async (payload) => {
-              try {
-                await updateMutation.mutateAsync({ id: product.id, input: payload })
-                toast.success('Product updated')
-                router.push('/admin/products')
-              } catch (error) {
-                toast.error(getApiErrorMessage(error, 'Failed to update product'))
-              }
-            }}
-          />
-          <ProductInventorySection productId={product.id} />
+          <>
+            <ProductForm
+              mode="edit"
+              loading={updateMutation.isPending}
+              brandOptions={brandOptions}
+              categoryOptions={categoryOptions}
+              initialValue={{
+                name: product.name,
+                brandId: product.brandId,
+                categoryId: product.categoryId,
+                description: product.description,
+                specs: product.specs,
+                imageUrl: product.imageUrl,
+                datasheetUrl: product.datasheetUrl,
+                status: product.status,
+              }}
+              onSubmit={async (payload) => {
+                try {
+                  await updateMutation.mutateAsync({ id: product.id, input: payload })
+                  toast.success('Product updated')
+                  router.push('/admin/products')
+                } catch (error) {
+                  toast.error(getApiErrorMessage(error, 'Failed to update product'))
+                }
+              }}
+            />
+            <ProductInventorySection productId={product.id} />
+          </>
         )}
       </div>
   )

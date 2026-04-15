@@ -64,6 +64,11 @@ export interface ProductListResponse {
   pages: number
   page: number
   size: number
+  storefront?: {
+    storefront_relaxed?: boolean
+    total_before_publish_ready?: number
+    total_after_publish_ready?: number
+  }
 }
 
 export interface SearchParams {
@@ -86,6 +91,11 @@ export interface SearchResponse {
   size: number
   query: string
   processingTimeMs?: number
+  storefront?: {
+    storefront_relaxed?: boolean
+    total_before_publish_ready?: number
+    total_after_publish_ready?: number
+  }
 }
 
 /** Alias for backward compat with features/ layer */

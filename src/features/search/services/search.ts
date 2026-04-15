@@ -13,6 +13,11 @@ interface RawSearchResponse {
   size?: number
   query?: string
   processingTimeMs?: number
+  storefront?: {
+    storefront_relaxed?: boolean
+    total_before_publish_ready?: number
+    total_after_publish_ready?: number
+  }
 }
 
 export interface BrowseSearchParams {
@@ -105,5 +110,6 @@ export async function searchProducts(params: SearchParams): Promise<SearchRespon
     size: d.size ?? (params.size ?? 20),
     query: d.query ?? params.q,
     processingTimeMs: d.processingTimeMs,
+    storefront: d.storefront,
   }
 }

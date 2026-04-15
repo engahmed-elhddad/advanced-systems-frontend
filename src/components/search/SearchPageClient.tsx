@@ -161,6 +161,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
   })
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const lastSearchTrackKey = useRef<string>('')
+  const [readinessHint, setReadinessHint] = useState(false)
 
   useEffect(() => {
     getBrowseFacets().then(setFacets).catch(() => {})
@@ -199,11 +200,13 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
         )
         setTotal(res.total ?? 0)
         setPages(res.pages ?? 1)
+        setReadinessHint((res.total ?? 0) === 0)
       } catch {
         if (!cancelled) {
           setRows([])
           setTotal(0)
           setPages(1)
+          setReadinessHint(true)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -566,6 +569,12 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     'border-dashed border-white/20 px-6 py-16 text-center transition-all duration-300',
                   )}
                 >
+                  {readinessHint ? (
+                    <p className="mb-4 rounded-lg border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                      No products found. This may be due to missing data (image, category, brand, description) required for
+                      storefront display.
+                    </p>
+                  ) : null}
                   <p className="font-medium text-white/80">No products match your search and filters.</p>
                   <p className="mt-2 text-sm text-white/45">Try clearing filters or broadening your query.</p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">

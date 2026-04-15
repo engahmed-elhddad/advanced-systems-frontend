@@ -344,7 +344,7 @@ export default function AdminProductsListPage() {
               variant="destructive"
               loading={deletingId === product.id}
               aria-label={`Delete ${product.name}`}
-              onClick={() => void onDelete(product.id)}
+              onClick={() => void onDelete(product)}
             >
               <Trash2 className="h-3.5 w-3.5" />
               Delete

@@ -5,10 +5,13 @@ interface RawListResponse {
   items?: Product[]
   products?: Product[]
   results?: Product[]
+  /** Meilisearch-style payload */
+  hits?: Product[]
   total?: number
   pages?: number
   page?: number
   size?: number
+  storefront?: ProductListResponse['storefront']
 }
 
 export async function getProducts(params: ProductListParams = {}): Promise<ProductListResponse> {
@@ -34,6 +37,7 @@ export async function getProducts(params: ProductListParams = {}): Promise<Produ
     pages: d.pages ?? 1,
     page: d.page ?? (params.page ?? 1),
     size: d.size ?? (params.size ?? 24),
+    storefront: d.storefront,
   }
 }
 
