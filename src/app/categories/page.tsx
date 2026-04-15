@@ -7,7 +7,8 @@ import { CategoryCard } from '@/components/ui/CategoryCard'
 const DRIVES_CATEGORY_ALIASES = ['Drives', 'VFD', 'Variable Frequency Drive']
 
 export const metadata = {
-  title: 'Product Categories | Advanced Systems',
+  /** Root layout uses template `%s | Advanced Systems` — do not append the site name here. */
+  title: 'Product Categories',
   description: 'Browse industrial automation parts by category: PLC, drives, sensors, HMI, and more.',
 }
 

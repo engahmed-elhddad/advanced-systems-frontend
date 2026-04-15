@@ -117,6 +117,15 @@ function parseSpecs(product: Record<string, unknown>): Record<string, string> {
   return result
 }
 
+function brandDisplayName(product: Record<string, unknown>): string {
+  const b = product.brand
+  if (typeof b === 'string') return b.trim()
+  if (b && typeof b === 'object' && 'name' in (b as Record<string, unknown>)) {
+    return String((b as { name?: unknown }).name ?? '').trim()
+  }
+  return String(product.manufacturer ?? '').trim()
+}
+
 function collectGalleryImages(product: Record<string, unknown>): string[] {
   const urls: string[] = []
   const main = String(product.image_url ?? '')
@@ -162,7 +171,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalSlug = String(product.slug ?? decoded).trim() || decoded
   const partNum = String(product?.part_number ?? decoded)
   const productName = String(product?.name ?? partNum).trim() || partNum
-  const brandName = String(product?.brand ?? product?.manufacturer ?? 'Industrial')
+  const brandName =
+    brandDisplayName(product as Record<string, unknown>) || 'Industrial'
   const categoryName =
     typeof product?.category === 'string'
       ? product.category
@@ -230,7 +240,7 @@ export default async function ProductSlugPage({ params }: Props) {
 
   const partNum = String(product.part_number ?? decoded)
   const productName = String(product.name ?? partNum).trim() || partNum
-  const brandName = String(product.brand ?? product.manufacturer ?? '').trim()
+  const brandName = brandDisplayName(product as Record<string, unknown>)
   const categoryName =
     typeof product.category === 'string'
       ? product.category

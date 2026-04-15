@@ -6,7 +6,7 @@ import React, { useEffect, useState, useCallback, useMemo, Suspense } from "reac
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ChevronRight, SlidersHorizontal, X } from "lucide-react"
-import { API_BASE_URL, normalizeCategoryQueryForApi } from "@/lib/constants"
+import { API_BASE_URL } from "@/lib/constants"
 import { ProductGrid } from "@/components/products/ProductGrid"
 import {
   FilterChip,
@@ -16,6 +16,24 @@ import {
   Spinner,
   CategoryCard,
 } from "@/components/ui"
+
+/** Map `attr.*` URL params to backend `spec=key:value` (repeatable). */
+function appendSpecParamsFromUrl(target: URLSearchParams, searchParams: URLSearchParams) {
+  for (const [k, v] of searchParams.entries()) {
+    if (!k.startsWith("attr.") || !v) continue
+    const specKey = k.slice(5)
+    const trimmed = v.trim()
+    if (!trimmed) continue
+    // Comma-separated enum values (avoid splitting numeric ranges "min:max")
+    if (trimmed.includes(",") && !/^[\d.]+:[\d.]+$/.test(trimmed)) {
+      for (const segment of trimmed.split(",").map((s) => s.trim()).filter(Boolean)) {
+        target.append("spec", `${specKey}:${segment}`)
+      }
+      continue
+    }
+    target.append("spec", `${specKey}:${trimmed}`)
+  }
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,23 +69,23 @@ function Breadcrumbs({ path, name }: { path?: string; name: string }) {
   const crumbs = segments.slice(0, -1)
 
   return (
-    <nav className="flex items-center gap-1 text-sm text-gray-500 flex-wrap" aria-label="Breadcrumb">
-      <Link href="/" className="hover:text-primary-600 transition-colors">Home</Link>
-      <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-      <Link href="/categories" className="hover:text-primary-600 transition-colors">Categories</Link>
+    <nav className="flex items-center gap-1 text-sm text-white/50 flex-wrap" aria-label="Breadcrumb">
+      <Link href="/" className="transition-colors hover:text-orange-300">Home</Link>
+      <ChevronRight className="w-3.5 h-3.5 shrink-0 text-white/30" />
+      <Link href="/categories" className="transition-colors hover:text-orange-300">Categories</Link>
       {crumbs.map((crumb, i) => {
         const href = "/categories/" + segments.slice(0, i + 1).join("/")
         return (
           <React.Fragment key={href}>
-            <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-            <Link href={href} className="hover:text-primary-600 transition-colors capitalize">
+            <ChevronRight className="w-3.5 h-3.5 shrink-0 text-white/30" />
+            <Link href={href} className="transition-colors hover:text-orange-300 capitalize">
               {crumb.replace(/-/g, " ")}
             </Link>
           </React.Fragment>
         )
       })}
-      <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-      <span className="text-gray-900 font-medium">{name}</span>
+      <ChevronRight className="w-3.5 h-3.5 shrink-0 text-white/30" />
+      <span className="font-medium text-white">{name}</span>
     </nav>
   )
 }
@@ -99,12 +117,12 @@ function CheckboxList({
               type="checkbox"
               checked={checked}
               onChange={() => onToggle(value)}
-              className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              className="w-4 h-4 rounded border-white/25 bg-white/5 text-orange-500 focus:ring-orange-500/50"
             />
-            <span className="text-sm text-gray-700 group-hover:text-gray-900 flex items-center gap-1">
+            <span className="text-sm text-white/80 group-hover:text-white flex items-center gap-1">
               <span>{value}{attr.unit ? ` ${attr.unit}` : ""}</span>
               {typeof count === "number" && (
-                <span className="text-xs text-gray-500">({count})</span>
+                <span className="text-xs text-white/45">({count})</span>
               )}
             </span>
           </label>
@@ -146,9 +164,9 @@ function NumberRange({
           onChange={(e) => setLocalMin(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => e.key === "Enter" && commit()}
-          className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full rounded border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-orange-500/40"
         />
-        <span className="text-gray-400 shrink-0">–</span>
+        <span className="text-white/35 shrink-0">–</span>
         <input
           type="number"
           placeholder={attr.max != null ? String(attr.max) : "Max"}
@@ -156,9 +174,9 @@ function NumberRange({
           onChange={(e) => setLocalMax(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => e.key === "Enter" && commit()}
-          className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full rounded border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-orange-500/40"
         />
-        {attr.unit && <span className="text-xs text-gray-500 shrink-0">{attr.unit}</span>}
+        {attr.unit && <span className="text-xs text-white/45 shrink-0">{attr.unit}</span>}
       </div>
     </div>
   )
@@ -178,8 +196,8 @@ function BooleanToggle({
       <button
         type="button"
         onClick={() => onChange(value === "true" ? "" : "true")}
-        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-          value === "true" ? "bg-primary-600" : "bg-gray-200"
+        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/50 ${
+          value === "true" ? "bg-orange-600" : "bg-white/20"
         }`}
         aria-pressed={value === "true"}
       >
@@ -189,7 +207,7 @@ function BooleanToggle({
           }`}
         />
       </button>
-      <span className="text-sm text-gray-700">{value === "true" ? "Yes" : "Any"}</span>
+      <span className="text-sm text-white/80">{value === "true" ? "Yes" : "Any"}</span>
     </div>
   )
 }
@@ -225,14 +243,14 @@ function FacetSection({
     : ["", ""]
 
   return (
-    <div className="border-b border-gray-100 pb-4 last:border-0">
+    <div className="border-b border-white/10 pb-4 last:border-0">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{attr.label}</h3>
+        <h3 className="text-xs font-semibold text-white/45 uppercase tracking-wider">{attr.label}</h3>
         {currentValue && (
           <button
             type="button"
             onClick={() => navigate({ [key]: null, page: null })}
-            className="text-xs text-primary-600 hover:text-primary-700"
+            className="text-xs text-orange-300/90 hover:text-orange-200"
           >
             Clear
           </button>
@@ -329,29 +347,39 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
     const abortController = new AbortController()
 
     const params = new URLSearchParams()
-    params.set("q", category.name)
-    const categorySlug =
-      (category.slug && String(category.slug).trim()) || normalizeCategoryQueryForApi(category.name)
-    params.set("category", categorySlug)
+    params.set("category_id", String(category.id))
     params.set("limit", String(LIMIT))
     params.set("page", String(pageParam))
+    params.set("sort", "newest")
+    appendSpecParamsFromUrl(params, searchParams)
 
-    // Forward all attr.* params from URL
-    for (const [k, v] of searchParams.entries()) {
-      if (k.startsWith("attr.") && v) params.set(k, v)
-    }
+    const requestUrl = `${API}/api/v1/search/?${params.toString()}`
 
-    apiFetch(`${API}/api/v1/search/?${params.toString()}`, { signal: abortController.signal })
-      .then((r) => r.json())
+    apiFetch(requestUrl, { signal: abortController.signal })
+      .then((r) => {
+        if (!r.ok) {
+          console.warn("[category browse] search request failed", r.status, requestUrl)
+          return r.json().catch(() => ({}))
+        }
+        return r.json()
+      })
       .then((data) => {
         const items = data.hits ?? data.results ?? data.items ?? data.products ?? []
         const total = data.total ?? 0
         setProducts(items)
         setTotalCount(total)
         setTotalPages(Math.ceil(total / LIMIT) || 1)
+        if (total === 0) {
+          console.warn("[category browse] zero results", {
+            categoryId: category.id,
+            slug: category.slug,
+            requestUrl,
+          })
+        }
       })
       .catch((error) => {
         if ((error as Error).name === "AbortError") return
+        console.warn("[category browse] search error", error)
         setProducts([])
         setTotalPages(1)
       })
@@ -402,10 +430,10 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
         {facetsLoading && (
           <div className="space-y-3 animate-pulse">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="space-y-2 pb-3 border-b border-gray-100">
-                <div className="h-3 w-24 bg-gray-200 rounded" />
-                <div className="h-3 w-full bg-gray-100 rounded" />
-                <div className="h-3 w-4/5 bg-gray-100 rounded" />
+              <div key={i} className="space-y-2 pb-3 border-b border-white/10">
+                <div className="h-3 w-24 rounded bg-white/15" />
+                <div className="h-3 w-full rounded bg-white/10" />
+                <div className="h-3 w-4/5 rounded bg-white/10" />
               </div>
             ))}
           </div>
@@ -419,7 +447,7 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
           />
         ))}
         {facets.length === 0 && !catLoading && !facetsLoading && (
-          <p className="text-sm text-gray-400">No filters available for this category.</p>
+          <p className="text-sm text-white/45">No filters available for this category.</p>
         )}
       </div>
     )
@@ -428,13 +456,13 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
   // ── Loading skeleton ───────────────────────────────────────────────────────
   if (catLoading) {
     return (
-      <div className="min-h-screen bg-white px-4 py-8">
-        <div className="max-w-7xl mx-auto animate-pulse space-y-6">
-          <div className="h-4 w-56 bg-gray-200 rounded" />
-          <div className="h-8 w-80 bg-gray-200 rounded" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="relative min-h-screen px-4 py-8">
+        <div className="page-container mx-auto animate-pulse space-y-6">
+          <div className="h-4 w-56 rounded bg-white/15" />
+          <div className="h-8 w-80 rounded bg-white/10" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-24 rounded-xl bg-gray-100 border border-gray-200" />
+              <div key={i} className="h-24 rounded-xl border border-white/10 bg-white/5" />
             ))}
           </div>
           <ProductGridSkeleton />
@@ -445,8 +473,14 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
 
   if (!category) {
     return (
-      <div className="min-h-screen bg-white">
-        <EmptyState title="Category not found" description="This category does not exist or has been removed." />
+      <div className="relative min-h-screen py-12">
+        <div className="page-container">
+          <EmptyState
+            title="Category not found"
+            description="This category does not exist or has been removed."
+            className="border-white/10 bg-white/5 backdrop-blur-xl [&_h2]:text-white [&_p]:text-white/60"
+          />
+        </div>
       </div>
     )
   }
@@ -454,20 +488,24 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
   const subcategories = category.children?.filter((c) => c.is_active !== false) ?? []
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="relative min-h-screen pb-16 pt-6 sm:pt-10">
+      <div
+        className="pointer-events-none absolute left-1/2 top-0 h-[240px] w-[min(100%,640px)] -translate-x-1/2 rounded-full bg-orange-500/12 blur-[100px]"
+        aria-hidden
+      />
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="border-b border-gray-200 bg-gray-50 py-8 px-4">
-        <div className="max-w-7xl mx-auto space-y-3">
+      <div className="border-b border-white/10 bg-white/[0.04] px-4 py-8 backdrop-blur-xl">
+        <div className="page-container space-y-3">
           <Breadcrumbs path={category.path} name={category.name} />
-          <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{category.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">{category.name}</h1>
               {category.description && (
-                <p className="mt-1 text-gray-600 max-w-2xl">{category.description}</p>
+                <p className="mt-1 max-w-2xl text-sm text-white/60 sm:text-base">{category.description}</p>
               )}
             </div>
             {totalCount > 0 && (
-              <span className="text-sm text-gray-500 shrink-0 mt-2">
+              <span className="mt-2 shrink-0 text-sm text-white/50">
                 {totalCount.toLocaleString()} part{totalCount !== 1 ? "s" : ""}
               </span>
             )}
@@ -475,11 +513,11 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="page-container relative z-10 px-4 py-8">
         {/* ── Subcategory cards (depth < 2 only) ─────────────────────────── */}
         {subcategories.length > 0 && (category.depth ?? 0) < 2 && (
           <div className="mb-8">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/45">
               Subcategories
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -499,15 +537,15 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
         <div className="flex gap-8">
           {/* Desktop sidebar */}
           {facets.length > 0 && (
-            <aside className="hidden lg:block w-56 shrink-0">
+            <aside className="hidden w-56 shrink-0 lg:block">
               <div className="sticky top-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-semibold text-gray-900">Filters</h2>
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-white">Filters</h2>
                   {hasActiveFilters && (
                     <button
                       type="button"
                       onClick={clearAll}
-                      className="text-xs text-primary-600 hover:text-primary-700"
+                      className="text-xs text-orange-300/90 hover:text-orange-200"
                     >
                       Clear all
                     </button>
@@ -531,7 +569,7 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
                   <SlidersHorizontal className="w-4 h-4" />
                   Filters
                   {hasActiveFilters && (
-                    <span className="ml-1 rounded-full bg-primary-600 text-white text-xs w-5 h-5 flex items-center justify-center">
+                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-xs text-white">
                       {activeFilters.length}
                     </span>
                   )}
@@ -540,7 +578,7 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
                   <button
                     type="button"
                     onClick={clearAll}
-                    className="text-sm text-primary-600 hover:text-primary-700"
+                    className="text-sm text-orange-300/90 hover:text-orange-200"
                   >
                     Clear all
                   </button>
@@ -583,6 +621,7 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
                     ? "Try removing some filters."
                     : `No products listed under ${category.name} yet.`
                 }
+                className="border-white/10 bg-white/5 backdrop-blur-xl [&_h2]:text-white [&_p]:text-white/60"
               />
             ) : (
               <>
@@ -606,22 +645,22 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
             className="absolute inset-0 bg-black/40"
             onClick={() => setMobileFiltersOpen(false)}
           />
-          <div className="absolute right-0 top-0 h-full w-80 max-w-full bg-white shadow-xl flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900">Filters</h2>
+          <div className="absolute right-0 top-0 flex h-full w-80 max-w-full flex-col border-l border-white/10 bg-[#121f3d]/98 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center justify-between border-b border-white/10 p-4">
+              <h2 className="font-semibold text-white">Filters</h2>
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(false)}
-                className="p-1 text-gray-500 hover:text-gray-700"
+                className="p-1 text-white/50 transition-colors hover:text-white"
                 aria-label="Close filters"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
               <Sidebar />
             </div>
-            <div className="p-4 border-t border-gray-200 flex gap-3">
+            <div className="flex gap-3 border-t border-white/10 p-4">
               {hasActiveFilters && (
                 <button
                   type="button"
@@ -656,7 +695,7 @@ export default function CategoryPage({
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex min-h-[50vh] items-center justify-center text-white/50">
           <Spinner size="lg" />
         </div>
       }
