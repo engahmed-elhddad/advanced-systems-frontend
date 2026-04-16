@@ -6,14 +6,13 @@ import dynamic from 'next/dynamic'
 import Script from 'next/script'
 import { getProductByPartNumber, getProductBySlug, getProducts, apiFetch } from '@/lib/api'
 import { COMPANY_NAME_EN } from '@/lib/company'
-import { normalizeCategoryQueryForApi, SITE_URL } from '@/lib/constants'
+import { API_BASE_URL, normalizeCategoryQueryForApi, SITE_URL } from '@/lib/constants'
+import { primaryProductImageUrl } from '@/lib/productImageUrl'
 import { canonicalPath } from '@/lib/seo'
 import { normalizeProductVariants } from '@/lib/productVariants'
 import { ProductDetail } from './ProductDetail'
 import { ProductPageSearchStrip } from './ProductPageSearchStrip'
 import { SafeImage } from '@/components/ui/SafeImage'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
 const RecommendationSections = dynamic(
   () => import('./RecommendationSections').then((m) => m.RecommendationSections),
@@ -128,21 +127,59 @@ function brandDisplayName(product: Record<string, unknown>): string {
 
 function collectGalleryImages(product: Record<string, unknown>): string[] {
   const urls: string[] = []
-  const main = String(product.image_url ?? '')
-  if (main) urls.push(main)
+  const push = (u: string) => {
+    const t = u.trim()
+    if (t && !urls.includes(t)) urls.push(t)
+  }
+  push(primaryProductImageUrl(product))
   for (const k of ['main_image_url', 'side_image_url', 'label_image_url', 'box_image_url']) {
     const v = product[k]
-    if (typeof v === 'string' && v && !urls.includes(v)) urls.push(v)
+    if (typeof v === 'string' && v.trim()) push(v)
   }
   const imgs = product.images
   if (Array.isArray(imgs)) {
     for (const img of imgs) {
-      const u = typeof img === 'string' ? img : (img as Record<string, unknown>)?.url
-      if (typeof u === 'string' && u && !urls.includes(u)) urls.push(u)
+      if (typeof img === 'string' && img.trim()) {
+        push(img)
+        continue
+      }
+      const row = img as Record<string, unknown>
+      const u =
+        (typeof row?.url === 'string' && row.url.trim()) ||
+        (typeof row?.image_url === 'string' && row.image_url.trim()) ||
+        ''
+      if (u) push(u)
     }
   }
   return urls
 }
+
+/** Slug/detail API historically omitted image_url when images[] was empty; list search still has URLs. */
+const enrichProductFromCatalogSearch = cache(async (product: Record<string, unknown>) => {
+  if (collectGalleryImages(product).length > 0) return product
+  const pn = String(product.part_number ?? '').trim()
+  if (!pn) return product
+  try {
+    const qs = new URLSearchParams({
+      page: '1',
+      size: '1',
+      search: pn,
+    })
+    const res = await apiFetch(`${API_BASE_URL}/api/v1/products/?${qs}`, { next: { revalidate: 120 } })
+    if (!res.ok) return product
+    const data = (await res.json()) as { items?: Array<Record<string, unknown>> }
+    const row = data.items?.[0]
+    if (!row) return product
+    const out = { ...product }
+    const url = String(row.image_url ?? '').trim()
+    if (url) out.image_url = url
+    const m = String(row.main_image_url ?? '').trim()
+    if (m && !String(out.main_image_url ?? '').trim()) out.main_image_url = m
+    return out
+  } catch {
+    return product
+  }
+})
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug: rawParam } = await params
@@ -153,6 +190,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) {
     product = await loadByPart(decoded)
     resolvedViaPart = Boolean(product)
+  }
+  if (product) {
+    product = await enrichProductFromCatalogSearch(product)
   }
 
   if (!product && !looksLikePartNumber(decoded)) {
@@ -226,6 +266,9 @@ export default async function ProductSlugPage({ params }: Props) {
   if (!product) {
     product = await loadByPart(decoded)
     openedViaPartNumber = Boolean(product)
+  }
+  if (product) {
+    product = await enrichProductFromCatalogSearch(product)
   }
 
   if (!product && !looksLikePartNumber(decoded)) {
@@ -431,7 +474,7 @@ async function BrandPage({ brandSlug }: { brandSlug: string }) {
   try {
     const params = new URLSearchParams({ page: '1', size: '20', sort: 'relevance' })
     params.set('brand', brand)
-    const res = await apiFetch(`${API_BASE}/api/v1/search/?${params}`, { cache: 'no-store' })
+    const res = await apiFetch(`${API_BASE_URL}/api/v1/search/?${params}`, { cache: 'no-store' })
     if (res.ok) {
       const data = await res.json()
       products = data?.hits ?? data?.items ?? data?.products ?? []

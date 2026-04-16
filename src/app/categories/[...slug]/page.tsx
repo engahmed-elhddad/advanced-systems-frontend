@@ -304,6 +304,14 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
   const API = API_BASE_URL
   const LIMIT = 30
 
+  /** Facet filters need Meilisearch/spec path; plain category browse uses relational `GET /products`. */
+  const hasFacetFilters = useMemo(() => {
+    for (const [k, v] of searchParams.entries()) {
+      if (k.startsWith("attr.") && String(v ?? "").trim()) return true
+    }
+    return false
+  }, [searchParams])
+
   // ── navigate helper (same pattern as search page) ──────────────────────────
   const navigate = useCallback(
     (updates: Record<string, string | null>) => {
@@ -346,25 +354,45 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
     setProdLoading(true)
     const abortController = new AbortController()
 
-    const params = new URLSearchParams()
-    params.set("category_id", String(category.id))
-    params.set("limit", String(LIMIT))
-    params.set("page", String(pageParam))
-    params.set("sort", "newest")
-    appendSpecParamsFromUrl(params, searchParams)
+    const runCatalog = () => {
+      const params = new URLSearchParams({
+        page: String(pageParam),
+        size: String(LIMIT),
+        sort: "newest",
+        category_id: String(category.id),
+      })
+      return `${API}/api/v1/products/?${params.toString()}`
+    }
 
-    const requestUrl = `${API}/api/v1/search/?${params.toString()}`
+    const runSearch = () => {
+      const params = new URLSearchParams()
+      params.set("category_id", String(category.id))
+      params.set("limit", String(LIMIT))
+      params.set("page", String(pageParam))
+      params.set("sort", "newest")
+      appendSpecParamsFromUrl(params, searchParams)
+      return `${API}/api/v1/search/?${params.toString()}`
+    }
+
+    const requestUrl = hasFacetFilters ? runSearch() : runCatalog()
 
     apiFetch(requestUrl, { signal: abortController.signal })
       .then((r) => {
         if (!r.ok) {
-          console.warn("[category browse] search request failed", r.status, requestUrl)
+          console.warn(
+            "[category browse] request failed",
+            r.status,
+            requestUrl,
+            hasFacetFilters ? "search" : "products"
+          )
           return r.json().catch(() => ({}))
         }
         return r.json()
       })
       .then((data) => {
-        const items = data.hits ?? data.results ?? data.items ?? data.products ?? []
+        const items = hasFacetFilters
+          ? data.hits ?? data.results ?? data.items ?? data.products ?? []
+          : data.items ?? data.products ?? []
         const total = data.total ?? 0
         setProducts(items)
         setTotalCount(total)
@@ -374,18 +402,19 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
             categoryId: category.id,
             slug: category.slug,
             requestUrl,
+            source: hasFacetFilters ? "search" : "products",
           })
         }
       })
       .catch((error) => {
         if ((error as Error).name === "AbortError") return
-        console.warn("[category browse] search error", error)
+        console.warn("[category browse] fetch error", error)
         setProducts([])
         setTotalPages(1)
       })
       .finally(() => setProdLoading(false))
     return () => abortController.abort()
-  }, [category, searchParams, pageParam, API])
+  }, [category, searchParams, pageParam, API, hasFacetFilters])
 
   // ── Active filter chips ────────────────────────────────────────────────────
   const activeFilters: { key: string; label: string; value: string; rawValue: string; isRange: boolean }[] = []

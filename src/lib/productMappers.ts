@@ -1,4 +1,5 @@
 import type { ProductCardProps } from '@/components/products/ProductCard'
+import { primaryProductImageUrl } from '@/lib/productImageUrl'
 
 /** Flexible product shape from API (various backend responses) */
 export interface ApiProduct {
@@ -32,10 +33,9 @@ export interface ApiProduct {
  */
 /** Map ORM-shaped product JSON (list/detail API) to ApiProduct. */
 export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
-  const images = (p.images as Array<{ url?: string; is_primary?: boolean }> | undefined) || []
-  const primary = images.find((i) => i.is_primary)?.url || images[0]?.url
   const br = p.brand as { name?: string } | undefined
   const cat = p.category as { name?: string } | undefined
+  const imgUrl = primaryProductImageUrl(p)
   return {
     id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
     slug: p.slug != null ? String(p.slug) : undefined,
@@ -45,7 +45,7 @@ export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
     category: cat?.name,
     description: String(p.description ?? ''),
     short_description: String(p.short_description ?? ''),
-    image_url: primary || String(p.image_url ?? ''),
+    image_url: imgUrl,
     stock_quantity: Number(p.stock_quantity ?? 0),
     availability: String(p.availability ?? ''),
     price_usd: (p.price_usd as number) ?? null,
@@ -55,10 +55,11 @@ export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
 
 /** Normalize a Meilisearch / search API hit to ApiProduct for cards. */
 export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct {
+  const primary = String(hit.primary_image ?? '').trim()
   const img =
-    (hit.primary_image as string) ||
-    (hit.image_url as string) ||
-    (hit.image as string) ||
+    primary ||
+    String(hit.image_url ?? '').trim() ||
+    String(hit.image ?? '').trim() ||
     ''
   const hid = hit.id
   const parsedId =

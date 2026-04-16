@@ -2,7 +2,22 @@
 
 import { memo } from 'react'
 import { ProductCard } from './ProductCard'
-import { productToCardProps } from '@/lib/productMappers'
+import {
+  ormProductToApiProduct,
+  productToCardProps,
+  searchHitToApiProduct,
+} from '@/lib/productMappers'
+
+function recordToCardProps(p: Record<string, unknown>) {
+  if (
+    'brand_name' in p ||
+    'category_name' in p ||
+    ('primary_image' in p && p.primary_image !== undefined)
+  ) {
+    return productToCardProps(searchHitToApiProduct(p))
+  }
+  return productToCardProps(ormProductToApiProduct(p))
+}
 
 export interface ProductGridProps {
   products: Array<Record<string, unknown>>
@@ -24,7 +39,7 @@ function ProductGridInner({
       }`}
     >
       {products.map((p, idx) => {
-        const props = productToCardProps(p as unknown as Parameters<typeof productToCardProps>[0])
+        const props = recordToCardProps(p as Record<string, unknown>)
         return (
           <div
             key={props.part_number + String(idx)}

@@ -19,7 +19,8 @@ import { Badge } from '@/components/ui/Badge'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { useRFQSubmit } from '@/features/rfq/hooks/useRFQSubmit'
 import { useRFQListStore } from '@/state/rfqListStore'
-import { whatsappHref } from '@/lib/constants'
+import { API_BASE_URL, whatsappHref } from '@/lib/constants'
+import { primaryProductImageUrl } from '@/lib/productImageUrl'
 import { trackPricingView, trackRfqCtaClick, trackWhatsApp } from '@/lib/analytics'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
 import { cn } from '@/lib/utils'
@@ -128,6 +129,34 @@ export function ProductDetail({
       if (savedCompany) setCompany(savedCompany)
     }
   }, [])
+
+  /** Slug/detail API often omits image_url; list endpoint includes it — hydrate in browser using same API base as the site. */
+  const [clientGallery, setClientGallery] = useState<string[] | null>(null)
+  useEffect(() => {
+    if (galleryImages.length > 0) return
+    const pn = partNumber.trim()
+    if (!pn) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const qs = new URLSearchParams({ page: '1', size: '1', search: pn })
+        const r = await fetch(`${API_BASE_URL}/api/v1/products/?${qs}`)
+        if (!r.ok || cancelled) return
+        const data = (await r.json()) as { items?: Array<Record<string, unknown>> }
+        const row = data.items?.[0]
+        if (!row || cancelled) return
+        const u = primaryProductImageUrl(row)
+        if (u) setClientGallery([u])
+      } catch {
+        /* ignore */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [galleryImages.length, partNumber])
+
+  const displayGallery = clientGallery ?? galleryImages
 
   const selectedVariant = useMemo(() => {
     if (selectedVariantKey == null) return null
@@ -288,10 +317,10 @@ export function ProductDetail({
               'shadow-lg shadow-black/20 hover:border-white/[0.14] hover:shadow-xl hover:shadow-orange-500/10'
             )}
           >
-            {galleryImages.length > 0 ? (
+            {displayGallery.length > 0 ? (
               <div className="group relative h-full w-full">
                 <SafeImage
-                  src={galleryImages[selectedImage] ?? galleryImages[0]}
+                  src={displayGallery[selectedImage] ?? displayGallery[0]}
                   alt={partNumber}
                   priority
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -302,9 +331,9 @@ export function ProductDetail({
               <span className="text-sm text-white/40">No image available</span>
             )}
           </div>
-          {galleryImages.length > 1 && (
+          {displayGallery.length > 1 && (
             <div className="flex flex-wrap gap-2">
-              {galleryImages.map((url, i) => (
+              {displayGallery.map((url, i) => (
                 <button
                   key={i}
                   type="button"
