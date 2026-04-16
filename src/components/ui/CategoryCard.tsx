@@ -25,15 +25,15 @@ export function CategoryCard({ name, slug, count, product_count, variant = 'defa
         className="group"
       >
         <Card className="flex min-h-[150px] items-center gap-5 p-8">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[color:color-mix(in_srgb,var(--color-primary)_8%,transparent)] transition-colors group-hover:bg-[color:color-mix(in_srgb,var(--color-primary)_14%,transparent)]">
-            <Icon className="h-8 w-8 text-[color:var(--color-primary)]" />
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 transition-colors group-hover:bg-orange-500/25">
+            <Icon className="h-8 w-8 text-orange-300" />
           </div>
           <div className="min-w-0">
-            <div className="text-xl font-bold text-[var(--text-primary)] transition-colors group-hover:text-[color:var(--color-accent)]">
+            <div className="text-xl font-bold text-white transition-colors group-hover:text-orange-200">
               {name}
             </div>
-            <div className="mt-1.5 text-sm text-[var(--text-secondary)]">{displayCount} parts</div>
-            <div className="mt-3 text-sm font-medium text-[color:var(--color-accent)] opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="mt-1.5 text-sm text-white/55">{displayCount} parts</div>
+            <div className="mt-3 text-sm font-medium text-orange-300/90 opacity-0 transition-opacity group-hover:opacity-100">
               Explore category →
             </div>
           </div>
@@ -48,14 +48,14 @@ export function CategoryCard({ name, slug, count, product_count, variant = 'defa
       className="group"
     >
       <Card className="flex min-h-[180px] flex-col items-start p-7">
-        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-[color:color-mix(in_srgb,var(--color-primary)_8%,transparent)] transition-colors group-hover:bg-[color:color-mix(in_srgb,var(--color-primary)_14%,transparent)]">
-          <Icon className="h-7 w-7 text-[color:var(--color-primary)]" />
+        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-orange-500/15 transition-colors group-hover:bg-orange-500/25">
+          <Icon className="h-7 w-7 text-orange-300" />
         </div>
-        <div className="text-base font-bold text-[var(--text-primary)] transition-colors group-hover:text-[color:var(--color-accent)]">
+        <div className="text-base font-bold text-white transition-colors group-hover:text-orange-200">
           {name}
         </div>
-        <div className="mt-2 text-xs text-[var(--text-secondary)]">{displayCount} parts</div>
-        <div className="mt-auto pt-5 text-xs font-medium text-[color:var(--color-accent)] opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="mt-2 text-xs text-white/55">{displayCount} parts</div>
+        <div className="mt-auto pt-5 text-xs font-medium text-orange-300/90 opacity-0 transition-opacity group-hover:opacity-100">
           Explore category →
         </div>
       </Card>

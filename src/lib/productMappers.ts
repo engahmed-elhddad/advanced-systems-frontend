@@ -1,5 +1,5 @@
 import type { ProductCardProps } from '@/components/products/ProductCard'
-import { primaryProductImageUrl } from '@/lib/productImageUrl'
+import { getProductImage } from '@/lib/productImageUrl'
 
 /** Flexible product shape from API (various backend responses) */
 export interface ApiProduct {
@@ -35,7 +35,7 @@ export interface ApiProduct {
 export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
   const br = p.brand as { name?: string } | undefined
   const cat = p.category as { name?: string } | undefined
-  const imgUrl = primaryProductImageUrl(p)
+  const imgUrl = getProductImage(p)
   return {
     id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
     slug: p.slug != null ? String(p.slug) : undefined,
@@ -55,12 +55,7 @@ export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
 
 /** Normalize a Meilisearch / search API hit to ApiProduct for cards. */
 export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct {
-  const primary = String(hit.primary_image ?? '').trim()
-  const img =
-    primary ||
-    String(hit.image_url ?? '').trim() ||
-    String(hit.image ?? '').trim() ||
-    ''
+  const img = getProductImage(hit)
   const hid = hit.id
   const parsedId =
     typeof hid === 'number' && Number.isFinite(hid)

@@ -38,20 +38,22 @@ export default async function ProductsPage() {
   const brandsForStrip = brands.slice(0, 12)
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+    <div className="relative min-h-screen pb-16 pt-6 sm:pb-20 sm:pt-8">
+      <div
+        className="pointer-events-none absolute right-0 top-24 h-[200px] w-[280px] rounded-full bg-purple-500/15 blur-[100px]"
+        aria-hidden
+      />
+      <div className="border-b border-white/10 bg-white/[0.04] backdrop-blur-xl">
         <div className="page-container py-8 sm:py-10">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#1A1A1A] tracking-tight">
-            Industrial Products
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-[#6B7280] sm:text-base">
+          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Industrial Products</h1>
+          <p className="mt-1 max-w-2xl text-sm text-white/60 sm:text-base">
             Browse automation components from leading manufacturers — PLCs, drives, sensors, and more.
           </p>
         </div>
       </div>
 
-      <div className="page-container space-y-12 py-8 sm:py-10">
-        <Suspense fallback={<div className="h-32 animate-pulse rounded-[4px] bg-[#F9FAFB]" />}>
+      <div className="page-container relative z-10 space-y-12 py-8 sm:py-10">
+        <Suspense fallback={<div className="h-32 animate-pulse rounded-xl bg-white/10" />}>
           <BrandGrid brands={brandsForStrip} title="Top Manufacturers" viewAllHref="/brands" />
         </Suspense>
 

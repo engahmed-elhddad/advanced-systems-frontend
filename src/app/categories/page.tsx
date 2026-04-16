@@ -12,7 +12,7 @@ export const metadata = {
   description: 'Browse industrial automation parts by category: PLC, drives, sensors, HMI, and more.',
 }
 
-async function getCategoryProductCount(categoryName: string): Promise<number> {
+async function getCategoryProductCountByName(categoryName: string): Promise<number> {
   try {
     const sp = new URLSearchParams({
       category: categoryName,
@@ -40,50 +40,82 @@ async function getCategoryProductCount(categoryName: string): Promise<number> {
   }
 }
 
+/** Relational catalog total — preferred when `category_id` is known (matches storefront filters). */
+async function getCategoryProductCountById(categoryId: number): Promise<number> {
+  try {
+    const sp = new URLSearchParams({
+      page: '1',
+      size: '1',
+      category_id: String(categoryId),
+    })
+    const res = await fetch(`${API_BASE_URL}/api/v1/products/?${sp}`, { cache: 'no-store' })
+    if (!res.ok) return 0
+    const data = await res.json()
+    return typeof data?.total === 'number' ? data.total : 0
+  } catch {
+    return 0
+  }
+}
+
 /** Count for "Drives" = sum of products in Drives, VFD, and Variable Frequency Drive (no double-count). */
 async function getDrivesProductCount(): Promise<number> {
   const counts = await Promise.all(
-    DRIVES_CATEGORY_ALIASES.map((cat) => getCategoryProductCount(cat))
+    DRIVES_CATEGORY_ALIASES.map((cat) => getCategoryProductCountByName(cat))
   )
   return counts.reduce((a, b) => a + b, 0)
 }
 
+type CategoryRow = { name: string; slug?: string; id?: number }
+
 export default async function CategoriesPage() {
-  let apiCategories: { name: string; slug?: string; product_count?: number }[] = []
+  let apiCategories: CategoryRow[] = []
   try {
     const data = await getCategories()
-    apiCategories = Array.isArray(data) ? data : data?.categories || []
+    const raw = Array.isArray(data) ? data : data?.categories || []
+    apiCategories = raw.map((c: { name?: string; slug?: string; id?: number }) => ({
+      name: String(c?.name ?? ''),
+      slug: c?.slug,
+      id: typeof c?.id === 'number' ? c.id : undefined,
+    }))
   } catch {}
-  const baseCategories =
+  const baseCategories: CategoryRow[] =
     apiCategories.length > 0
       ? apiCategories
       : CATEGORIES.map((c) => ({ name: c.name, slug: c.slug }))
 
   const categories = await Promise.all(
     baseCategories.map(async (cat) => {
-      const count =
-        cat.slug === 'drives'
-          ? await getDrivesProductCount()
-          : await getCategoryProductCount(cat.name)
+      let count: number
+      if (cat.slug === 'drives') {
+        count = await getDrivesProductCount()
+      } else if (typeof cat.id === 'number' && cat.id > 0) {
+        count = await getCategoryProductCountById(cat.id)
+      } else {
+        count = await getCategoryProductCountByName(cat.name)
+      }
       return { name: cat.name, slug: cat.slug, product_count: count }
     })
   )
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="border-b border-gray-200 bg-gray-50 py-14 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+    <div className="relative min-h-screen pb-16 pt-6 sm:pt-10">
+      <div
+        className="pointer-events-none absolute left-1/2 top-0 h-[240px] w-[min(100%,640px)] -translate-x-1/2 rounded-full bg-orange-500/12 blur-[100px]"
+        aria-hidden
+      />
+      <div className="border-b border-white/10 bg-white/[0.04] px-4 py-12 backdrop-blur-xl sm:py-14">
+        <div className="page-container">
+          <h1 className="mb-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Product Categories
           </h1>
-          <p className="text-gray-600 max-w-2xl">
+          <p className="max-w-2xl text-sm text-white/60 sm:text-base">
             Browse our industrial automation catalog by category. Find PLCs, drives, sensors, and more.
           </p>
         </div>
       </div>
 
-      <div className="page-container py-12">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="page-container relative z-10 py-12">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {categories.map((cat) => (
             <CategoryCard
               key={cat.name}
