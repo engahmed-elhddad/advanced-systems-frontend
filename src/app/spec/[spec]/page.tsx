@@ -122,7 +122,12 @@ export default async function SpecPage({ params, searchParams }: Props) {
                   <div key={p.part_number} className="card card-hover group flex flex-col overflow-hidden">
                     <Link href={`/products/${encodeURIComponent(p.part_number)}`} className="block relative">
                       <div className="aspect-square flex items-center justify-center p-3 bg-gray-50 border-b border-gray-100 overflow-hidden">
-                        <ProductImageWithFallback src={imageSrc} alt={p.part_number} className="max-h-full w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                        <ProductImageWithFallback
+                          src={imageSrc}
+                          alt={p.part_number}
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                          className="object-contain group-hover:scale-105 transition-transform duration-300"
+                        />
                       </div>
                       <div className="absolute top-2 right-2">
                         {inStock ? <span className="badge-in-stock">In Stock</span> : <span className="badge-on-request">On Request</span>}

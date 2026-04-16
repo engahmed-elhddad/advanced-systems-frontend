@@ -1,14 +1,57 @@
 import type { MetadataRoute } from "next"
-import { CATEGORIES, SITE_URL } from "@/lib/constants"
+import { API_BASE_URL, CATEGORIES, SITE_URL } from "@/lib/constants"
 
-const base = SITE_URL
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://localhost:8000"
+const base = SITE_URL.replace(/\/$/, "")
 
-/** Paginated storefront product URL segments (slug-first for canonical PDPs). */
+/** Paginated catalog — source of truth for all listed PDPs (slug-first). */
+async function fetchAllProductSlugsFromCatalog(): Promise<string[]> {
+  const segments: string[] = []
+  let page = 1
+  let pagesTotal = 1
+  const size = 100
+  while (page <= pagesTotal && page <= 5000) {
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        size: String(size),
+        sort: "newest",
+      })
+      const res = await fetch(`${API_BASE_URL}/api/v1/products/?${params}`, {
+        next: { revalidate: 3600 },
+      })
+      if (!res.ok) break
+      const data = await res.json()
+      const items = data?.items ?? data?.products ?? []
+      if (typeof data?.pages === "number" && data.pages >= 1) pagesTotal = data.pages
+      for (const p of items) {
+        const slug = String((p as { slug?: string }).slug ?? "").trim()
+        const pn = String((p as { part_number?: string }).part_number ?? "").trim()
+        const seg = slug || pn
+        if (seg) segments.push(seg)
+      }
+      if (!items.length) break
+      page += 1
+    } catch {
+      break
+    }
+  }
+  return segments
+}
+
+/** Catalog + search index, deduped (slug / part_number segments for `/products/[slug]`). */
 async function fetchAllProductSlugSegments(): Promise<string[]> {
+  const [catalog, search] = await Promise.all([
+    fetchAllProductSlugsFromCatalog(),
+    fetchAllProductSlugSegmentsFromSearch(),
+  ])
+  const out = new Set<string>()
+  for (const s of catalog) out.add(s)
+  for (const s of search) out.add(s)
+  return [...out]
+}
+
+/** Paginated search index (Meilisearch) — merge with catalog for completeness. */
+async function fetchAllProductSlugSegmentsFromSearch(): Promise<string[]> {
   const segments: string[] = []
   let page = 1
   let hasMore = true
@@ -16,14 +59,18 @@ async function fetchAllProductSlugSegments(): Promise<string[]> {
   while (hasMore) {
     try {
       const res = await fetch(
-        `${API_BASE}/api/v1/search/?page=${page}&size=${size}&sort=newest`,
+        `${API_BASE_URL}/api/v1/search/?page=${page}&size=${size}&sort=newest`,
         { next: { revalidate: 3600 } }
       )
       if (!res.ok) break
       const data = await res.json()
       const items = data?.hits ?? data?.items ?? data?.products ?? []
       for (const p of items) {
-        const s = String((p as { slug?: string; part_number?: string }).slug || (p as { part_number?: string }).part_number || "").trim()
+        const s = String(
+          (p as { slug?: string; part_number?: string }).slug ||
+            (p as { part_number?: string }).part_number ||
+            ""
+        ).trim()
         if (s) segments.push(s)
       }
       hasMore = items.length >= size
@@ -44,7 +91,7 @@ async function fetchAllPartNumbers(): Promise<string[]> {
   const size = 5000
   while (hasMore) {
     try {
-      const res = await fetch(`${API_BASE}/api/seo/urls?type=products&page=${page}&size=${size}`, {
+      const res = await fetch(`${API_BASE_URL}/api/seo/urls?type=products&page=${page}&size=${size}`, {
         next: { revalidate: 3600 },
       })
       const data = await res.json()
@@ -62,12 +109,12 @@ async function fetchAllPartNumbers(): Promise<string[]> {
 /** Fetch brands from SEO API (fallback to v1 brands) */
 async function fetchBrands(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/seo/urls?type=brands`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE_URL}/api/seo/urls?type=brands`, { next: { revalidate: 3600 } })
     const data = await res.json()
     if (data?.brands?.length) return data.brands
   } catch { /* fallback */ }
   try {
-    const res = await fetch(`${API_BASE}/api/v1/brands/`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE_URL}/api/v1/brands/`, { next: { revalidate: 3600 } })
     const data = await res.json()
     return Array.isArray(data) ? data.map((b: any) => b.slug || b.name) : data?.brands || []
   } catch {
@@ -80,7 +127,7 @@ async function fetchCategorySlugs(): Promise<string[]> {
   const fromConst = CATEGORIES.map((c) => c.slug)
   const seen = new Set(fromConst.map((s) => s.toLowerCase()))
   try {
-    const res = await fetch(`${API_BASE}/api/seo/urls?type=categories`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE_URL}/api/seo/urls?type=categories`, { next: { revalidate: 3600 } })
     const data = await res.json()
     const cats = data?.categories || []
     for (const c of cats) {
@@ -97,7 +144,7 @@ async function fetchCategorySlugs(): Promise<string[]> {
 /** Fetch series from SEO API for /series/[slug] */
 async function fetchSeriesSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/seo/urls?type=series`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE_URL}/api/seo/urls?type=series`, { next: { revalidate: 3600 } })
     const data = await res.json()
     const list = data?.series || []
     return list.map((s: { slug?: string; name?: string }) =>
@@ -111,7 +158,7 @@ async function fetchSeriesSlugs(): Promise<string[]> {
 /** Fetch matrix slugs (product_count > 3) */
 async function fetchMatrixSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/matrix/slugs?limit=5000`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE_URL}/api/matrix/slugs?limit=5000`, { next: { revalidate: 3600 } })
     const data = await res.json()
     return data?.slugs || []
   } catch {
@@ -122,7 +169,7 @@ async function fetchMatrixSlugs(): Promise<string[]> {
 /** Fetch news article slugs */
 async function fetchNewsSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/news?limit=1000`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_BASE_URL}/api/news?limit=1000`, { next: { revalidate: 3600 } })
     const data = await res.json()
     return (data?.items || []).map((a: { slug?: string }) => a.slug).filter(Boolean)
   } catch {
@@ -142,7 +189,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       fetchNewsSlugs(),
     ])
 
-  const pdpSegments = productSegments.length ? productSegments : partNumbers
+  const pdpSegments = [...new Set([...productSegments, ...partNumbers])].filter(Boolean)
 
   /** Canonical product URLs use slugs when available (legacy part-number URLs redirect). */
   const canonicalProductPages = pdpSegments.map((seg) => ({
@@ -193,11 +240,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
     .filter((e) => e.url && e.url !== `${base}/brands/`)
 
+  /** Primary category browse URLs (`/categories/[slug]`). */
   const categoryPages = categorySlugs.map((slug) => ({
-    url: `${base}/category/${encodeURIComponent(slug)}`,
+    url: `${base}/categories/${encodeURIComponent(slug)}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
-    priority: 0.7,
+    priority: 0.75,
   }))
 
   const seriesPages = seriesSlugs.map((slug) => ({

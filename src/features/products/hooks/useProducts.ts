@@ -11,7 +11,7 @@ export function useProducts(params: ProductListParams) {
   const query = useQuery({
     queryKey: ['products', params],
     queryFn: () => productService.getProducts(params),
-    staleTime: 30_000,
+    staleTime: 120_000,
     placeholderData: keepPreviousData,
   })
 

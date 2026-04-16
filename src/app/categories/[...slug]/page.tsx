@@ -16,6 +16,7 @@ import {
   Spinner,
   CategoryCard,
 } from "@/components/ui"
+import { trackCategoryView } from "@/lib/analytics"
 
 /** Map `attr.*` URL params to backend `spec=key:value` (repeatable). */
 function appendSpecParamsFromUrl(target: URLSearchParams, searchParams: URLSearchParams) {
@@ -282,6 +283,7 @@ function FacetSection({
 // ─── Main page (inner — has access to search params) ─────────────────────────
 
 function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
+  const categoryViewTracked = React.useRef<string | null>(null)
   const router = useRouter()
   const sp = useSearchParams()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -299,6 +301,10 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
   const [catLoading, setCatLoading] = useState(true)
   const [facetsLoading, setFacetsLoading] = useState(true)
   const [prodLoading, setProdLoading] = useState(true)
+  const [categoryFetchError, setCategoryFetchError] = useState(false)
+  const [productsFetchError, setProductsFetchError] = useState(false)
+  const [categoryRetryKey, setCategoryRetryKey] = useState(0)
+  const [productsRetryKey, setProductsRetryKey] = useState(0)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const API = API_BASE_URL
@@ -329,29 +335,58 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
   useEffect(() => {
     setCatLoading(true)
     setFacetsLoading(true)
+    setCategoryFetchError(false)
     const abortController = new AbortController()
-    Promise.all([
-      apiFetch(`${API}/api/v1/categories/${slug}`, { signal: abortController.signal }).then((r) => r.json()),
-      apiFetch(`${API}/api/v1/categories/${slug}/facets`, { signal: abortController.signal }).then((r) => r.json()),
-    ])
-      .then(([catData, facetData]) => {
+    ;(async () => {
+      try {
+        const [catRes, facetRes] = await Promise.all([
+          apiFetch(`${API}/api/v1/categories/${slug}`, { signal: abortController.signal }),
+          apiFetch(`${API}/api/v1/categories/${slug}/facets`, { signal: abortController.signal }),
+        ])
+        if (!catRes.ok) {
+          setCategory(null)
+          setFacets([])
+          if (catRes.status !== 404) setCategoryFetchError(true)
+          return
+        }
+        const catData = (await catRes.json()) as CategoryData
         setCategory(catData)
-        setFacets(facetData?.attributes ?? [])
-      })
-      .catch((error) => {
+        if (facetRes.ok) {
+          const facetData = (await facetRes.json()) as { attributes?: FacetAttribute[] }
+          setFacets(facetData?.attributes ?? [])
+        } else {
+          setFacets([])
+        }
+      } catch (error) {
         if ((error as Error).name === "AbortError") return
-      })
-      .finally(() => {
+        setCategory(null)
+        setFacets([])
+        setCategoryFetchError(true)
+      } finally {
         setCatLoading(false)
         setFacetsLoading(false)
-      })
+      }
+    })()
     return () => abortController.abort()
-  }, [slug, API])
+  }, [slug, API, categoryRetryKey]) // eslint-disable-line react-hooks/exhaustive-deps -- retry nonce
+
+  React.useEffect(() => {
+    if (!category?.id) return
+    const mark = `${slugSegments.join("/")}:${category.id}`
+    if (categoryViewTracked.current === mark) return
+    categoryViewTracked.current = mark
+    trackCategoryView({
+      category_id: category.id,
+      category_slug: slugSegments.join("/"),
+      category_name: category.name,
+    })
+  }, [category, slugSegments])
 
   // ── Fetch products when any filter or page changes ────────────────────────
   useEffect(() => {
     if (!category) return
     setProdLoading(true)
+    setProductsFetchError(false)
     const abortController = new AbortController()
 
     const runCatalog = () => {
@@ -377,7 +412,7 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
     const requestUrl = hasFacetFilters ? runSearch() : runCatalog()
 
     apiFetch(requestUrl, { signal: abortController.signal })
-      .then((r) => {
+      .then(async (r) => {
         if (!r.ok) {
           console.warn(
             "[category browse] request failed",
@@ -385,15 +420,21 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
             requestUrl,
             hasFacetFilters ? "search" : "products"
           )
-          return r.json().catch(() => ({}))
+          setProductsFetchError(true)
+          setProducts([])
+          setTotalCount(0)
+          setTotalPages(1)
+          return null
         }
-        return r.json()
+        return r.json() as Promise<Record<string, unknown>>
       })
       .then((data) => {
+        if (!data) return
         const items = hasFacetFilters
-          ? data.hits ?? data.results ?? data.items ?? data.products ?? []
-          : data.items ?? data.products ?? []
-        const total = data.total ?? 0
+          ? (data.hits ?? data.results ?? data.items ?? data.products ?? []) as unknown[]
+          : (data.items ?? data.products ?? []) as unknown[]
+        const total = Number(data.total ?? 0)
+        setProductsFetchError(false)
         setProducts(items)
         setTotalCount(total)
         setTotalPages(Math.ceil(total / LIMIT) || 1)
@@ -409,12 +450,14 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
       .catch((error) => {
         if ((error as Error).name === "AbortError") return
         console.warn("[category browse] fetch error", error)
+        setProductsFetchError(true)
         setProducts([])
+        setTotalCount(0)
         setTotalPages(1)
       })
       .finally(() => setProdLoading(false))
     return () => abortController.abort()
-  }, [category, searchParams, pageParam, API, hasFacetFilters])
+  }, [category, searchParams, pageParam, API, hasFacetFilters, productsRetryKey]) // eslint-disable-line react-hooks/exhaustive-deps -- retry nonce
 
   // ── Active filter chips ────────────────────────────────────────────────────
   const activeFilters: { key: string; label: string; value: string; rawValue: string; isRange: boolean }[] = []
@@ -500,6 +543,37 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
     )
   }
 
+  if (categoryFetchError) {
+    return (
+      <div className="relative min-h-screen py-12">
+        <div className="page-container">
+          <EmptyState
+            title="Could not load this category"
+            description="The catalog may be temporarily unavailable. Check your connection and try again."
+            className="border-white/10 bg-white/5 backdrop-blur-xl [&_h2]:text-white [&_p]:text-white/60"
+            action={
+              <div className="flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCategoryRetryKey((k) => k + 1)}
+                  className="rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition-all hover:brightness-110"
+                >
+                  Try again
+                </button>
+                <Link
+                  href="/categories"
+                  className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:border-orange-400/35 hover:bg-orange-500/10"
+                >
+                  Browse all categories
+                </Link>
+              </div>
+            }
+          />
+        </div>
+      </div>
+    )
+  }
+
   if (!category) {
     return (
       <div className="relative min-h-screen py-12">
@@ -508,6 +582,14 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
             title="Category not found"
             description="This category does not exist or has been removed."
             className="border-white/10 bg-white/5 backdrop-blur-xl [&_h2]:text-white [&_p]:text-white/60"
+            action={
+              <Link
+                href="/categories"
+                className="inline-block rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:border-orange-400/35 hover:bg-orange-500/10"
+              >
+                View categories
+              </Link>
+            }
           />
         </div>
       </div>
@@ -642,15 +724,76 @@ function CategoryPageInner({ slugSegments }: { slugSegments: string[] }) {
             {/* Products */}
             {prodLoading ? (
               <ProductGridSkeleton />
+            ) : productsFetchError ? (
+              <div
+                className="rounded-2xl border border-red-400/30 bg-red-500/10 px-6 py-10 text-center backdrop-blur-xl"
+                role="alert"
+              >
+                <h2 className="text-lg font-semibold text-white">Could not load products</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-white/55">
+                  Something went wrong while loading the catalog for this category. Your filters are still here — try again,
+                  or use search.
+                </p>
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setProductsRetryKey((k) => k + 1)}
+                    className="rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition-all hover:brightness-110"
+                  >
+                    Retry
+                  </button>
+                  <Link
+                    href="/search"
+                    className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:border-orange-400/35 hover:bg-orange-500/10"
+                  >
+                    Smart search
+                  </Link>
+                </div>
+              </div>
             ) : products.length === 0 ? (
               <EmptyState
-                title="No products found"
+                title="No products in this category"
                 description={
                   hasActiveFilters
-                    ? "Try removing some filters."
-                    : `No products listed under ${category.name} yet.`
+                    ? "No parts match these filters. Try removing a filter or clearing all."
+                    : subcategories.length > 0
+                      ? `No parts are listed directly under ${category.name} — open a subcategory above, or browse the full catalog.`
+                      : `No products listed under ${category.name} yet. Try search or request a quote for a specific part number.`
                 }
                 className="border-white/10 bg-white/5 backdrop-blur-xl [&_h2]:text-white [&_p]:text-white/60"
+                action={
+                  <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+                    {hasActiveFilters ? (
+                      <button
+                        type="button"
+                        onClick={clearAll}
+                        className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:border-orange-400/35 hover:bg-orange-500/10"
+                      >
+                        Clear filters
+                      </button>
+                    ) : null}
+                    {slugSegments.length > 1 ? (
+                      <Link
+                        href={`/categories/${slugSegments.slice(0, -1).join("/")}`}
+                        className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:border-orange-400/35 hover:bg-orange-500/10"
+                      >
+                        Parent category
+                      </Link>
+                    ) : null}
+                    <Link
+                      href="/search"
+                      className="rounded-xl border border-orange-400/35 bg-orange-500/10 px-5 py-2.5 text-sm font-semibold text-orange-100 transition-all hover:bg-orange-500/20"
+                    >
+                      Search catalog
+                    </Link>
+                    <Link
+                      href="/products"
+                      className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:border-orange-400/35 hover:bg-orange-500/10"
+                    >
+                      Browse all products
+                    </Link>
+                  </div>
+                }
               />
             ) : (
               <>

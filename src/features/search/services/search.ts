@@ -12,6 +12,7 @@ interface RawSearchResponse {
   page?: number
   size?: number
   query?: string
+  did_you_mean?: string | null
   processingTimeMs?: number
   storefront?: {
     storefront_relaxed?: boolean
@@ -69,6 +70,7 @@ export async function searchBrowse(params: BrowseSearchParams): Promise<SearchRe
     page: d.page ?? (params.page ?? 1),
     size: d.size ?? (params.size ?? 30),
     query: d.query ?? q,
+    did_you_mean: d.did_you_mean ?? null,
     processingTimeMs: d.processingTimeMs,
   }
 }
@@ -109,6 +111,7 @@ export async function searchProducts(params: SearchParams): Promise<SearchRespon
     page: d.page ?? (params.page ?? 1),
     size: d.size ?? (params.size ?? 20),
     query: d.query ?? params.q,
+    did_you_mean: d.did_you_mean ?? null,
     processingTimeMs: d.processingTimeMs,
     storefront: d.storefront,
   }

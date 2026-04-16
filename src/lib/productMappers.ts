@@ -85,7 +85,6 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
     typeof p.brand === 'string' ? p.brand : (p.brand?.name ?? p.manufacturer)
   const category =
     typeof p.category === 'string' ? p.category : (p.category?.name ?? undefined)
-  const imageUrl = typeof p.image_url === 'string' ? p.image_url : ''
   const stock = p.stock_quantity ?? 0
   const isAvailable =
     p.availability === 'available' ||
@@ -115,7 +114,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
     manufacturer,
     category: categoryDisplay,
     description: p.short_description ?? p.description,
-    image_url: imageUrl,
+    image_url: getProductImage(p as unknown as Record<string, unknown>),
     stock_quantity: stock,
     availability: isAvailable ? 'in_stock' : 'on_request',
     price_usd: p.price_usd,

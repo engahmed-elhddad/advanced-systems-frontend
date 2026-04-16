@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Search, Package, Building2, FolderTree, Loader2, Clock, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { HighlightMatch } from '@/components/search/SearchHighlight'
 import { cn } from '@/lib/utils'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
@@ -59,10 +60,6 @@ export interface SearchBarProps {
   onValueChange?: (value: string) => void
 }
 
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
 function slugFromName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
 }
@@ -84,29 +81,6 @@ function pushRecent(term: string) {
   const prev = readRecent()
   const next = [t, ...prev.filter((x) => x.toLowerCase() !== t.toLowerCase())].slice(0, MAX_RECENT)
   localStorage.setItem(RECENT_KEY, JSON.stringify(next))
-}
-
-function HighlightMatch({ text, query }: { text: string; query: string }) {
-  const q = query.trim()
-  if (!q || !text) return <>{text}</>
-  try {
-    const parts = text.split(new RegExp(`(${escapeRegExp(q)})`, 'gi'))
-    return (
-      <>
-        {parts.map((part, i) =>
-          part.toLowerCase() === q.toLowerCase() ? (
-            <mark key={i} className="bg-transparent font-semibold text-orange-200/95">
-              {part}
-            </mark>
-          ) : (
-            <span key={i}>{part}</span>
-          ),
-        )}
-      </>
-    )
-  } catch {
-    return <>{text}</>
-  }
 }
 
 function normalizeBrandsV1(data: unknown): BrandItem[] {
@@ -337,7 +311,7 @@ export function SearchBar({
 
   const { productOptions, brandOptions, categoryOptions, recentOpts, popularOpts, idleOptions, searchOptions } =
     useMemo(() => {
-      const po = productSuggestions.slice(0, 6).map((s) => ({
+      const po = productSuggestions.slice(0, 10).map((s) => ({
         type: 'product' as const,
         part_number: s.part_number,
         name: s.name || s.part_number,
@@ -348,13 +322,13 @@ export function SearchBar({
         qLower.length >= minLength
           ? allBrands
               .filter((b) => b.name.toLowerCase().includes(qLower) || b.slug.toLowerCase().includes(qLower))
-              .slice(0, 4)
+              .slice(0, 8)
           : []
       const filteredCategories =
         qLower.length >= minLength
           ? allCategories
               .filter((c) => c.name.toLowerCase().includes(qLower) || c.slug.toLowerCase().includes(qLower))
-              .slice(0, 4)
+              .slice(0, 8)
           : []
       const bo = filteredBrands.map((b) => ({
         type: 'brand' as const,

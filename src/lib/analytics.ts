@@ -22,6 +22,9 @@ export const TRACKING_EVENT_NAMES = [
   'rfq_cta_click',
   'rfq_submit',
   'whatsapp_click',
+  'category_view',
+  'add_to_rfq',
+  'click_product',
 ] as const
 
 export type TrackingEventName = (typeof TRACKING_EVENT_NAMES)[number]
@@ -106,8 +109,20 @@ export function track(event: string, data?: Record<string, unknown>) {
 }
 
 export function trackSearch(data: { query?: string; total?: number; page?: number; has_filters?: boolean }) {
-  track('search', data as Record<string, unknown>)
-  trackEvent('search', data as Record<string, unknown>)
+  const payload = data as Record<string, unknown>
+  track('search', payload)
+  trackEvent('search', payload)
+  if (typeof window === 'undefined') return
+  const searchTerm = (data.query ?? '').trim()
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'search', {
+      search_term: searchTerm || undefined,
+      ...(data.total != null ? { results_count: data.total } : {}),
+      ...(data.page != null ? { page: data.page } : {}),
+      ...(data.has_filters != null ? { has_filters: data.has_filters } : {}),
+    })
+  }
 }
 
 /** SPA route changes — one `page_view` per distinct path. */
@@ -270,18 +285,41 @@ export function trackPricingView(data: { product_id?: number | null; part_number
   trackEvent('pricing_view', payload)
 }
 
-export function trackProductView(partNumber: string) {
+export type ProductViewPayload = {
+  part_number: string
+  product_id?: number | null
+  slug?: string | null
+}
+
+/** PDP view — first-party, GA4 `view_item`, PostHog/Meta. */
+export function trackProductView(partNumberOrPayload: string | ProductViewPayload) {
   if (typeof window === 'undefined') return
-  const normalized = (partNumber || '').trim()
+  const raw =
+    typeof partNumberOrPayload === 'string'
+      ? { part_number: partNumberOrPayload }
+      : { ...partNumberOrPayload }
+  const normalized = (raw.part_number || '').trim()
   if (!normalized) return
-  const payload = { ...getUtmContext(), part_number: normalized }
+  const firstParty: Record<string, unknown> = { part_number: normalized }
+  if (raw.product_id != null && Number.isFinite(Number(raw.product_id))) {
+    firstParty.product_id = Number(raw.product_id)
+  }
+  if (raw.slug != null && String(raw.slug).trim()) {
+    firstParty.slug = String(raw.slug).trim()
+  }
+  const payload = { ...getUtmContext(), ...firstParty }
   track('product_view', payload)
-  trackEvent('product_view', { part_number: normalized })
+  trackEvent('product_view', firstParty)
   const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
   if (typeof gtag === 'function') {
     gtag('event', 'view_item', {
       ...payload,
-      items: [{ item_id: normalized }],
+      items: [
+        {
+          item_id: normalized,
+          ...(firstParty.product_id != null ? { item_variant: String(firstParty.product_id) } : {}),
+        },
+      ],
     })
   }
   const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq
@@ -290,6 +328,109 @@ export function trackProductView(partNumber: string) {
       ...payload,
       content_ids: [normalized],
       content_type: 'product',
+    })
+  }
+}
+
+export type CategoryViewPayload = {
+  category_id: number
+  category_slug: string
+  category_name: string
+}
+
+export function trackCategoryView(data: CategoryViewPayload) {
+  if (typeof window === 'undefined') return
+  const slug = (data.category_slug || '').trim()
+  const name = (data.category_name || '').trim()
+  if (!Number.isFinite(data.category_id) || data.category_id <= 0) return
+  const firstParty: Record<string, unknown> = {
+    category_id: data.category_id,
+    category_slug: slug,
+    category_name: name,
+  }
+  track('category_view', { ...getUtmContext(), ...firstParty })
+  trackEvent('category_view', firstParty)
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'category_view', {
+      ...getUtmContext(),
+      category_id: String(data.category_id),
+      category_slug: slug,
+      category_name: name,
+    })
+  }
+}
+
+export type AddToRfqPayload = {
+  source: string
+  part_number: string
+  product_id?: number | null
+  quantity?: number
+}
+
+export function trackAddToRfq(data: AddToRfqPayload) {
+  if (typeof window === 'undefined') return
+  const pn = (data.part_number || '').trim()
+  if (!pn) return
+  const firstParty: Record<string, unknown> = {
+    source: data.source,
+    part_number: pn,
+    ...(data.quantity != null ? { quantity: data.quantity } : {}),
+    ...(data.product_id != null && Number.isFinite(Number(data.product_id))
+      ? { product_id: Number(data.product_id) }
+      : {}),
+  }
+  track('add_to_rfq', { ...getUtmContext(), ...firstParty })
+  trackEvent('add_to_rfq', firstParty)
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'add_to_rfq', firstParty)
+    gtag('event', 'add_to_cart', {
+      currency: 'USD',
+      value: 0,
+      items: [{ item_id: pn, quantity: data.quantity ?? 1 }],
+    })
+  }
+  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq
+  if (typeof fbq === 'function') {
+    fbq('trackCustom', 'add_to_rfq', firstParty)
+  }
+}
+
+export type ClickProductPayload = {
+  source: string
+  part_number: string
+  slug?: string | null
+  product_id?: number | null
+  /** e.g. product_card, recommendations, search_results */
+  list_context?: string
+  position?: number
+  href?: string
+}
+
+export function trackClickProduct(data: ClickProductPayload) {
+  if (typeof window === 'undefined') return
+  const pn = (data.part_number || '').trim()
+  if (!pn) return
+  const firstParty: Record<string, unknown> = {
+    source: data.source,
+    part_number: pn,
+    ...(data.slug ? { slug: String(data.slug).trim() } : {}),
+    ...(data.product_id != null && Number.isFinite(Number(data.product_id))
+      ? { product_id: Number(data.product_id) }
+      : {}),
+    ...(data.list_context ? { list_context: data.list_context } : {}),
+    ...(data.position != null ? { position: data.position } : {}),
+    ...(data.href ? { href: data.href.slice(0, 500) } : {}),
+  }
+  track('click_product', { ...getUtmContext(), ...firstParty })
+  trackEvent('click_product', firstParty)
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag
+  if (typeof gtag === 'function') {
+    gtag('event', 'click_product', firstParty)
+    gtag('event', 'select_item', {
+      item_list_id: data.list_context || data.source,
+      items: [{ item_id: pn, ...(data.position != null ? { index: data.position } : {}) }],
     })
   }
 }

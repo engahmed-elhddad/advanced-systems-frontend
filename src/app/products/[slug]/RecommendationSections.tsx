@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { Sparkles, PackageSearch, Zap } from 'lucide-react'
+import { PackageSearch, Sparkles } from 'lucide-react'
 import { getProducts } from '@/features/products/services'
 import { useUIStore } from '@/state/uiStore'
-import { trackRfqCtaClick } from '@/lib/analytics'
+import { trackClickProduct, trackRfqCtaClick } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 
 type ProductHit = {
@@ -41,13 +41,52 @@ function scoreProduct(item: ProductHit, keywordSeed: string, brandName: string, 
   return score
 }
 
+function toHit(p: Record<string, unknown>): ProductHit {
+  return {
+    part_number: String(p.part_number ?? ''),
+    slug: p.slug != null ? String(p.slug) : undefined,
+    name: p.name != null ? String(p.name) : undefined,
+    brand: String(p.brand ?? p.brand_name ?? ''),
+    category: String(p.category ?? p.category_name ?? ''),
+    description: p.description != null ? String(p.description) : undefined,
+    image_url: String(p.image_url ?? p.primary_image ?? ''),
+  }
+}
+
+function dedupHits(items: unknown[] | undefined, excludePn: string): ProductHit[] {
+  const dedup = new Map<string, ProductHit>()
+  const ex = excludePn.trim().toUpperCase()
+  for (const raw of items ?? []) {
+    if (!raw || typeof raw !== 'object') continue
+    const hit = toHit(raw as Record<string, unknown>)
+    const pn = (hit.part_number || '').trim()
+    if (!pn || pn.toUpperCase() === ex) continue
+    if (!dedup.has(pn)) dedup.set(pn, hit)
+  }
+  return Array.from(dedup.values())
+}
+
+function rankHits(
+  items: ProductHit[],
+  keywordSeed: string,
+  brandName: string,
+  categoryName: string,
+): ProductHit[] {
+  return [...items]
+    .map((p) => ({ item: p, score: scoreProduct(p, keywordSeed, brandName, categoryName) }))
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.item)
+}
+
 function HorizontalRow({
   title,
   icon,
+  listContext,
   products,
 }: {
   title: string
   icon: React.ReactNode
+  listContext: string
   products: ProductHit[]
 }) {
   const openRFQModal = useUIStore((s) => s.openRFQModal)
@@ -60,61 +99,74 @@ function HorizontalRow({
         {title}
       </h2>
       <div className="-mx-1 flex gap-4 overflow-x-auto pb-2 pt-1">
-        {products.map((item) => (
-          <div
-            key={item.part_number}
-            className={cn(
-              'flex w-[min(280px,85vw)] shrink-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-lg backdrop-blur-xl transition-all duration-300',
-              'hover:scale-[1.02] hover:border-white/[0.14] hover:shadow-xl hover:shadow-orange-500/15'
-            )}
-          >
-            <Link
-              href={`/products/${encodeURIComponent((item.slug || item.part_number).trim())}`}
-              className="group flex flex-1 flex-col"
+        {products.map((item, idx) => {
+          const href = `/products/${encodeURIComponent((item.slug || item.part_number).trim())}`
+          return (
+            <div
+              key={item.part_number}
+              className={cn(
+                'flex w-[min(280px,85vw)] shrink-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-lg backdrop-blur-xl transition-all duration-300',
+                'hover:scale-[1.02] hover:border-white/[0.14] hover:shadow-xl hover:shadow-orange-500/15',
+              )}
             >
-              <div className="relative flex aspect-[4/3] items-center justify-center border-b border-white/10 bg-black/20 p-4">
-                {item.image_url ? (
-                  <Image
-                    src={item.image_url}
-                    alt={item.part_number}
-                    width={200}
-                    height={160}
-                    unoptimized
-                    loading="lazy"
-                    sizes="(max-width: 768px) 85vw, 280px"
-                    className="max-h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <PackageSearch className="h-10 w-10 text-white/20" />
-                )}
-              </div>
-              <div className="flex flex-1 flex-col gap-1 p-4">
-                <p className="font-mono text-sm font-bold text-orange-300">{item.part_number}</p>
-                <p className="line-clamp-2 text-sm font-semibold text-white">{item.name || item.part_number}</p>
-                <p className="line-clamp-1 text-xs text-white/45">
-                  {item.brand || 'Industrial'}
-                  {item.category ? ` · ${item.category}` : ''}
-                </p>
-              </div>
-            </Link>
-            <div className="border-t border-white/10 p-3">
-              <button
-                type="button"
-                onClick={() => {
-                  trackRfqCtaClick({
-                    source: 'product_recommendations_rfq',
+              <Link
+                href={href}
+                onClick={() =>
+                  trackClickProduct({
+                    source: 'recommendations',
+                    list_context: listContext,
                     part_number: item.part_number,
+                    slug: item.slug,
+                    position: idx + 1,
+                    href,
                   })
-                  openRFQModal(item.part_number)
-                }}
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-orange-400/30 bg-orange-500/10 py-2.5 text-xs font-bold uppercase tracking-wider text-orange-200 transition-all duration-300 hover:bg-orange-500/20 hover:shadow-[0_0_20px_rgba(255,122,0,0.25)]"
+                }
+                className="group flex flex-1 flex-col"
               >
-                <Zap className="h-3.5 w-3.5" />
-                RFQ
-              </button>
+                <div className="relative flex aspect-[4/3] items-center justify-center border-b border-white/10 bg-black/20 p-4">
+                  {item.image_url ? (
+                    <Image
+                      src={item.image_url}
+                      alt={item.part_number}
+                      width={200}
+                      height={160}
+                      unoptimized
+                      loading="lazy"
+                      sizes="(max-width: 768px) 85vw, 280px"
+                      className="max-h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <PackageSearch className="h-10 w-10 text-white/20" />
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col gap-1 p-4">
+                  <p className="font-mono text-sm font-bold text-orange-300">{item.part_number}</p>
+                  <p className="line-clamp-2 text-sm font-semibold text-white">{item.name || item.part_number}</p>
+                  <p className="line-clamp-1 text-xs text-white/45">
+                    {item.brand || 'Industrial'}
+                    {item.category ? ` · ${item.category}` : ''}
+                  </p>
+                </div>
+              </Link>
+              <div className="border-t border-white/10 p-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackRfqCtaClick({
+                      source: 'product_recommendations_rfq',
+                      part_number: item.part_number,
+                    })
+                    openRFQModal(item.part_number)
+                  }}
+                  className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-orange-400/30 bg-orange-500/10 py-2.5 text-xs font-bold uppercase tracking-wider text-orange-200 transition-all duration-300 hover:bg-orange-500/20 hover:shadow-[0_0_20px_rgba(255,122,0,0.25)]"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  RFQ
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )
@@ -127,45 +179,36 @@ export function RecommendationSections({
   keywordSeed,
 }: RecommendationSectionsProps) {
   const [loading, setLoading] = useState(true)
-  const [related, setRelated] = useState<ProductHit[]>([])
-  const [youMayNeed, setYouMayNeed] = useState<ProductHit[]>([])
+  const [sameCategory, setSameCategory] = useState<ProductHit[]>([])
+  const [sameBrand, setSameBrand] = useState<ProductHit[]>([])
 
   useEffect(() => {
     let active = true
     setLoading(true)
 
+    const cat = categoryName?.trim()
+    const br = brandName?.trim()
+
     Promise.all([
-      getProducts({ page: 1, size: 24, category: categoryName || undefined }),
-      getProducts({ page: 1, size: 24, brand: brandName || undefined }),
+      cat ? getProducts({ page: 1, size: 24, category: cat }) : Promise.resolve({ items: [] }),
+      br ? getProducts({ page: 1, size: 24, brand: br }) : Promise.resolve({ items: [] }),
     ])
-      .then(([categoryRes, brandRes]) => {
+      .then(([catRes, brandRes]) => {
         if (!active) return
-        const raw = [...(categoryRes.items || []), ...(brandRes.items || [])] as unknown as Record<
-          string,
-          unknown
-        >[]
-        const merged: ProductHit[] = raw.map((p) => ({
-          part_number: String(p.part_number ?? ''),
-          slug: p.slug != null ? String(p.slug) : undefined,
-          name: p.name != null ? String(p.name) : undefined,
-          brand: String(p.brand ?? p.brand_name ?? ''),
-          category: String(p.category ?? p.category_name ?? ''),
-          description: p.description != null ? String(p.description) : undefined,
-          image_url: String(p.image_url ?? p.primary_image ?? ''),
-        }))
-        const dedup = new Map<string, ProductHit>()
-        for (const p of merged) {
-          const pn = (p.part_number || '').trim()
-          if (!pn || pn.toUpperCase() === currentPartNumber.toUpperCase()) continue
-          if (!dedup.has(pn)) dedup.set(pn, p)
-        }
-        const all = Array.from(dedup.values())
-        const ranked = all
-          .map((p) => ({ item: p, score: scoreProduct(p, keywordSeed, brandName, categoryName) }))
-          .sort((a, b) => b.score - a.score)
-          .map((x) => x.item)
-        setRelated(ranked.slice(0, 12))
-        setYouMayNeed(ranked.slice(12, 24))
+        const catHits = rankHits(
+          dedupHits(catRes.items as unknown[] | undefined, currentPartNumber),
+          keywordSeed,
+          brandName,
+          categoryName,
+        ).slice(0, 10)
+        const brandHits = rankHits(
+          dedupHits(brandRes.items as unknown[] | undefined, currentPartNumber),
+          keywordSeed,
+          brandName,
+          categoryName,
+        ).slice(0, 10)
+        setSameCategory(catHits)
+        setSameBrand(brandHits)
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -201,19 +244,46 @@ export function RecommendationSections({
     )
   }
 
-  if (!related.length && !youMayNeed.length) return null
+  if (!sameCategory.length && !sameBrand.length) {
+    return (
+      <section className="mt-14 rounded-2xl border border-dashed border-white/15 bg-white/[0.03] p-8 text-center backdrop-blur-sm">
+        <PackageSearch className="mx-auto h-10 w-10 text-orange-300/80" aria-hidden />
+        <h2 className="mt-4 text-lg font-bold text-white">More parts like this</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-white/50">
+          We could not load same-category or same-brand matches in preview. Search the catalog or request a quote — we
+          will match alternates.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/search"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition-all hover:brightness-110"
+          >
+            Search catalog
+          </Link>
+          <Link
+            href={`/rfq?part_number=${encodeURIComponent(currentPartNumber)}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-orange-400/40 bg-orange-500/10 px-5 py-2.5 text-sm font-semibold text-orange-100 transition-colors hover:bg-orange-500/20"
+          >
+            RFQ this part
+          </Link>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <div>
       <HorizontalRow
-        title="Related products"
+        title={categoryName ? `More in ${categoryName}` : 'More in this category'}
         icon={<PackageSearch className="h-5 w-5 text-orange-300" />}
-        products={related}
+        listContext="same_category"
+        products={sameCategory}
       />
       <HorizontalRow
-        title="You may also need"
+        title={brandName ? `More from ${brandName}` : 'More from this brand'}
         icon={<Sparkles className="h-5 w-5 text-violet-300" />}
-        products={youMayNeed}
+        listContext="same_brand"
+        products={sameBrand}
       />
     </div>
   )

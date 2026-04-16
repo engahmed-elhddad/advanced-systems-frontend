@@ -233,6 +233,58 @@ export async function fetchAnalyticsSummary(days = 14) {
   return request<AnalyticsSummary>(`/api/v1/analytics/summary?days=${days}`);
 }
 
+export type AnalyticsFunnelStep = {
+  step_key: string;
+  label: string;
+  distinct_sessions: number;
+  retention_vs_prior_pct: number;
+  drop_off_vs_prior_pct: number;
+};
+
+export type AnalyticsRfqConversion = {
+  distinct_sessions_product_view: number;
+  distinct_sessions_pricing_among_pdp: number;
+  distinct_sessions_rfq_intent_among_pdp: number;
+  distinct_sessions_rfq_submit_event_among_pdp: number;
+  rfq_rows_persisted_in_period: number;
+  rate_rfq_submit_sessions_per_pdp_session: number;
+  rate_rfq_intent_sessions_per_pdp_session: number;
+  rate_persisted_rfqs_per_pdp_session: number;
+};
+
+export type AnalyticsAlert = {
+  severity: "warning" | "opportunity";
+  code: string;
+  title: string;
+  detail: string;
+  meta?: Record<string, unknown>;
+};
+
+export type AnalyticsRecommendation = {
+  priority: "high" | "medium" | "low";
+  code: string;
+  title: string;
+  detail: string;
+  meta?: Record<string, unknown>;
+};
+
+export type AnalyticsInsights = {
+  period_days: number;
+  period_start: string;
+  top_n: number;
+  top_search_queries: { query: string; count: number }[];
+  top_viewed_products: { part_number: string; views: number }[];
+  top_clicked_products_from_search: { part_number: string; clicks: number }[];
+  funnel_conditional_on_pdp: AnalyticsFunnelStep[];
+  rfq_conversion: AnalyticsRfqConversion;
+  alerts: AnalyticsAlert[];
+  recommendations: AnalyticsRecommendation[];
+};
+
+export async function fetchAnalyticsInsights(days = 14, top_n = 25) {
+  return request<AnalyticsInsights>(`/api/v1/analytics/insights?days=${days}&top_n=${top_n}`);
+}
+
 // —— Brands & categories (admin catalog) ——————————————————————————
 
 export type AdminBrandRow = {

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
 import { cache } from 'react'
 import type { Metadata } from 'next'
@@ -8,11 +9,12 @@ import { getProductByPartNumber, getProductBySlug, getProducts, apiFetch } from 
 import { COMPANY_NAME_EN } from '@/lib/company'
 import { API_BASE_URL, normalizeCategoryQueryForApi, SITE_URL } from '@/lib/constants'
 import { primaryProductImageUrl } from '@/lib/productImageUrl'
-import { canonicalPath } from '@/lib/seo'
+import { absoluteUrl, canonicalPath, truncateMetaDescription } from '@/lib/seo'
 import { normalizeProductVariants } from '@/lib/productVariants'
 import { ProductDetail } from './ProductDetail'
 import { ProductPageSearchStrip } from './ProductPageSearchStrip'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { ViewProductTracker } from '@/components/analytics/ViewProductTracker'
 
 const RecommendationSections = dynamic(
   () => import('./RecommendationSections').then((m) => m.RecommendationSections),
@@ -76,10 +78,14 @@ export async function generateStaticParams() {
   }
 }
 
-function toSchemaAvailability(availability?: string): string {
+function toSchemaAvailability(availability?: string, stockQty?: number): string {
   const v = (availability || '').toLowerCase()
-  if (v.includes('stock') || v.includes('available')) return 'https://schema.org/InStock'
+  if (v === 'in_stock' || v.includes('stock') || v.includes('available')) {
+    return 'https://schema.org/InStock'
+  }
+  if (typeof stockQty === 'number' && stockQty > 0) return 'https://schema.org/InStock'
   if (v.includes('preorder')) return 'https://schema.org/PreOrder'
+  if (v.includes('request') || v.includes('order')) return 'https://schema.org/PreOrder'
   return 'https://schema.org/OutOfStock'
 }
 
@@ -123,6 +129,19 @@ function brandDisplayName(product: Record<string, unknown>): string {
     return String((b as { name?: unknown }).name ?? '').trim()
   }
   return String(product.manufacturer ?? '').trim()
+}
+
+/** Prefer canonical `/brands/[slug]` when API exposes a slug; else deep-link search. */
+function brandBrowseHref(product: Record<string, unknown>, brandName: string): string {
+  if (!brandName.trim()) return '/brands'
+  const b = product.brand
+  if (b && typeof b === 'object' && b !== null && 'slug' in b) {
+    const s = String((b as { slug?: unknown }).slug ?? '').trim()
+    if (s) return `/brands/${encodeURIComponent(s)}`
+  }
+  const slug = typeof product.brand_slug === 'string' ? product.brand_slug.trim() : ''
+  if (slug) return `/brands/${encodeURIComponent(slug)}`
+  return `/search?q=${encodeURIComponent(brandName)}`
 }
 
 function collectGalleryImages(product: Record<string, unknown>): string[] {
@@ -220,36 +239,43 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           product?.category &&
           'name' in (product.category as Record<string, unknown>)
         ? String((product.category as { name?: unknown }).name ?? '')
-        : 'Industrial Parts'
+        : ''
 
   const metaTitleRaw = String(product.meta_title ?? '').trim()
   const metaDescRaw = String(product.meta_description ?? '').trim()
-  const rawDesc = String(product?.description || `${productName} (${partNum}) — ${brandName}.`).trim()
-  const trimmed = rawDesc.length > 110 ? `${rawDesc.slice(0, 110).trim()}…` : rawDesc
-  const fallbackDescription = `${trimmed} Request a quote — typical reply 2–6 hours.`.slice(0, 160)
+  const rawDesc = String(product?.description || '').trim()
+  const fallbackDescSource =
+    rawDesc ||
+    `${productName} — ${brandName}${categoryName ? ` — ${categoryName}` : ''}. Industrial automation part ${partNum}. Request a quote.`
+  const fallbackDescription = truncateMetaDescription(fallbackDescSource, 155)
   const title =
     metaTitleRaw ||
-    `${productName} | ${brandName} | ${categoryName}`
+    [productName, brandName || '', categoryName || '']
+      .filter((s) => String(s).trim().length > 0)
+      .join(' · ')
   const description = metaDescRaw || fallbackDescription
   const canonicalUrl = canonicalPath(`/products/${encodeSlugForUrl(canonicalSlug)}`)
 
-  const ogImage = String(product?.image_url || collectGalleryImages(product)[0] || '/placeholder.png')
+  const ogImageRel = String(product?.image_url || collectGalleryImages(product)[0] || '/placeholder.png')
+  const ogImage = absoluteUrl(ogImageRel)
+
+  const displayTitle = title
 
   return {
-    title,
+    title: displayTitle,
     description,
     keywords: [productName, partNum, brandName, categoryName, 'industrial automation'],
     alternates: { canonical: canonicalUrl },
     openGraph: {
-      title: metaTitleRaw || `${productName} | ${brandName}`,
+      title: displayTitle,
       description,
       url: canonicalUrl,
-      images: [ogImage],
+      images: [{ url: ogImage }],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: metaTitleRaw || `${productName} | ${brandName}`,
+      title: displayTitle,
       description,
       images: [ogImage],
     },
@@ -291,12 +317,25 @@ export default async function ProductSlugPage({ params }: Props) {
         ? String((product.category as { name?: unknown }).name || '')
         : ''
   const categorySlugForQuery = categoryName ? normalizeCategoryQueryForApi(categoryName) : ''
+  const categoryObj =
+    product.category && typeof product.category === 'object'
+      ? (product.category as { name?: string; slug?: string })
+      : null
+  const categorySlugFromApi = String(categoryObj?.slug ?? '').trim()
+  const categoryBrowsePathSeg = categorySlugFromApi || categorySlugForQuery
   const description = String(product.description || '')
   const series = String(product.series || '')
   const specs = parseSpecs(product)
   const galleryImages = collectGalleryImages(product)
   const datasheetUrl = String(product.datasheet_url ?? product.datasheet ?? '')
   const availability = String(product.availability ?? 'on_request')
+  const rawStock = product.stock_quantity
+  const stockQty =
+    typeof rawStock === 'number' && Number.isFinite(rawStock)
+      ? rawStock
+      : typeof rawStock === 'string' && /^\d+$/.test(rawStock)
+        ? Number(rawStock)
+        : 0
   const variants = normalizeProductVariants(product)
   const productUrl = canonicalPath(`/products/${encodeSlugForUrl(canonicalSlug || decoded)}`)
   const keywordSeed = `${productName} ${brandName} ${categoryName} ${series}`.trim()
@@ -308,12 +347,23 @@ export default async function ProductSlugPage({ params }: Props) {
         ? Number(rawPid)
         : undefined
 
+  const schemaImages = (galleryImages.length ? galleryImages : ['/placeholder.png']).map((u) => absoluteUrl(u))
+  const schemaDescription =
+    (description || `Industrial part ${partNum}${brandName ? ` — ${brandName}` : ''}.`).replace(/\s+/g, ' ').trim()
+  const offerPrice =
+    typeof product.price_usd === 'number' && Number.isFinite(product.price_usd)
+      ? product.price_usd
+      : typeof product.list_price === 'number' && Number.isFinite(product.list_price)
+        ? product.list_price
+        : undefined
+  const schemaAvailability = toSchemaAvailability(availability, stockQty)
+
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: productName,
-    image: galleryImages.length ? galleryImages : [`${SITE_URL}/placeholder.png`],
-    description: description || `Buy ${productName} with fast delivery.`,
+    image: schemaImages,
+    description: schemaDescription.slice(0, 5000),
     sku: partNum,
     mpn: partNum,
     category: categoryName || 'Industrial Parts',
@@ -325,30 +375,38 @@ export default async function ProductSlugPage({ params }: Props) {
     offers: {
       '@type': 'Offer',
       url: productUrl,
-      availability: toSchemaAvailability(availability),
+      availability: schemaAvailability,
       seller: { '@type': 'Organization', name: COMPANY_NAME_EN },
-      ...(typeof product.price_usd === 'number' ? { price: product.price_usd, priceCurrency: 'USD' } : {}),
+      ...(offerPrice != null ? { price: offerPrice, priceCurrency: 'USD' } : {}),
     },
   }
+
+  const categoryBrowseUrl =
+    categoryName && categoryBrowsePathSeg
+      ? canonicalPath(`/categories/${encodeURIComponent(categoryBrowsePathSeg)}`)
+      : ''
+
+  const brandPathVisual = brandName ? brandBrowseHref(product as Record<string, unknown>, brandName) : ''
 
   const breadcrumbItems = [
     { '@type': 'ListItem', position: 1, name: 'Home', item: canonicalPath('/') },
     { '@type': 'ListItem', position: 2, name: 'Products', item: canonicalPath('/products') },
   ]
-  if (categoryName && categorySlugForQuery) {
+  if (categoryName && categoryBrowseUrl) {
     breadcrumbItems.push({
       '@type': 'ListItem',
       position: breadcrumbItems.length + 1,
       name: categoryName,
-      item: `${canonicalPath('/products')}?category=${encodeURIComponent(categorySlugForQuery)}`,
+      item: categoryBrowseUrl,
     })
   }
   if (brandName) {
+    const brandPath = brandBrowseHref(product as Record<string, unknown>, brandName)
     breadcrumbItems.push({
       '@type': 'ListItem',
       position: breadcrumbItems.length + 1,
       name: brandName,
-      item: `${canonicalPath('/products')}?brand=${encodeURIComponent(brandName)}`,
+      item: canonicalPath(brandPath),
     })
   }
   breadcrumbItems.push({
@@ -388,52 +446,71 @@ export default async function ProductSlugPage({ params }: Props) {
         aria-hidden
       />
 
-      <div className="page-container pb-20 pt-6 sm:pb-24 lg:px-8">
-        <nav className="mb-6 text-xs text-white/50" aria-label="Breadcrumb">
-          <ol className="flex flex-wrap items-center gap-1.5">
+      <div className="page-container pb-28 pt-6 sm:pb-28 lg:pb-24 lg:px-8">
+        <nav className="mb-6" aria-label="Breadcrumb">
+          <p className="sr-only">You are here</p>
+          <ol className="flex flex-wrap items-center gap-1 text-xs text-white/50">
             <li>
               <Link href="/" className="transition-colors hover:text-orange-300">
                 Home
               </Link>
             </li>
-            <li className="text-white/25">/</li>
+            <li className="flex items-center text-white/30" aria-hidden>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </li>
             <li>
               <Link href="/products" className="transition-colors hover:text-orange-300">
                 Products
               </Link>
             </li>
-            {categoryName && categorySlugForQuery ? (
+            {categoryName && categoryBrowsePathSeg ? (
               <>
-                <li className="text-white/25">/</li>
+                <li className="flex items-center text-white/30" aria-hidden>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </li>
                 <li>
                   <Link
-                    href={`/products?category=${encodeURIComponent(categorySlugForQuery)}`}
-                    className="transition-colors hover:text-orange-300"
+                    href={`/categories/${encodeURIComponent(categoryBrowsePathSeg)}`}
+                    className="max-w-[200px] truncate transition-colors hover:text-orange-300 sm:max-w-xs"
+                    title={categoryName}
                   >
                     {categoryName}
                   </Link>
                 </li>
               </>
             ) : null}
-            {brandName ? (
+            {brandName && brandPathVisual ? (
               <>
-                <li className="text-white/25">/</li>
+                <li className="flex items-center text-white/30" aria-hidden>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </li>
                 <li>
                   <Link
-                    href={`/products?brand=${encodeURIComponent(brandName)}`}
-                    className="transition-colors hover:text-orange-300"
+                    href={brandPathVisual}
+                    className="max-w-[180px] truncate transition-colors hover:text-orange-300 sm:max-w-xs"
+                    title={brandName}
                   >
                     {brandName}
                   </Link>
                 </li>
               </>
             ) : null}
-            <li className="text-white/25">/</li>
-            <li className="font-mono font-medium text-white/90">{partNum}</li>
+            <li className="flex items-center text-white/30" aria-hidden>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </li>
+            <li className="font-mono font-medium text-white/90" aria-current="page">
+              {partNum}
+            </li>
           </ol>
         </nav>
 
         <ProductPageSearchStrip className="mb-10" />
+
+        <ViewProductTracker
+          partNumber={partNum}
+          productId={productId}
+          slug={(canonicalSlug || decoded).trim() || null}
+        />
 
         <ProductDetail
           productName={productName}
@@ -447,6 +524,7 @@ export default async function ProductSlugPage({ params }: Props) {
           galleryImages={galleryImages}
           datasheetUrl={datasheetUrl}
           availability={availability}
+          stockQuantity={stockQty}
           variants={variants}
         />
 

@@ -1,20 +1,32 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
 interface ProductImageWithFallbackProps {
   src: string
   alt: string
   className?: string
   fallbackSrc?: string
+  sizes?: string
+  priority?: boolean
 }
 
-/** img with automatic fallback — works on glass product tiles. */
+function shouldUnoptimize(src: string): boolean {
+  if (src.startsWith('/uploads/')) return true
+  if (src.startsWith('blob:') || src.startsWith('data:')) return true
+  return false
+}
+
+/** next/image with automatic fallback — use inside a sized or aspect-ratio parent for stable layout. */
 export function ProductImageWithFallback({
   src,
   alt,
   className,
-  fallbackSrc = '/products/no-product-image.jpg',
+  fallbackSrc = '/placeholder.png',
+  sizes,
+  priority = false,
 }: ProductImageWithFallbackProps) {
   const [imgSrc, setImgSrc] = useState(src)
 
@@ -23,8 +35,19 @@ export function ProductImageWithFallback({
   }, [src])
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={imgSrc} alt={alt} loading="lazy" className={className} onError={() => setImgSrc(fallbackSrc)} />
+    <div className="relative h-full w-full min-h-[1px] min-w-0">
+      <Image
+        src={imgSrc}
+        alt={alt}
+        fill
+        sizes={sizes ?? '(max-width: 768px) 50vw, 25vw'}
+        className={cn(className)}
+        priority={priority}
+        loading={priority ? 'eager' : 'lazy'}
+        unoptimized={shouldUnoptimize(imgSrc)}
+        onError={() => setImgSrc((cur) => (cur === fallbackSrc ? cur : fallbackSrc))}
+      />
+    </div>
   )
 }
 

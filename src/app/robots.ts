@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next"
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://advancedsystems-int.com"
+  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://advancedsystems-int.com").replace(/\/$/, "")
+  const host = base.replace(/^https?:\/\//, "")
   return {
     rules: {
       userAgent: "*",
@@ -9,5 +10,6 @@ export default function robots(): MetadataRoute.Robots {
       disallow: ["/admin/", "/api/"],
     },
     sitemap: [`${base}/sitemap.xml`, `${base}/sitemap-products.xml`],
+    host,
   }
 }

@@ -23,12 +23,15 @@ export interface ProductGridProps {
   products: Array<Record<string, unknown>>
   productBasePath?: string
   columns?: 'default' | 'compact'
+  /** Current search string — highlights matches in cards when set. */
+  highlightQuery?: string
 }
 
 function ProductGridInner({
   products,
   productBasePath = '/products',
   columns = 'default',
+  highlightQuery,
 }: ProductGridProps) {
   return (
     <div
@@ -40,9 +43,10 @@ function ProductGridInner({
     >
       {products.map((p, idx) => {
         const props = recordToCardProps(p as Record<string, unknown>)
+        const stableKey = props.slug ? String(props.slug) : String(props.part_number)
         return (
           <div
-            key={props.part_number + String(idx)}
+            key={`${stableKey}-${idx}`}
             className="animate-fadeIn"
             style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
           >
@@ -50,6 +54,7 @@ function ProductGridInner({
               {...props}
               productBasePath={productBasePath}
               variant="compact"
+              highlightQuery={highlightQuery}
             />
           </div>
         )

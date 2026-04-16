@@ -1,13 +1,14 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ImagePlus, Plus, Trash2, FileText, Upload } from 'lucide-react'
+import { AlertTriangle, ImagePlus, LayoutList, Plus, Trash2, FileText, Upload } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Button, Card, Input, Modal, Select } from '@/components/ui'
 import { api, getApiErrorMessage } from '@/lib/api'
+import { useAdminCategorySchema } from '@/features/products/hooks/useCategories'
 import type {
   AdminProductFormInput,
   AdminProductSpec,
@@ -50,7 +51,72 @@ export function ProductForm({
   const [creatingBrand, setCreatingBrand] = useState(false)
   const [creatingCategory, setCreatingCategory] = useState(false)
 
+  const categoryIdNum = Number(form.categoryId)
+  const categorySchemaQuery = useAdminCategorySchema(form.categoryId)
+  const schemaSpecKeys = useMemo(() => {
+    const rows = categorySchemaQuery.data ?? []
+    return rows
+      .slice()
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((r) => (r.attribute?.label || r.attribute?.key || '').trim())
+      .filter(Boolean)
+  }, [categorySchemaQuery.data])
+
+  const lastAutoCategoryRef = useRef<string>('')
+
   const previewImage = useMemo(() => form.imageUrl || FALLBACK_IMAGE, [form.imageUrl])
+
+  const entryWarnings = useMemo(() => {
+    const items: string[] = []
+    if (!form.imageUrl?.trim()) items.push('Main image is missing (upload or paste an image URL).')
+    if (!form.description?.trim()) items.push('Description is empty.')
+    const brandOk = form.brandId?.trim() && brandOptions.some((o) => o.value === form.brandId)
+    if (!brandOk) items.push('Brand is not selected (pick one from the list or create a new brand).')
+    const catOk = form.categoryId?.trim() && categoryOptions.some((o) => o.value === form.categoryId)
+    if (!catOk) items.push('Category is not selected (pick one from the list or create a new category).')
+    return items
+  }, [form.brandId, form.categoryId, form.description, form.imageUrl, brandOptions, categoryOptions])
+
+  /** When category changes and the spec list is still empty, seed rows from category schema (per category id). */
+  useEffect(() => {
+    const cid = form.categoryId?.trim() ?? ''
+    if (!cid || schemaSpecKeys.length === 0) return
+    if (form.specs.length > 0) {
+      lastAutoCategoryRef.current = cid
+      return
+    }
+    if (lastAutoCategoryRef.current === cid) return
+    lastAutoCategoryRef.current = cid
+    setForm((f) => ({
+      ...f,
+      specs: schemaSpecKeys.map((key) => ({ key, value: '' })),
+    }))
+  }, [form.categoryId, form.specs.length, schemaSpecKeys])
+
+  const applyCategorySpecTemplate = useCallback(() => {
+    const cid = form.categoryId?.trim()
+    if (!cid || !Number.isFinite(categoryIdNum) || categoryIdNum <= 0) {
+      toast.error('Select a category first')
+      return
+    }
+    if (schemaSpecKeys.length === 0) {
+      toast.error('This category has no attribute schema yet. Define it under Admin → Categories → Schema.')
+      return
+    }
+    const existingLower = new Set(
+      form.specs.map((s) => s.key.trim().toLowerCase()).filter(Boolean),
+    )
+    const toAdd = schemaSpecKeys.filter((k) => !existingLower.has(k.trim().toLowerCase()))
+    if (toAdd.length === 0) {
+      toast.success('All schema fields are already in your specs list')
+      return
+    }
+    setForm((f) => ({
+      ...f,
+      specs: [...f.specs, ...toAdd.map((key) => ({ key, value: '' }))],
+    }))
+    toast.success(`Added ${toAdd.length} spec row(s) from category schema`)
+  }, [categoryIdNum, form.categoryId, form.specs, schemaSpecKeys])
 
   function patch(partial: Partial<ProductFormValues>) {
     setForm((f) => ({ ...f, ...partial }))
@@ -74,6 +140,13 @@ export function ProductForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (entryWarnings.length > 0) {
+      const lines = entryWarnings.join('\n')
+      const ok = window.confirm(
+        `This product is missing recommended fields:\n\n${lines}\n\nSave anyway?`,
+      )
+      if (!ok) return
+    }
     setSubmitting(true)
     try {
       await onSubmit({
@@ -185,13 +258,35 @@ export function ProductForm({
       </Card>
 
       <Card className="border border-white/10 bg-white/5 p-6 backdrop-blur-xl lg:p-8">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-300">Specs</h2>
-          <Button type="button" size="sm" variant="secondary" onClick={addSpec}>
-            <Plus className="h-4 w-4" />
-            Add Spec
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              surface="dark"
+              onClick={() => void applyCategorySpecTemplate()}
+              disabled={categorySchemaQuery.isFetching}
+            >
+              <LayoutList className="h-4 w-4" />
+              Add rows from category schema
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onClick={addSpec}>
+              <Plus className="h-4 w-4" />
+              Add Spec
+            </Button>
+          </div>
         </div>
+        {form.categoryId?.trim() && categorySchemaQuery.isSuccess && schemaSpecKeys.length === 0 ? (
+          <p className="mb-3 text-xs text-gray-400">
+            No schema attributes for this category yet. Add them under{' '}
+            <Link href={`/admin/categories/${form.categoryId}/schema`} className="text-orange-300 underline hover:text-orange-200">
+              Category schema
+            </Link>{' '}
+            to enable one-click spec rows.
+          </p>
+        ) : null}
 
         <div className="space-y-3">
           {form.specs.length === 0 ? (

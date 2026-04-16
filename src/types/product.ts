@@ -90,6 +90,8 @@ export interface SearchResponse {
   page: number
   size: number
   query: string
+  /** Server spell / casing hint when the query returned no hits. */
+  did_you_mean?: string | null
   processingTimeMs?: number
   storefront?: {
     storefront_relaxed?: boolean

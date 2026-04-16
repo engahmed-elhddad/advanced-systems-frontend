@@ -56,8 +56,13 @@ function ProductCard({ p }: { p: ProductRow }) {
   return (
     <div className="min-w-[220px] flex-shrink-0 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl transition-all duration-300 hover:scale-[1.03] hover:border-orange-400/25 hover:shadow-[0_0_28px_rgba(139,92,246,0.1)]">
       <Link href={`/products/${partSlug}`} className="block">
-        <div className="flex h-28 items-center justify-center rounded-lg border border-white/5 bg-white/[0.04]">
-          <SafeImage src={p.image_url} alt={p.part_number} className="h-28 w-full object-contain" />
+        <div className="relative flex h-28 w-full items-center justify-center rounded-lg border border-white/5 bg-white/[0.04]">
+          <SafeImage
+            src={p.image_url}
+            alt={p.part_number}
+            sizes="220px"
+            className="object-contain"
+          />
         </div>
         <p className="mt-3 line-clamp-2 text-sm font-semibold text-white">{p.part_number}</p>
         <p className="text-xs text-white/50">{(p.brand ?? p.manufacturer) || '—'}</p>

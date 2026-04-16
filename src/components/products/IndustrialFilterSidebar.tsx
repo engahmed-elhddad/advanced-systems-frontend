@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CDN_BASE_URL } from '@/lib/constants'
@@ -118,8 +119,14 @@ export function IndustrialFilterSidebar({
                   onChange={() => onToggleBrand(b.id)}
                 />
                 {logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logo} alt="" className="h-7 w-7 shrink-0 rounded bg-white/90 object-contain p-0.5" />
+                  <Image
+                    src={logo}
+                    alt=""
+                    width={28}
+                    height={28}
+                    loading="lazy"
+                    className="h-7 w-7 shrink-0 rounded bg-white/90 object-contain p-0.5"
+                  />
                 ) : (
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-white/10 text-[10px] font-bold text-slate-400">
                     {(b.name || '?').slice(0, 2).toUpperCase()}

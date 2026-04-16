@@ -4,8 +4,10 @@ import { memo, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { useRFQListStore } from '@/state/rfqListStore'
+import { trackAddToRfq, trackClickProduct } from '@/lib/analytics'
 import { useCurrency } from '@/lib/hooks/useCurrency'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { HighlightMatch } from '@/components/search/SearchHighlight'
 import { cn } from '@/lib/utils'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
 
@@ -71,12 +73,15 @@ export interface ProductCardProps {
   }
   variant?: 'default' | 'compact'
   productBasePath?: string
+  /** When set (e.g. catalog search), matching tokens are emphasized in title lines. */
+  highlightQuery?: string
 }
 
 const shellClass =
   'group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:border-orange-400/25 hover:shadow-[0_0_32px_rgba(255,122,0,0.1)] focus-within:border-orange-400/35 focus-within:shadow-[0_0_28px_rgba(255,122,0,0.12)]'
 
 function ProductCardInner({
+  id,
   slug,
   part_number,
   brand,
@@ -90,19 +95,30 @@ function ProductCardInner({
   quickSpecs,
   variant = 'default',
   productBasePath = '/products',
+  highlightQuery,
 }: ProductCardProps) {
   const { format } = useCurrency()
   const { showExactPricing, openLoginModal } = usePricingGate()
   const addItem = useRFQListStore((s) => s.addItem)
-  const listItems = useRFQListStore((s) => s.items)
-  const [mounted, setMounted] = useState(false)
+  const isInListFromStore = useRFQListStore((s) => s.items.some((i) => i.part_number === part_number))
+  const [hydrated, setHydrated] = useState(false)
   useEffect(() => {
-    setMounted(true)
+    setHydrated(true)
   }, [])
-  const isInList = mounted && listItems.some((i) => i.part_number === part_number)
+  const isInList = hydrated && isInListFromStore
   const inStock = availability === 'in_stock' || stock_quantity > 0
   const compact = variant === 'compact'
   const pathSegment = encodeURIComponent((slug || part_number).trim())
+  const productHref = `${productBasePath}/${pathSegment}`
+  const logProductClick = (surface: string) =>
+    trackClickProduct({
+      source: 'product_card',
+      list_context: surface,
+      part_number,
+      slug: slug || undefined,
+      product_id: id,
+      href: productHref,
+    })
   const maker = brand ?? manufacturer ?? 'Brand on request'
   const hasSpecs = Boolean(
     quickSpecs?.coil_voltage?.trim() ||
@@ -115,14 +131,20 @@ function ProductCardInner({
   return (
     <div className={cn(shellClass, !compact && 'shadow-lg shadow-black/20')}>
       <Link
-        href={`${productBasePath}/${pathSegment}`}
+        href={productHref}
+        onClick={() => logProductClick('card_image')}
         className={`relative block overflow-hidden border-b border-white/[0.06] bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-inset ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
       >
         <div className="absolute inset-0">
           <SafeImage
             src={image_url}
             alt={`${maker} ${part_number}`}
-            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+            sizes={
+              compact
+                ? '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw'
+                : '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw'
+            }
+            className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </div>
         <div className="absolute right-2 top-2">
@@ -139,20 +161,35 @@ function ProductCardInner({
       </Link>
 
       <div className={compact ? 'flex flex-1 flex-col p-3' : 'flex flex-1 flex-col p-4'}>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">{maker}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">
+          {highlightQuery?.trim() ? <HighlightMatch text={maker} query={highlightQuery} /> : maker}
+        </p>
         <Link
-          href={`${productBasePath}/${pathSegment}`}
+          href={productHref}
+          onClick={() => logProductClick('card_title')}
           className="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]"
         >
           <h3 className="mt-0.5 break-all font-mono text-base font-semibold leading-snug text-white transition-colors duration-300 group-hover:text-orange-200">
-            {part_number}
+            {highlightQuery?.trim() ? (
+              <HighlightMatch text={part_number} query={highlightQuery} />
+            ) : (
+              part_number
+            )}
           </h3>
         </Link>
-        <p className="mt-0.5 text-xs text-white/50">{category ?? 'Industrial component'}</p>
+        <p className="mt-0.5 text-xs text-white/50">
+          {highlightQuery?.trim() && category ? (
+            <HighlightMatch text={category} query={highlightQuery} />
+          ) : (
+            category ?? 'Industrial component'
+          )}
+        </p>
         {quickSpecs && <KeySpecs quickSpecs={quickSpecs} />}
         {!hasSpecs && <p className="mt-2 text-xs text-white/40">Specifications available on request</p>}
         {!compact && description && (
-          <p className="mb-3 mt-1 flex-1 line-clamp-2 text-xs leading-relaxed text-white/45">{description}</p>
+          <p className="mb-3 mt-1 flex-1 line-clamp-2 text-xs leading-relaxed text-white/45">
+            {highlightQuery?.trim() ? <HighlightMatch text={description} query={highlightQuery} /> : description}
+          </p>
         )}
 
         {price_usd != null && price_usd > 0 && (
@@ -182,14 +219,23 @@ function ProductCardInner({
 
         <div className="mt-auto flex items-center gap-2 border-t border-white/10 pt-3">
           <Link
-            href={`${productBasePath}/${pathSegment}`}
+            href={productHref}
+            onClick={() => logProductClick('card_cta_view')}
             className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition-all duration-300 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]"
           >
             View product
           </Link>
           <button
             type="button"
-            onClick={() => addItem({ part_number, quantity: 1 })}
+            onClick={() => {
+              trackAddToRfq({
+                source: 'product_card',
+                part_number,
+                product_id: id,
+                quantity: 1,
+              })
+              addItem({ part_number, quantity: 1 })
+            }}
             disabled={isInList}
             className={
               isInList

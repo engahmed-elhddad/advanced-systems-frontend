@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { SlidersHorizontal, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SearchBar } from '@/components/search/SearchBar'
@@ -151,75 +152,74 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
     })
   }
 
-  const [loading, setLoading] = useState(false)
-  const [rows, setRows] = useState<Array<Record<string, unknown>>>([])
-  const [total, setTotal] = useState(0)
-  const [pages, setPages] = useState(1)
-  const [facets, setFacets] = useState<{ series: string[]; specs: Record<string, string[]> }>({
-    series: [],
-    specs: {},
-  })
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const lastSearchTrackKey = useRef<string>('')
-  const [readinessHint, setReadinessHint] = useState(false)
 
-  useEffect(() => {
-    getBrowseFacets().then(setFacets).catch(() => {})
-  }, [])
+  const facetsQuery = useQuery({
+    queryKey: ['browse-facets'],
+    queryFn: getBrowseFacets,
+    staleTime: 1_800_000,
+  })
+  const facets = facetsQuery.data ?? { series: [], specs: {} }
 
-  useEffect(() => {
-    let cancelled = false
-    async function run() {
-      if (!hasMeiliFilters) {
-        setLoading(false)
-        setRows([])
-        setTotal(0)
-        setPages(1)
-        return
+  const searchQueryKey = useMemo(
+    () =>
+      [
+        'search-page-browse',
+        page,
+        sort,
+        qUrl.trim(),
+        [...brandIds].slice().sort((a, b) => a - b).join(','),
+        [...categoryIds].slice().sort((a, b) => a - b).join(','),
+        [...seriesVals].slice().sort().join('\0'),
+        [...availabilityVals].slice().sort().join('\0'),
+        [...specTokens].slice().sort().join('\0'),
+      ] as const,
+    [page, sort, qUrl, brandIds, categoryIds, seriesVals, availabilityVals, specTokens],
+  )
+
+  const searchQuery = useQuery({
+    queryKey: searchQueryKey,
+    enabled: hasMeiliFilters,
+    queryFn: async () => {
+      const res = await searchBrowse({
+        q: qUrl.trim() || undefined,
+        page,
+        size: PAGE_SIZE,
+        brand_ids: brandIds.length ? brandIds : undefined,
+        category_ids: categoryIds.length ? categoryIds : undefined,
+        series_values: seriesVals.length ? seriesVals : undefined,
+        availability_in: availabilityVals.length ? availabilityVals : undefined,
+        spec: specTokens.length ? specTokens : undefined,
+        sort: sort === 'relevance' ? 'relevance' : sort,
+      })
+      const hits = res.items ?? []
+      return {
+        rows: hits.map(
+          (h) =>
+            searchHitToApiProduct(h as unknown as Record<string, unknown>) as unknown as Record<string, unknown>,
+        ),
+        total: res.total ?? 0,
+        pages: res.pages ?? 1,
+        readinessHint: (res.total ?? 0) === 0,
+        did_you_mean: res.did_you_mean ?? null,
       }
-      setLoading(true)
-      try {
-        const res = await searchBrowse({
-          q: qUrl.trim() || undefined,
-          page,
-          size: PAGE_SIZE,
-          brand_ids: brandIds.length ? brandIds : undefined,
-          category_ids: categoryIds.length ? categoryIds : undefined,
-          series_values: seriesVals.length ? seriesVals : undefined,
-          availability_in: availabilityVals.length ? availabilityVals : undefined,
-          spec: specTokens.length ? specTokens : undefined,
-          sort: sort === 'relevance' ? 'relevance' : sort,
-        })
-        if (cancelled) return
-        const hits = res.items ?? []
-        setRows(
-          hits.map(
-            (h) =>
-              searchHitToApiProduct(h as unknown as Record<string, unknown>) as unknown as Record<string, unknown>,
-          ),
-        )
-        setTotal(res.total ?? 0)
-        setPages(res.pages ?? 1)
-        setReadinessHint((res.total ?? 0) === 0)
-      } catch {
-        if (!cancelled) {
-          setRows([])
-          setTotal(0)
-          setPages(1)
-          setReadinessHint(true)
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    run()
-    return () => {
-      cancelled = true
-    }
-  }, [hasMeiliFilters, qUrl, page, sort, brandIds, categoryIds, seriesVals, availabilityVals, specTokens])
+    },
+    staleTime: 90_000,
+    gcTime: 900_000,
+    placeholderData: keepPreviousData,
+  })
+
+  const rows = hasMeiliFilters ? (searchQuery.data?.rows ?? []) : []
+  const total = hasMeiliFilters ? (searchQuery.data?.total ?? 0) : 0
+  const pages = hasMeiliFilters ? (searchQuery.data?.pages ?? 1) : 1
+  const readinessHint = hasMeiliFilters ? (searchQuery.data?.readinessHint ?? false) : false
+  const didYouMean = hasMeiliFilters ? (searchQuery.data?.did_you_mean ?? null) : null
+  const loading = hasMeiliFilters && searchQuery.isFetching
+  const searchFailed = hasMeiliFilters && searchQuery.isError
 
   useEffect(() => {
-    if (loading || !hasMeiliFilters) return
+    if (loading || !hasMeiliFilters || searchFailed) return
     const q = qUrl.trim()
     const key = `${q}|${page}|${total}|${brandIds.join(',')}|${categoryIds.join(',')}`
     if (!q && brandIds.length + categoryIds.length + seriesVals.length === 0) return
@@ -239,6 +239,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
   }, [
     loading,
     hasMeiliFilters,
+    searchFailed,
     qUrl,
     page,
     total,
@@ -519,14 +520,76 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                 </div>
               )}
 
-              {loading ? (
+              {hasMeiliFilters && !loading && !searchFailed && didYouMean && total === 0 ? (
+                <div
+                  className={cn(
+                    glassPanel,
+                    'flex flex-col gap-3 border border-sky-400/30 bg-sky-500/10 px-4 py-4 sm:flex-row sm:items-center sm:justify-between',
+                  )}
+                  role="status"
+                >
+                  <p className="text-sm text-white/85">
+                    <span className="font-semibold text-sky-100">Did you mean</span>{' '}
+                    <span className="font-mono text-orange-200/95">&quot;{didYouMean}&quot;</span>?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQDraft(didYouMean)
+                      setParam((p) => {
+                        p.set('q', didYouMean)
+                        p.set('page', '1')
+                      })
+                      trackSearch({
+                        query: didYouMean,
+                        total: 0,
+                        page: 1,
+                        has_filters: false,
+                      })
+                    }}
+                    className="shrink-0 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-white/15"
+                  >
+                    Search this instead
+                  </button>
+                </div>
+              ) : null}
+
+              {searchFailed ? (
+                <div
+                  className={cn(
+                    glassPanel,
+                    'border-red-400/35 bg-red-500/10 px-6 py-12 text-center',
+                  )}
+                  role="alert"
+                >
+                  <p className="text-lg font-semibold text-white">Could not load search results</p>
+                  <p className="mx-auto mt-2 max-w-md text-sm text-white/55">
+                    The search service may be unavailable. Check your connection and try again.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => void searchQuery.refetch()}
+                      className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10"
+                    >
+                      Try again
+                    </button>
+                    <Link
+                      href="/products"
+                      className="rounded-full border border-white/20 bg-white/[0.08] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:border-orange-400/40 hover:bg-orange-500/10"
+                    >
+                      Browse catalog
+                    </Link>
+                  </div>
+                </div>
+              ) : loading ? (
                 <div className="transition-opacity duration-300">
                   <ProductGridSkeleton count={12} />
                 </div>
               ) : rows.length > 0 ? (
                 <>
                   <div className={cn(glassPanel, 'p-4 sm:p-5')}>
-                    <ProductGrid products={rows} productBasePath="/products" />
+                    <ProductGrid products={rows} productBasePath="/products" highlightQuery={qUrl.trim()} />
                   </div>
                   {pages > 1 && (
                     <nav className="flex flex-wrap justify-center gap-2 pt-4" aria-label="Pagination">
@@ -576,7 +639,21 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     </p>
                   ) : null}
                   <p className="font-medium text-white/80">No products match your search and filters.</p>
-                  <p className="mt-2 text-sm text-white/45">Try clearing filters or broadening your query.</p>
+                  <p className="mt-2 text-sm text-white/45">
+                    Try a shorter keyword, clear filters, or explore a popular search below.
+                  </p>
+                  <p className="mt-6 text-xs font-semibold uppercase tracking-wider text-white/40">Try instead</p>
+                  <div className="mt-3 flex flex-wrap justify-center gap-2">
+                    {POPULAR_QUERIES.map(({ label, q: qq }) => (
+                      <Link
+                        key={label}
+                        href={`/search?q=${encodeURIComponent(qq)}`}
+                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-md transition-all duration-300 hover:border-orange-400/35 hover:bg-orange-500/10"
+                      >
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <button
                       type="button"

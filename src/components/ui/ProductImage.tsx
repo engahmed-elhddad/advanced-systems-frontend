@@ -63,6 +63,7 @@ export function ProductImage({
                 (variant === 'hero' ? '(max-width: 1024px) 100vw, 520px' : '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw')
               }
               priority={priority}
+              loading={priority ? 'eager' : 'lazy'}
               unoptimized={currentSrc.startsWith('/uploads/') || currentSrc === PRODUCT_PLACEHOLDER}
               onError={handleError}
             />

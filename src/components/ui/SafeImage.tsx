@@ -1,41 +1,53 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { resolveImage } from '@/lib/resolveImage'
+import { cn } from '@/lib/utils'
+
+const PLACEHOLDER = '/placeholder.png'
 
 interface SafeImageProps {
   src: string | null | undefined
   alt: string
   className?: string
-  /** LCP / hero — eager load + high fetch priority */
+  /** LCP / hero — eager load + priority decoding */
   priority?: boolean
-  /** Responsive hint for the browser (e.g. "(max-width:768px) 100vw, 50vw") */
+  /** Width hint for responsive `srcset` (required for good LCP / CLS with `fill`). */
   sizes?: string
 }
 
+function shouldUnoptimize(src: string): boolean {
+  if (src.startsWith('/uploads/')) return true
+  if (src.startsWith('blob:') || src.startsWith('data:')) return true
+  return false
+}
+
 export function SafeImage({ src, alt, className, priority, sizes }: SafeImageProps) {
-  const [currentSrc, setCurrentSrc] = useState<string>(resolveImage(src))
+  const [currentSrc, setCurrentSrc] = useState(() => resolveImage(src))
 
   useEffect(() => {
     setCurrentSrc(resolveImage(src))
   }, [src])
 
+  const handleError = () => {
+    if (currentSrc === PLACEHOLDER) return
+    setCurrentSrc(PLACEHOLDER)
+  }
+
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={currentSrc}
-      alt={alt}
-      className={className}
-      sizes={sizes}
-      loading={priority ? 'eager' : 'lazy'}
-      fetchPriority={priority ? 'high' : 'auto'}
-      decoding="async"
-      onError={(event) => {
-        const img = event.currentTarget
-        if (img.dataset.fallbackApplied === 'true') return
-        img.dataset.fallbackApplied = 'true'
-        setCurrentSrc('/placeholder.png')
-      }}
-    />
+    <div className="relative h-full w-full min-h-0 min-w-0">
+      <Image
+        src={currentSrc}
+        alt={alt}
+        fill
+        sizes={sizes ?? '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw'}
+        className={cn(className)}
+        priority={priority}
+        loading={priority ? 'eager' : 'lazy'}
+        unoptimized={shouldUnoptimize(currentSrc)}
+        onError={handleError}
+      />
+    </div>
   )
 }

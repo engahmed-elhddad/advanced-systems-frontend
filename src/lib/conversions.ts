@@ -11,6 +11,9 @@ export const ConversionEvents = {
   PAGE_VIEW: "page_view",
   SEARCH: "search",
   VISIT: "visit",
+  CATEGORY_VIEW: "category_view",
+  ADD_TO_RFQ: "add_to_rfq",
+  CLICK_PRODUCT: "click_product",
 } as const
 
 export type ConversionEventName = (typeof ConversionEvents)[keyof typeof ConversionEvents]
@@ -23,9 +26,20 @@ export {
   trackLead,
   trackWhatsApp,
   trackProductView,
+  trackCategoryView,
+  trackAddToRfq,
+  trackClickProduct,
   trackVisit,
   trackPageView,
   trackSearch,
 } from "@/lib/analytics";
 
-export type { RfqSubmitTrackPayload, RfqCtaTrackPayload, TrackingEventName } from "@/lib/analytics";
+export type {
+  RfqSubmitTrackPayload,
+  RfqCtaTrackPayload,
+  TrackingEventName,
+  ProductViewPayload,
+  CategoryViewPayload,
+  AddToRfqPayload,
+  ClickProductPayload,
+} from "@/lib/analytics";

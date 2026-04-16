@@ -12,6 +12,8 @@ import {
   FileText,
   Layers,
   ChevronRight,
+  Truck,
+  ShieldCheck,
 } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -20,8 +22,8 @@ import { SafeImage } from '@/components/ui/SafeImage'
 import { useRFQSubmit } from '@/features/rfq/hooks/useRFQSubmit'
 import { useRFQListStore } from '@/state/rfqListStore'
 import { API_BASE_URL, whatsappHref } from '@/lib/constants'
-import { primaryProductImageUrl } from '@/lib/productImageUrl'
-import { trackPricingView, trackRfqCtaClick, trackWhatsApp } from '@/lib/analytics'
+import { getProductImage, primaryProductImageUrl } from '@/lib/productImageUrl'
+import { trackAddToRfq, trackPricingView, trackRfqCtaClick, trackWhatsApp } from '@/lib/analytics'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
 import { cn } from '@/lib/utils'
 import type { ProductVariantOption } from '@/lib/productVariants'
@@ -37,8 +39,8 @@ import {
 const rfqSchema = z.object({
   email: z.string().email('Valid email required'),
   quantity: z.number().min(1, 'Minimum 1'),
-  contact_name: z.string().min(1, 'Name is required'),
-  phone: z.string().min(6, 'Phone is required'),
+  contact_name: z.string().max(200).optional(),
+  phone: z.string().max(80).optional(),
   company: z.string().optional(),
   country: z.string().optional(),
 })
@@ -57,10 +59,10 @@ interface Props {
   galleryImages: string[]
   datasheetUrl: string
   availability: string
+  /** Catalog stock (used with variants for “only X left” urgency). */
+  stockQuantity?: number
   variants: ProductVariantOption[]
 }
-
-const HIGHLIGHTS = ['Fast sourcing', 'Global delivery', 'Warranty support'] as const
 
 function specCardValue(specs: Record<string, string>, series: string, keys: string[]): string {
   const entries = Object.entries(specs)
@@ -84,6 +86,7 @@ export function ProductDetail({
   galleryImages,
   datasheetUrl,
   availability,
+  stockQuantity = 0,
   variants,
 }: Props) {
   const [selectedImage, setSelectedImage] = useState(0)
@@ -285,6 +288,18 @@ export function ProductDetail({
     availLower.includes('available') ||
     availability === 'in_stock'
 
+  const stockForUrgency = useMemo(() => {
+    if (variants.length > 1 && selectedVariant) return Math.max(0, Math.floor(selectedVariant.stock))
+    if (variants.length === 1) {
+      const vs = Math.max(0, Math.floor(variants[0]?.stock ?? 0))
+      if (vs > 0) return vs
+    }
+    return Math.max(0, Math.floor(Number(stockQuantity) || 0))
+  }, [variants, selectedVariant, stockQuantity])
+
+  const showLowStockUrgency =
+    isAvailable && stockForUrgency > 0 && stockForUrgency <= 25 && !(variants.length > 1 && !selectedVariant)
+
   const waLink = whatsappHref(partNumber)
   const hasDatasheet = Boolean(datasheetUrl?.startsWith('http'))
 
@@ -301,7 +316,9 @@ export function ProductDetail({
   }, [partNumber, productName, productId, selectedVariant])
 
   const primaryCtaLabel =
-    variants.length > 1 && !selectedVariant ? 'Choose condition & get quote' : 'Get a free quote'
+    variants.length > 1 && !selectedVariant
+      ? 'Choose condition · Add to RFQ'
+      : 'Add to RFQ — free quote'
 
   const glass = 'rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300'
 
@@ -328,7 +345,18 @@ export function ProductDetail({
                 />
               </div>
             ) : (
-              <span className="text-sm text-white/40">No image available</span>
+              <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-4">
+                <div className="relative h-full min-h-[180px] w-full max-w-md opacity-90">
+                  <SafeImage
+                    src={getProductImage({ part_number: partNumber })}
+                    alt={`${partNumber} — image not available`}
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-contain"
+                  />
+                </div>
+                <span className="text-xs text-white/45">No product photo — placeholder shown</span>
+              </div>
             )}
           </div>
           {displayGallery.length > 1 && (
@@ -369,6 +397,18 @@ export function ProductDetail({
               Firm quote on this SKU · Typical response <span className="text-orange-200/90">2–6 hours</span> · No
               obligation
             </p>
+            {showLowStockUrgency ? (
+              <p
+                className="mt-4 inline-flex items-center gap-2.5 rounded-xl border border-rose-400/40 bg-rose-500/[0.12] px-4 py-2.5 text-sm font-semibold text-rose-100 shadow-[0_0_24px_rgba(244,63,94,0.12)]"
+                role="status"
+              >
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-400" />
+                </span>
+                Only {stockForUrgency} left in stock — secure yours on the RFQ below.
+              </p>
+            ) : null}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {brandName ? (
                 <Badge variant="info" size="sm">
@@ -383,6 +423,27 @@ export function ProductDetail({
               <Badge variant={isAvailable ? 'success' : 'pending'} size="sm">
                 {isAvailable ? 'Available' : 'On request'}
               </Badge>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide',
+                  isAvailable
+                    ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-100'
+                    : 'border-amber-400/40 bg-amber-500/10 text-amber-100',
+                )}
+              >
+                <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
+                {isAvailable ? 'In stock' : 'On request'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/35 bg-sky-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-sky-100">
+                <Truck className="h-3.5 w-3.5 shrink-0 text-sky-200/90" aria-hidden />
+                Fast delivery
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-400/35 bg-violet-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-violet-100">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-violet-200/90" aria-hidden />
+                Trusted supplier
+              </span>
             </div>
             {hasListPrices && !showExactPricing ? (
               <div className="mt-4 rounded-xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-md">
@@ -410,17 +471,6 @@ export function ProductDetail({
             <p className="text-base leading-relaxed text-white/70">{description}</p>
           ) : null}
 
-          <ul className="space-y-2">
-            {HIGHLIGHTS.map((h) => (
-              <li key={h} className="flex items-center gap-2 text-sm font-medium text-white/85">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
-                  <Check className="h-3 w-3" strokeWidth={3} />
-                </span>
-                {h}
-              </li>
-            ))}
-          </ul>
-
           {/* Featured spec cards */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {featuredCards.map(({ label, value }) => (
@@ -439,6 +489,37 @@ export function ProductDetail({
             ))}
           </div>
 
+          {specEntries.length > 0 ? (
+            <div className={cn(glass, 'overflow-hidden')}>
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">Quick specs</h2>
+                <span className="text-[10px] text-white/35">{specEntries.length} fields</span>
+              </div>
+              <div className="max-h-[min(280px,45vh)] overflow-y-auto overscroll-contain">
+                <table className="w-full text-left text-sm">
+                  <tbody>
+                    {specEntries.slice(0, 28).map(([k, v]) => (
+                      <tr key={k} className="border-b border-white/[0.06] last:border-0 hover:bg-white/[0.03]">
+                        <th
+                          scope="row"
+                          className="w-[min(42%,200px)] px-4 py-2.5 align-top text-xs font-semibold uppercase tracking-wide text-white/40"
+                        >
+                          {k}
+                        </th>
+                        <td className="px-4 py-2.5 font-mono text-[13px] leading-snug text-white/90">{v}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {specEntries.length > 28 ? (
+                <p className="border-t border-white/10 px-4 py-2 text-center text-[11px] text-white/40">
+                  Full list in the Specifications tab below.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           {/* Primary CTAs */}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button
@@ -446,7 +527,7 @@ export function ProductDetail({
               variant="primary"
               size="lg"
               leftIcon={<Zap className="h-5 w-5" />}
-              className="min-h-[56px] flex-1 rounded-xl px-8 text-base font-bold shadow-[0_0_36px_rgba(255,122,0,0.4)] sm:min-w-[240px]"
+              className="min-h-[56px] flex-1 rounded-xl border-2 border-orange-300/40 px-8 text-base font-bold shadow-[0_0_40px_rgba(255,122,0,0.45)] sm:min-w-[260px]"
               onClick={() => {
                 trackRfqCtaClick({
                   source: 'product_hero_scroll_rfq',
@@ -509,7 +590,10 @@ export function ProductDetail({
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-base font-bold uppercase tracking-wider text-white/80">Request your quote</h2>
+                  <div>
+                    <h2 className="text-base font-bold uppercase tracking-wider text-white/80">Request your quote</h2>
+                    <p className="mt-1 text-xs text-white/45">Email &amp; quantity are enough — optional fields below.</p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -518,18 +602,24 @@ export function ProductDetail({
                         scrollToRfqPanel()
                         return
                       }
+                      trackAddToRfq({
+                        source: 'product_page',
+                        part_number: partNumber,
+                        product_id: productId,
+                        quantity: Math.max(1, Number(quantity) || 1),
+                      })
                       addItem({ part_number: partNumber, quantity: Math.max(1, Number(quantity) || 1) })
                     }}
                     disabled={isInRFQList}
                     className={cn(
-                      'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all duration-300',
+                      'inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-xs font-bold transition-all duration-300',
                       isInRFQList
-                        ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
-                        : 'border-white/15 text-white/70 hover:border-orange-400/40 hover:text-white'
+                        ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'
+                        : 'border-orange-400/50 bg-orange-500/20 text-orange-100 shadow-[0_0_20px_rgba(255,122,0,0.2)] hover:border-orange-300/70 hover:bg-orange-500/30',
                     )}
                   >
                     {isInRFQList ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                    {isInRFQList ? 'In RFQ list' : 'Add to list'}
+                    {isInRFQList ? 'In RFQ list' : 'Quick add to list'}
                   </button>
                 </div>
                 {variantError ? (
@@ -623,16 +713,6 @@ export function ProductDetail({
                 />
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input
-                    label="Your name"
-                    required
-                    value={contactName}
-                    onChange={(e) => setContactName(e.target.value)}
-                    error={errors.contact_name}
-                    placeholder="Full name"
-                    comfortable
-                    autoComplete="name"
-                  />
-                  <Input
                     label="Work email"
                     type="email"
                     required
@@ -642,19 +722,6 @@ export function ProductDetail({
                     placeholder="you@company.com"
                     comfortable
                     autoComplete="email"
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Input
-                    label="Phone"
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    error={errors.phone}
-                    placeholder="+20 …"
-                    comfortable
-                    autoComplete="tel"
                   />
                   <Input
                     label="Quantity"
@@ -670,32 +737,63 @@ export function ProductDetail({
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input
-                    label="Company"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    placeholder="Optional"
+                    label="Your name (optional)"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    error={errors.contact_name}
+                    placeholder="Helps us personalize your quote"
                     comfortable
-                    autoComplete="organization"
+                    autoComplete="name"
                   />
                   <Input
-                    label="Country"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    placeholder="Optional"
+                    label="Phone (optional)"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    error={errors.phone}
+                    placeholder="+20 …"
                     comfortable
-                    autoComplete="country-name"
+                    autoComplete="tel"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <span className="text-xs font-medium text-white/50">Message</span>
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Urgency, target price, condition…"
-                    rows={3}
-                    className="min-h-[88px] w-full resize-y rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-base text-white outline-none transition-colors placeholder:text-white/35 focus:border-orange-400/40 focus:ring-2 focus:ring-orange-400/15 sm:min-h-[72px] sm:text-sm"
-                  />
-                </div>
+                <details className="group rounded-xl border border-white/10 bg-black/15 open:border-orange-400/25">
+                  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-white/80 transition-colors marker:content-none [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-center justify-between gap-2">
+                      Company, country &amp; notes
+                      <ChevronRight className="h-4 w-4 shrink-0 text-white/40 transition-transform group-open:rotate-90" />
+                    </span>
+                  </summary>
+                  <div className="space-y-4 border-t border-white/10 px-4 pb-4 pt-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        label="Company"
+                        value={company}
+                        onChange={(e) => setCompany(e.target.value)}
+                        placeholder="Optional"
+                        comfortable
+                        autoComplete="organization"
+                      />
+                      <Input
+                        label="Country"
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        placeholder="Optional"
+                        comfortable
+                        autoComplete="country-name"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-xs font-medium text-white/50">Message</span>
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Urgency, target price, alternate parts…"
+                        rows={3}
+                        className="min-h-[88px] w-full resize-y rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-base text-white outline-none transition-colors placeholder:text-white/35 focus:border-orange-400/40 focus:ring-2 focus:ring-orange-400/15 sm:min-h-[72px] sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                </details>
                 <Link
                   href={fullRfqHref}
                   onClick={() =>
@@ -726,7 +824,7 @@ export function ProductDetail({
                   size="lg"
                   loading={isLoading}
                   disabled={!selectedVariant}
-                  className="min-h-[52px] rounded-xl text-base font-bold shadow-[0_0_28px_rgba(255,122,0,0.3)]"
+                  className="min-h-[52px] rounded-xl border-2 border-orange-200/30 text-base font-bold shadow-[0_0_32px_rgba(255,122,0,0.35)]"
                   onClick={() =>
                     trackRfqCtaClick({
                       source: 'product_inline_form_submit',
@@ -738,10 +836,10 @@ export function ProductDetail({
                   {isLoading
                     ? 'Sending…'
                     : !selectedVariant
-                      ? 'Select condition to request quote'
-                      : `Request quote · ${formatVariantConditionLabel(selectedVariant.condition)}`}
+                      ? 'Select condition to add to RFQ'
+                      : `Submit RFQ · ${formatVariantConditionLabel(selectedVariant.condition)}`}
                 </Button>
-                <p className="text-center text-[11px] text-white/40">Typical reply within 2–4 hours · No obligation</p>
+                <p className="text-center text-[11px] text-white/40">Typical reply within 2–6 hours · No obligation</p>
               </form>
             )}
           </section>
@@ -829,15 +927,18 @@ export function ProductDetail({
           trackRfqCtaClick({ source: 'product_fab_rfq', part_number: partNumber, product_id: productId ?? null })
           scrollToRfqPanel()
         }}
-        className="pointer-events-auto fixed bottom-8 right-8 z-30 hidden h-14 min-h-[56px] items-center gap-2 rounded-full border border-orange-400/40 bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-6 text-sm font-bold text-white shadow-[0_0_44px_rgba(255,106,0,0.5)] transition-all hover:scale-[1.04] hover:brightness-110 lg:inline-flex"
-        aria-label="Request quote"
+        className="pointer-events-auto fixed bottom-8 right-8 z-30 hidden h-14 min-h-[56px] items-center gap-2 rounded-full border-2 border-orange-200/50 bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-6 text-sm font-bold text-white shadow-[0_0_44px_rgba(255,106,0,0.5)] transition-all hover:scale-[1.04] hover:brightness-110 lg:inline-flex"
+        aria-label="Add to RFQ"
       >
         <Zap className="h-5 w-5" />
-        RFQ
+        Add to RFQ
       </button>
 
-      {/* Mobile sticky */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0a1628]/95 px-4 py-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
+      {/* Mobile sticky — always visible above the fold when scrolling */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-orange-500/20 bg-[#0a1628]/98 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl lg:hidden">
+        <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-white/50">
+          {isAvailable ? 'In stock · Fast delivery · Trusted supplier' : 'Fast sourcing · Trusted supplier'}
+        </p>
         <div className="mx-auto flex max-w-lg gap-2">
           <button
             type="button"
@@ -845,10 +946,10 @@ export function ProductDetail({
               trackRfqCtaClick({ source: 'product_mobile_sticky_rfq', part_number: partNumber, product_id: productId ?? null })
               scrollToRfqPanel()
             }}
-            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/35"
+            className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-orange-300/40 bg-gradient-to-r from-[#FF7A00] to-[#FF5500] py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/40"
           >
             <Zap className="h-4 w-4" />
-            {variants.length > 1 && !selectedVariant ? 'Pick condition' : 'Quote'}
+            {primaryCtaLabel}
           </button>
           <a
             href={waLink}

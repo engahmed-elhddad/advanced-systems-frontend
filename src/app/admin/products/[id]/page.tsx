@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
-import { Card, Skeleton } from '@/components/ui'
+import { ArrowLeft, Copy } from 'lucide-react'
+import { Button, Card, Skeleton } from '@/components/ui'
 import { useBrands } from '@/features/products/hooks/useBrands'
 import { useCategories } from '@/features/products/hooks/useCategories'
 import { getApiErrorMessage } from '@/lib/api'
@@ -35,9 +35,19 @@ export default function AdminEditProductPage() {
           </Link>
         </div>
 
-        <div>
-          <h1 className="text-2xl font-bold text-white">Edit Product</h1>
-          <p className="mt-1 text-sm text-gray-300">Update product details, specs, image, and datasheet.</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Edit Product</h1>
+            <p className="mt-1 text-sm text-gray-300">Update product details, specs, image, and datasheet.</p>
+          </div>
+          {product ? (
+            <Button asChild type="button" variant="secondary" surface="dark" className="shrink-0">
+              <Link href={`/admin/products/new?duplicate=${product.id}`}>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate as new
+              </Link>
+            </Button>
+          ) : null}
         </div>
 
         {loading || !product ? (
