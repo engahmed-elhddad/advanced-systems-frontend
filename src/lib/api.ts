@@ -1,8 +1,9 @@
 import axios from "axios";
 import type { RFQCreateInput, RFQResponse } from "@/types/rfq";
 import { submitPublicRFQ } from "@/lib/rfqSubmit";
+import { API_BASE_URL } from "@/lib/constants";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = API_BASE_URL;
 
 const TENANT_HEADER = (process.env.NEXT_PUBLIC_TENANT_ID || "").trim();
 

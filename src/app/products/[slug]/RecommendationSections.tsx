@@ -7,7 +7,7 @@ import { PackageSearch, Sparkles } from 'lucide-react'
 import { getProducts } from '@/features/products/services'
 import { useUIStore } from '@/state/uiStore'
 import { trackClickProduct, trackRfqCtaClick } from '@/lib/analytics'
-import { cn } from '@/lib/utils'
+import { asApiDisplayString, cn } from '@/lib/utils'
 
 type ProductHit = {
   part_number: string
@@ -127,7 +127,7 @@ function HorizontalRow({
                   {item.image_url ? (
                     <Image
                       src={item.image_url}
-                      alt={item.part_number}
+                      alt={item.name ? `${item.part_number} — ${item.name}` : item.part_number}
                       width={200}
                       height={160}
                       unoptimized
@@ -141,7 +141,9 @@ function HorizontalRow({
                 </div>
                 <div className="flex flex-1 flex-col gap-1 p-4">
                   <p className="font-mono text-sm font-bold text-orange-300">{item.part_number}</p>
-                  <p className="line-clamp-2 text-sm font-semibold text-white">{item.name || item.part_number}</p>
+                  {item.name ? (
+                    <p className="line-clamp-2 text-sm font-semibold text-white">{item.name}</p>
+                  ) : null}
                   <p className="line-clamp-1 text-xs text-white/45">
                     {item.brand || 'Industrial'}
                     {item.category ? ` · ${item.category}` : ''}

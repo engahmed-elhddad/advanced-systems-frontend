@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Copy, Download } from 'lucide-react'
 import { seriesToSlug } from '@/lib/constants'
+import { asApiDisplayString } from '@/lib/utils'
 import { trackLead, trackWhatsApp } from '@/lib/analytics'
 import { SafeImage } from '@/components/ui/SafeImage'
 
@@ -58,12 +59,14 @@ export function ProductHero({
   categoryHref,
 }: ProductHeroProps) {
   const partNumber = product.part_number ?? ''
-  const title = product.name || partNumber
-  const rawBrand = product.brand ?? product.manufacturer ?? ''
-  const rawCategory = product.category ?? ''
+  const nameStr = asApiDisplayString(product.name)
+  const title = nameStr || partNumber
+  const rawBrand =
+    asApiDisplayString(product.brand) || asApiDisplayString(product.manufacturer) || ''
+  const rawCategory = asApiDisplayString(product.category) || ''
   const brand = rawBrand || 'Brand on request'
   const category = rawCategory || 'Category on request'
-  const series = product.series ?? ''
+  const series = asApiDisplayString(product.series)
   const availability = product.availability || 'On Request'
   const availabilityClass = availabilityStyle(availability)
   const whatsappMessage = encodeURIComponent(`Hello, I need price for ${partNumber}`)
@@ -112,7 +115,9 @@ export function ProductHero({
           <span className="rounded-lg bg-slate-100 px-2.5 py-1">
             <span className="font-semibold text-slate-700">Brand</span>:{' '}
             {brandHref && rawBrand ? (
-              <Link href={brandHref} className="text-[#0B1F3A] hover:underline">{brand}</Link>
+              <Link href={brandHref} className="text-[#0B1F3A] hover:underline" aria-label={`Brand: ${brand}`}>
+                {brand}
+              </Link>
             ) : (
               brand
             )}
@@ -120,17 +125,25 @@ export function ProductHero({
           <span className="rounded-lg bg-slate-100 px-2.5 py-1">
             <span className="font-semibold text-slate-700">Category</span>:{' '}
             {categoryHref && rawCategory ? (
-              <Link href={categoryHref} className="text-[#0B1F3A] hover:underline">{category}</Link>
+              <Link href={categoryHref} className="text-[#0B1F3A] hover:underline" aria-label={`Category: ${category}`}>
+                {category}
+              </Link>
             ) : (
               category
             )}
           </span>
-          {series && (
+          {series ? (
             <span className="rounded-lg bg-slate-100 px-2.5 py-1">
               <span className="font-semibold text-slate-700">Series</span>:{' '}
-              <Link href={`/series/${seriesToSlug(series)}`} className="text-[#0B1F3A] hover:underline">{series}</Link>
+              <Link
+                href={`/series/${seriesToSlug(series)}`}
+                className="text-[#0B1F3A] hover:underline"
+                aria-label={`Series: ${series}`}
+              >
+                {series}
+              </Link>
             </span>
-          )}
+          ) : null}
         </div>
 
         <p className="mt-5 text-[15px] leading-7 text-slate-600">

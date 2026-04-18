@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { asApiDisplayString } from '@/lib/utils'
 
 export interface RelatedProductItem {
   part_number: string
@@ -52,7 +53,7 @@ function RelatedProductCard({
       initial="hidden"
       animate="visible"
     >
-      <Link href={href} className="block group">
+      <Link href={href} className="block group" aria-label={`${item.part_number}${brand ? `, ${brand}` : ''}`}>
         <motion.div
           whileHover={{ y: -4, transition: { duration: 0.2 } }}
           className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-md hover:shadow-lg hover:border-slate-300 transition-all h-full"
@@ -102,7 +103,8 @@ export function RelatedProducts({
         {products.slice(0, 8).map((item, i) => {
           const href = `${productBasePath}/${encodeURIComponent(item.part_number)}`
           const imgSrc = imageUrl(item)
-          const brand = item.brand ?? item.manufacturer ?? ''
+          const brand =
+            asApiDisplayString(item.brand) || asApiDisplayString(item.manufacturer) || ''
           return (
             <RelatedProductCard
               key={item.part_number}

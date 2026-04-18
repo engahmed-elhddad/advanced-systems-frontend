@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { API_BASE_URL } from '@/lib/constants'
+import { asApiDisplayString } from '@/lib/utils'
 
 interface TrendingPart {
   part_number: string
@@ -13,11 +14,27 @@ interface TrendingPart {
   count?: number
 }
 
+function normalizeTrendingRow(raw: Record<string, unknown>): TrendingPart | null {
+  const part_number = String(raw.part_number ?? '').trim()
+  if (!part_number) return null
+  const brand = asApiDisplayString(raw.brand ?? raw.brand_name)
+  const category = asApiDisplayString(raw.category ?? raw.category_name)
+  const count = typeof raw.count === 'number' ? raw.count : undefined
+  return { part_number, brand: brand || undefined, category: category || undefined, count }
+}
+
 async function fetchTrending(): Promise<TrendingPart[]> {
   const parse = async (res: Response) => {
     const data = await res.json()
     const list = data?.parts ?? []
-    return Array.isArray(list) ? list : []
+    if (!Array.isArray(list)) return []
+    const out: TrendingPart[] = []
+    for (const row of list) {
+      if (!row || typeof row !== 'object') continue
+      const n = normalizeTrendingRow(row as Record<string, unknown>)
+      if (n) out.push(n)
+    }
+    return out
   }
   try {
     const res = await apiFetch(`${API_BASE_URL}/api/v1/search/trending?limit=12`)
@@ -77,6 +94,7 @@ export function TrendingParts() {
               key={item.part_number}
               href={`/products/${encodeURIComponent(item.part_number)}`}
               className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl transition-all duration-300 hover:scale-[1.03] hover:border-violet-400/25 hover:bg-white/[0.08]"
+              aria-label={[item.part_number, item.brand, item.category].filter(Boolean).join(', ')}
             >
               <p className="truncate font-mono text-sm font-semibold text-white" title={item.part_number}>
                 {item.part_number}

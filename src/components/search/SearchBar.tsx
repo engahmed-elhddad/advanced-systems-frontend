@@ -6,9 +6,10 @@ import { Search, Package, Building2, FolderTree, Loader2, Clock, TrendingUp } fr
 import Link from 'next/link'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { HighlightMatch } from '@/components/search/SearchHighlight'
-import { cn } from '@/lib/utils'
+import { asApiDisplayString, cn } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/constants'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+const API_BASE = API_BASE_URL
 
 const RECENT_KEY = 'asi_search_recent'
 const MAX_RECENT = 8
@@ -130,9 +131,11 @@ function parseMeiliHits(data: unknown, limit: number): SearchSuggestion[] {
             : undefined
       return {
         part_number: pn,
-        name: String(o.name ?? ''),
-        brand: String(o.brand_name ?? o.brand ?? ''),
-        brand_name: String(o.brand_name ?? ''),
+        name:
+          asApiDisplayString(o.name) ||
+          (typeof o.name === 'number' ? String(o.name) : ''),
+        brand: asApiDisplayString(o.brand_name ?? o.brand),
+        brand_name: asApiDisplayString(o.brand_name),
         image_url: img,
         primary_image: img,
       }
@@ -152,8 +155,8 @@ function parseLegacySuggest(data: unknown, limit: number): SearchSuggestion[] {
       if (!pn) return null
       return {
         part_number: pn,
-        brand: typeof o.brand === 'string' ? o.brand : undefined,
-        category: typeof o.category === 'string' ? o.category : undefined,
+        brand: asApiDisplayString(o.brand ?? o.brand_name) || undefined,
+        category: asApiDisplayString(o.category ?? o.category_name) || undefined,
       }
     })
     .filter((s): s is SearchSuggestion => s !== null)

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { API_BASE_URL } from '@/lib/constants'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { asApiDisplayString } from '@/lib/utils'
 
 interface ProductRow {
   part_number: string
@@ -65,7 +66,9 @@ function ProductCard({ p }: { p: ProductRow }) {
           />
         </div>
         <p className="mt-3 line-clamp-2 text-sm font-semibold text-white">{p.part_number}</p>
-        <p className="text-xs text-white/50">{(p.brand ?? p.manufacturer) || '—'}</p>
+        <p className="text-xs text-white/50">
+          {asApiDisplayString(p.brand) || asApiDisplayString(p.manufacturer) || '—'}
+        </p>
       </Link>
       <a
         href={rfqHref}

@@ -1,7 +1,32 @@
-export const API_BASE_URL =
+const LOCAL_API_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"])
+
+/**
+ * Normalize the public API origin for browser builds: mistaken `http://` on production
+ * API hosts is upgraded to `https://` to avoid mixed-content blocking on HTTPS pages.
+ * Local dev hosts keep `http://` when configured.
+ */
+export function normalizePublicApiBaseUrl(raw: string): string {
+  const trimmed = (raw || "").trim().replace(/\/$/, "")
+  if (!trimmed) return "http://localhost:8000"
+  try {
+    const withProto = trimmed.includes("://") ? trimmed : `https://${trimmed}`
+    const u = new URL(withProto)
+    const isLocal = LOCAL_API_HOSTS.has(u.hostname)
+    if (!isLocal && u.protocol === "http:") {
+      u.protocol = "https:"
+      return u.toString().replace(/\/$/, "")
+    }
+    return trimmed
+  } catch {
+    return trimmed
+  }
+}
+
+export const API_BASE_URL = normalizePublicApiBaseUrl(
   process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://localhost:8000"
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    "http://localhost:8000",
+)
 
 /** Cloudflare CDN for R2 media (images, datasheets) */
 export const CDN_BASE_URL =
