@@ -1,5 +1,6 @@
 import type { ProductCardProps } from '@/components/products/ProductCard'
 import { getProductImage } from '@/lib/productImageUrl'
+import { asApiDisplayString } from '@/lib/utils'
 
 /** Flexible product shape from API (various backend responses) */
 export interface ApiProduct {
@@ -31,16 +32,16 @@ export interface ApiProduct {
  */
 /** Map ORM-shaped product JSON (list/detail API) to ApiProduct. */
 export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
-  const br = p.brand as { name?: string } | undefined
-  const cat = p.category as { name?: string } | undefined
   const imgUrl = getProductImage(p)
+  const brandStr = asApiDisplayString(p.brand) || asApiDisplayString(p.manufacturer)
+  const categoryStr = asApiDisplayString(p.category)
   return {
     id: typeof p.id === 'number' && Number.isFinite(p.id) ? p.id : undefined,
     slug: p.slug != null ? String(p.slug) : undefined,
     part_number: String(p.part_number ?? ''),
-    brand: br?.name,
-    manufacturer: br?.name,
-    category: cat?.name,
+    brand: brandStr || undefined,
+    manufacturer: brandStr || undefined,
+    category: categoryStr || undefined,
     description: String(p.description ?? ''),
     short_description: String(p.short_description ?? ''),
     image_url: imgUrl,
@@ -61,13 +62,15 @@ export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct 
       : typeof hid === 'string' && /^\d+$/.test(hid)
         ? Number(hid)
         : undefined
+  const brandStr = asApiDisplayString(hit.brand_name ?? hit.brand)
+  const categoryStr = asApiDisplayString(hit.category_name ?? hit.category)
   return {
     id: parsedId,
     slug: hit.slug != null ? String(hit.slug) : undefined,
     part_number: String(hit.part_number ?? ''),
-    brand: String(hit.brand_name ?? hit.brand ?? ''),
-    manufacturer: String(hit.brand_name ?? ''),
-    category: String(hit.category_name ?? hit.category ?? ''),
+    brand: brandStr,
+    manufacturer: brandStr,
+    category: categoryStr,
     description: String(hit.short_description ?? hit.description ?? ''),
     short_description: String(hit.short_description ?? ''),
     image_url: img,

@@ -14,8 +14,9 @@ interface ProductImageWithFallbackProps {
 }
 
 function shouldUnoptimize(src: string): boolean {
-  if (src.startsWith('/uploads/')) return true
+  if (src.includes('/uploads/')) return true
   if (src.startsWith('blob:') || src.startsWith('data:')) return true
+  if (src.startsWith('http://') || src.startsWith('https://')) return true
   return false
 }
 

@@ -64,7 +64,12 @@ export function ProductImage({
               }
               priority={priority}
               loading={priority ? 'eager' : 'lazy'}
-              unoptimized={currentSrc.startsWith('/uploads/') || currentSrc === PRODUCT_PLACEHOLDER}
+              unoptimized={
+                currentSrc.includes('/uploads/') ||
+                currentSrc === PRODUCT_PLACEHOLDER ||
+                currentSrc.startsWith('http://') ||
+                currentSrc.startsWith('https://')
+              }
               onError={handleError}
             />
           </div>

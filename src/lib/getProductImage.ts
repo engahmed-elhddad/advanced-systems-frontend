@@ -1,9 +1,14 @@
 /**
- * Product image resolution: try /uploads/products/{partNumber}.jpg, .png, .webp then placeholder.
- * Use with ProductImage component for client-side fallback on error.
+ * Product image resolution: try API-hosted uploads …/uploads/products/{partNumber}.jpg|.png|.webp then placeholder.
+ * Paths must be absolute to the API origin — root-relative /uploads/… on the www host 404s.
  */
 
-const UPLOADS_BASE = '/uploads/products'
+import { API_BASE_URL } from '@/lib/constants'
+
+function uploadsProductsBase(): string {
+  return `${API_BASE_URL.replace(/\/$/, '')}/uploads/products`
+}
+
 const PLACEHOLDER = '/images/product-placeholder.png'
 
 /** Sanitize part number for file path (no slashes, trim). */
@@ -19,11 +24,8 @@ function safePartNumber(partNumber: string | undefined): string {
 export function getProductImageCandidates(partNumber: string | undefined): string[] {
   const part = safePartNumber(partNumber)
   if (!part) return []
-  return [
-    `${UPLOADS_BASE}/${part}.jpg`,
-    `${UPLOADS_BASE}/${part}.png`,
-    `${UPLOADS_BASE}/${part}.webp`,
-  ]
+  const base = uploadsProductsBase()
+  return [`${base}/${part}.jpg`, `${base}/${part}.png`, `${base}/${part}.webp`]
 }
 
 /** First candidate URL (e.g. for server/buildImageSrc). */

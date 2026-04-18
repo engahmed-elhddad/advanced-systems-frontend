@@ -7,6 +7,7 @@ import { PackageSearch, Sparkles } from 'lucide-react'
 import { getProducts } from '@/features/products/services'
 import { useUIStore } from '@/state/uiStore'
 import { trackClickProduct, trackRfqCtaClick } from '@/lib/analytics'
+import { getProductImage } from '@/lib/productImageUrl'
 import { asApiDisplayString, cn } from '@/lib/utils'
 
 type ProductHit = {
@@ -42,14 +43,18 @@ function scoreProduct(item: ProductHit, keywordSeed: string, brandName: string, 
 }
 
 function toHit(p: Record<string, unknown>): ProductHit {
+  const pn = String(p.part_number ?? '').trim()
+  const nameRaw = p.name != null ? asApiDisplayString(p.name) : ''
+  const name =
+    nameRaw && pn && nameRaw.toUpperCase() === pn.toUpperCase() ? undefined : nameRaw || undefined
   return {
-    part_number: String(p.part_number ?? ''),
+    part_number: pn,
     slug: p.slug != null ? String(p.slug) : undefined,
-    name: p.name != null ? String(p.name) : undefined,
-    brand: String(p.brand ?? p.brand_name ?? ''),
-    category: String(p.category ?? p.category_name ?? ''),
+    name,
+    brand: asApiDisplayString(p.brand ?? p.brand_name),
+    category: asApiDisplayString(p.category ?? p.category_name),
     description: p.description != null ? String(p.description) : undefined,
-    image_url: String(p.image_url ?? ''),
+    image_url: getProductImage({ ...p, part_number: pn }),
   }
 }
 

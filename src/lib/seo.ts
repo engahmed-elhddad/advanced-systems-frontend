@@ -1,4 +1,4 @@
-import { SITE_URL } from '@/lib/constants'
+import { API_BASE_URL, SITE_URL } from '@/lib/constants'
 
 /** Absolute canonical URL for metadata `alternates.canonical`. */
 export function canonicalPath(path: string): string {
@@ -13,6 +13,10 @@ export function absoluteUrl(pathOrUrl: string): string {
   if (!raw) return ''
   if (/^https?:\/\//i.test(raw)) return raw
   const path = raw.startsWith('/') ? raw : `/${raw}`
+  if (path.startsWith('/uploads/')) {
+    const base = API_BASE_URL.replace(/\/$/, '')
+    return `${base}${path}`
+  }
   return canonicalPath(path)
 }
 

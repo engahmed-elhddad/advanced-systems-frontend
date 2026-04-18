@@ -5,12 +5,14 @@ import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CDN_BASE_URL } from '@/lib/constants'
+import { resolvePublicMediaUrl } from '@/lib/resolveImage'
 import type { Brand, Category } from '@/types/product'
 
 export function brandLogoSrc(url?: string | null): string | undefined {
   if (!url?.trim()) return undefined
   const u = url.trim()
   if (u.startsWith('http://') || u.startsWith('https://')) return u
+  if (u.startsWith('/uploads/')) return resolvePublicMediaUrl(u)
   if (u.startsWith('/')) return `${CDN_BASE_URL.replace(/\/$/, '')}${u}`
   return u
 }

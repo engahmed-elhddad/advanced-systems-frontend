@@ -5,12 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { SlidersHorizontal, Search, FileText, Package, GitCompare, X } from 'lucide-react'
 import { API_BASE_URL, CATEGORIES } from '@/lib/constants'
+import { getProductImage } from '@/lib/productImageUrl'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { Select } from '@/components/ui/Select'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { SELECT_EMPTY, sentinelToEmpty } from '@/lib/formSentinels'
-
-const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || API_BASE_URL
 
 // Common industrial values (used when API options are empty)
 const DEFAULT_CURRENTS = ['6A', '9A', '12A', '16A', '20A', '25A', '32A', '40A', '63A']
@@ -63,7 +62,7 @@ export default function ProductFinderPage() {
 
   const fetchOptions = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/product-finder/options`)
+      const res = await fetch(`${API_BASE_URL}/api/product-finder/options`)
       const data = await res.json()
       setOptions({
         categories: data.categories?.length ? data.categories : CATEGORIES.map(c => c.name),
@@ -97,7 +96,7 @@ export default function ProductFinderPage() {
       if (f.mounting_type) params.set('mounting_type', f.mounting_type)
       params.set('page', String(page))
       params.set('limit', '24')
-      const res = await fetch(`${API}/api/product-finder/search?${params}`)
+      const res = await fetch(`${API_BASE_URL}/api/product-finder/search?${params}`)
       const data = await res.json()
       setProducts(data.products || [])
       setTotalPages(data.pages ?? 1)
@@ -121,12 +120,6 @@ export default function ProductFinderPage() {
       else if (next.size < 5) next.add(pn)
       return next
     })
-  }
-
-  const imageUrl = (url: string | undefined) => {
-    if (!url) return '/products/no-product-image.jpg'
-    if (url.startsWith('http')) return url
-    return `${API}${url.startsWith('/') ? '' : '/'}${url}`
   }
 
   const compareProducts = products.filter(p => compareIds.has(p.part_number))
@@ -280,7 +273,7 @@ export default function ProductFinderPage() {
                       >
                         {p.image_url ? (
                           <Image
-                            src={imageUrl(p.image_url)}
+                            src={getProductImage(p as Record<string, unknown>)}
                             alt={p.part_number}
                             fill
                             className="object-contain p-4"
@@ -326,7 +319,7 @@ export default function ProductFinderPage() {
                           </Link>
                           {p.datasheet_url && (
                             <a
-                              href={p.datasheet_url.startsWith('http') ? p.datasheet_url : `${API}${p.datasheet_url}`}
+                              href={p.datasheet_url.startsWith('http') ? p.datasheet_url : `${API_BASE_URL}${p.datasheet_url}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600"
