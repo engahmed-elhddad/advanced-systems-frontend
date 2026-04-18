@@ -9,11 +9,7 @@ import {
 } from '@/lib/productMappers'
 
 function recordToCardProps(p: Record<string, unknown>) {
-  if (
-    'brand_name' in p ||
-    'category_name' in p ||
-    ('primary_image' in p && p.primary_image !== undefined)
-  ) {
+  if ('brand_name' in p || 'category_name' in p) {
     return productToCardProps(searchHitToApiProduct(p))
   }
   return productToCardProps(ormProductToApiProduct(p))

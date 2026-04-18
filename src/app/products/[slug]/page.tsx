@@ -8,7 +8,6 @@ import Script from 'next/script'
 import { getProductByPartNumber, getProductBySlug, getProducts, apiFetch } from '@/lib/api'
 import { COMPANY_NAME_EN } from '@/lib/company'
 import { API_BASE_URL, normalizeCategoryQueryForApi, SITE_URL } from '@/lib/constants'
-import { primaryProductImageUrl } from '@/lib/productImageUrl'
 import { absoluteUrl, canonicalPath, truncateMetaDescription } from '@/lib/seo'
 import { normalizeProductVariants } from '@/lib/productVariants'
 import { ProductDetail } from './ProductDetail'
@@ -150,8 +149,8 @@ function collectGalleryImages(product: Record<string, unknown>): string[] {
     const t = u.trim()
     if (t && !urls.includes(t)) urls.push(t)
   }
-  push(primaryProductImageUrl(product))
-  for (const k of ['main_image_url', 'side_image_url', 'label_image_url', 'box_image_url']) {
+  push(String(product.image_url ?? '').trim())
+  for (const k of ['side_image_url', 'label_image_url', 'box_image_url']) {
     const v = product[k]
     if (typeof v === 'string' && v.trim()) push(v)
   }
@@ -173,7 +172,7 @@ function collectGalleryImages(product: Record<string, unknown>): string[] {
   return urls
 }
 
-/** Slug/detail API historically omitted image_url when images[] was empty; list search still has URLs. */
+/** If detail payload lacks a resolvable gallery, merge canonical ``image_url`` from list search. */
 const enrichProductFromCatalogSearch = cache(async (product: Record<string, unknown>) => {
   if (collectGalleryImages(product).length > 0) return product
   const pn = String(product.part_number ?? '').trim()
@@ -192,8 +191,6 @@ const enrichProductFromCatalogSearch = cache(async (product: Record<string, unkn
     const out = { ...product }
     const url = String(row.image_url ?? '').trim()
     if (url) out.image_url = url
-    const m = String(row.main_image_url ?? '').trim()
-    if (m && !String(out.main_image_url ?? '').trim()) out.main_image_url = m
     return out
   } catch {
     return product

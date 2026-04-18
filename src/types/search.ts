@@ -26,6 +26,8 @@ export interface SearchSuggestionHit {
   part_number?: string
   name?: string
   brand_name?: string
+  image_url?: string
+  /** @deprecated Prefer image_url */
   primary_image?: string
   slug?: string
 }

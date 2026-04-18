@@ -28,6 +28,9 @@ export interface SearchSuggestion {
   brand?: string
   brand_name?: string
   category?: string
+  /** Canonical storefront image URL from search index. */
+  image_url?: string
+  /** @deprecated Use image_url; retained for older autocomplete payloads. */
   primary_image?: string
 }
 
@@ -119,12 +122,19 @@ function parseMeiliHits(data: unknown, limit: number): SearchSuggestion[] {
       const o = r as Record<string, unknown>
       const pn = String(o.part_number ?? o.partNumber ?? '')
       if (!pn) return null
+      const img =
+        typeof o.image_url === 'string' && o.image_url.trim()
+          ? o.image_url.trim()
+          : typeof o.primary_image === 'string'
+            ? o.primary_image
+            : undefined
       return {
         part_number: pn,
         name: String(o.name ?? ''),
         brand: String(o.brand_name ?? o.brand ?? ''),
         brand_name: String(o.brand_name ?? ''),
-        primary_image: typeof o.primary_image === 'string' ? o.primary_image : undefined,
+        image_url: img,
+        primary_image: img,
       }
     })
     .filter((s): s is SearchSuggestion => s !== null)
@@ -316,7 +326,7 @@ export function SearchBar({
         part_number: s.part_number,
         name: s.name || s.part_number,
         brand: s.brand_name || s.brand,
-        image: s.primary_image,
+        image: s.image_url ?? s.primary_image,
       }))
       const filteredBrands =
         qLower.length >= minLength

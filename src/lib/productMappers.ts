@@ -12,8 +12,6 @@ export interface ApiProduct {
   description?: string
   short_description?: string
   images?: Array<{ url?: string } | string> | null
-  primary_image?: string
-  image?: string
   image_url?: string
   stock_quantity?: number | null
   availability?: string
@@ -53,7 +51,7 @@ export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
   }
 }
 
-/** Normalize a Meilisearch / search API hit to ApiProduct for cards. */
+/** Normalize a Meilisearch / search API hit to ApiProduct for cards (uses {@link getProductImage}). */
 export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct {
   const img = getProductImage(hit)
   const hid = hit.id

@@ -22,7 +22,7 @@ import { SafeImage } from '@/components/ui/SafeImage'
 import { useRFQSubmit } from '@/features/rfq/hooks/useRFQSubmit'
 import { useRFQListStore } from '@/state/rfqListStore'
 import { API_BASE_URL, whatsappHref } from '@/lib/constants'
-import { getProductImage, primaryProductImageUrl } from '@/lib/productImageUrl'
+import { getProductImage } from '@/lib/productImageUrl'
 import { trackAddToRfq, trackPricingView, trackRfqCtaClick, trackWhatsApp } from '@/lib/analytics'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
 import { cn } from '@/lib/utils'
@@ -148,7 +148,7 @@ export function ProductDetail({
         const data = (await r.json()) as { items?: Array<Record<string, unknown>> }
         const row = data.items?.[0]
         if (!row || cancelled) return
-        const u = primaryProductImageUrl(row)
+        const u = String(row.image_url ?? '').trim()
         if (u) setClientGallery([u])
       } catch {
         /* ignore */

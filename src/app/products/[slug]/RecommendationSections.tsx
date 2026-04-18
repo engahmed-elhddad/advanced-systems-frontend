@@ -49,7 +49,7 @@ function toHit(p: Record<string, unknown>): ProductHit {
     brand: String(p.brand ?? p.brand_name ?? ''),
     category: String(p.category ?? p.category_name ?? ''),
     description: p.description != null ? String(p.description) : undefined,
-    image_url: String(p.image_url ?? p.primary_image ?? ''),
+    image_url: String(p.image_url ?? ''),
   }
 }
 

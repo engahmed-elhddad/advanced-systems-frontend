@@ -50,7 +50,7 @@ export function ProductSlugNotFoundClient() {
             part_number: pn,
             slug: row.slug != null ? String(row.slug) : undefined,
             name: row.name != null ? String(row.name) : undefined,
-            image_url: String(row.image_url ?? row.primary_image ?? '').trim() || undefined,
+            image_url: String(row.image_url ?? '').trim() || undefined,
           })
           if (out.length >= 6) break
         }

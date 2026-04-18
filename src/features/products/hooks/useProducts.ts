@@ -140,7 +140,7 @@ function normalizeProduct(row: any): AdminProduct {
     category: String(categoryName || 'Uncategorized'),
     description: String(row?.description || ''),
     specs,
-    imageUrl: String(row?.image_url || row?.main_image_url || row?.images?.[0]?.url || ''),
+    imageUrl: String(row?.image_url ?? '').trim(),
     datasheetUrl: String(row?.datasheet_url || ''),
     status: fromApiStatus(row),
     _etag: typeof row?._etag === 'string' && row._etag.trim() ? row._etag : undefined,

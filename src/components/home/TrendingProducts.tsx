@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/api'
 
 import { useState, useEffect } from 'react'
 import { ProductCard } from '@/components/products/ProductCard'
-import { productToCardProps } from '@/lib/productMappers'
+import { ormProductToApiProduct, productToCardProps } from '@/lib/productMappers'
 import { API_BASE_URL } from '@/lib/constants'
 
 const CARD_MIN_WIDTH = 280
@@ -59,7 +59,9 @@ export function TrendingProducts() {
 
   if (!products.length) return null
 
-  const cardPropsList = products.map((p) => productToCardProps(p as never))
+  const cardPropsList = products.map((p) =>
+    productToCardProps(ormProductToApiProduct(p as Record<string, unknown>)),
+  )
 
   return (
     <section className="py-20">
