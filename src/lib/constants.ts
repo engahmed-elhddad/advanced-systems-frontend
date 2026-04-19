@@ -157,16 +157,22 @@ export const PRODUCT_PLACEHOLDER_IMAGE = "/images/product-placeholder.png"
  * @deprecated Use resolveProductImage from '@/lib/imageResolver' (CDN-based: /products/{part_number}/main.png).
  * Robust product image resolver – images always render without breaking layout.
  * Priority:
- *  1. product.image_url (or images[0] / image) when present – use as-is (full URL or API-relative)
- *  2. Else: /uploads/products/{part_number}.jpg (backend may serve from uploads)
- *  3. Else: /images/product-placeholder.png
+ *  1. product.image_url (canonical CDN from API) when present
+ *  2. Legacy: images[0] or image (avoid for catalog — prefer image_url)
+ *  3. Else: /uploads/products/{part_number}.jpg (legacy fallback only)
+ *  4. Else: /images/product-placeholder.png
  */
 export function resolveProductImageUrl(
   p: { part_number?: string; images?: string[]; image?: string; image_url?: string },
   api: string
 ): string {
   const rawImg: string | null =
-    (p.images && p.images.length > 0 ? p.images[0] : null) ?? p.image_url ?? p.image ?? null
+    (typeof p.image_url === 'string' && p.image_url.trim()
+      ? p.image_url.trim()
+      : null) ??
+    (p.images && p.images.length > 0 ? p.images[0] : null) ??
+    p.image ??
+    null
   if (typeof rawImg === "string" && rawImg.trim()) {
     const s = rawImg.trim()
     if (s.startsWith("http")) return s
