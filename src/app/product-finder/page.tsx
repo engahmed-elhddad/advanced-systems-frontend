@@ -273,7 +273,7 @@ export default function ProductFinderPage() {
                       >
                         {p.image_url ? (
                           <Image
-                            src={getProductImage(p as Record<string, unknown>)}
+                            src={getProductImage(p)}
                             alt={p.part_number}
                             fill
                             className="object-contain p-4"

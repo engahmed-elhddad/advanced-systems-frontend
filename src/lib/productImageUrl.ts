@@ -12,7 +12,7 @@ export function primaryProductImageUrl(product: Record<string, unknown> | null |
 }
 
 /** Always returns a usable `src` string (falls back to site placeholder). */
-export function getProductImage(product: Record<string, unknown> | null | undefined): string {
+export function getProductImage(product: any): string {
   const u = primaryProductImageUrl(product)
   if (u) {
     return resolveImage(u)
