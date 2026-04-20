@@ -56,9 +56,12 @@ export type AdminProductFormInput = {
   categoryId: string
   description: string
   specs: AdminProductSpec[]
+  /** Remote image URL only (https/http). Never data: or blob: — use `imageFile` for uploads. */
   imageUrl: string
   datasheetUrl: string
   status: AdminProductStatus
+  /** Pending local file; uploaded via multipart after product save. */
+  imageFile?: File | null
 }
 
 type BrandRow = { id: number; name: string }
@@ -198,9 +201,48 @@ async function getAdminProductById(id: number): Promise<AdminProduct | null> {
   return rows.items.find((p) => p.id === id) ?? null
 }
 
+/** Only pass real remote URLs to JSON `image_url` — never data:/blob: strings. */
+function normalizeImageUrlForApi(url: string): string | null {
+  const t = (url ?? '').trim()
+  if (!t) return null
+  if (t.startsWith('data:') || t.startsWith('blob:')) return null
+  return t
+}
+
+function extractProductIdFromResponse(data: unknown): number | undefined {
+  if (!data || typeof data !== 'object') return undefined
+  const o = data as Record<string, unknown>
+  if (typeof o.id === 'number' && Number.isFinite(o.id)) return o.id
+  if (typeof o.id === 'string' && /^\d+$/.test(o.id)) return parseInt(o.id, 10)
+  const inner = o.data
+  if (inner && typeof inner === 'object') {
+    const id = (inner as { id?: unknown }).id
+    if (typeof id === 'number' && Number.isFinite(id)) return id
+    if (typeof id === 'string' && /^\d+$/.test(id)) return parseInt(id, 10)
+  }
+  return undefined
+}
+
+/** POST /api/v1/admin/products/{product_id}/images — `file` + `is_primary` match FastAPI `File` / `Form`. */
+async function uploadProductPrimaryImage(productId: number, file: File) {
+  const fd = new FormData()
+  fd.append('file', file)
+  fd.append('is_primary', 'true')
+  // Axios rejects non-2xx; no silent failure.
+  const res = await api.post<unknown>(`/api/v1/admin/products/${productId}/images`, fd)
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console -- temporary upload verification
+    console.info('[admin product image upload]', { productId, status: res.status, data: res.data })
+  }
+  return res
+}
+
 async function createAdminProduct(input: AdminProductFormInput) {
   const { brandId, categoryId } = await resolveBrandCategoryIds(input)
-  const statusPayload = toApiStatus(input.status)
+  const wantsActive = input.status === 'Active'
+  /** Publish rules require an image when active; create draft first if we must upload a file then activate. */
+  const initialStatus =
+    input.imageFile && wantsActive ? toApiStatus('Draft') : toApiStatus(input.status)
   const autoPartNumber = input.name
     .trim()
     .toUpperCase()
@@ -214,13 +256,39 @@ async function createAdminProduct(input: AdminProductFormInput) {
     brand_id: brandId ?? null,
     category_id: categoryId ?? null,
     description: input.description || null,
-    image_url: input.imageUrl?.trim() || null,
+    image_url: normalizeImageUrlForApi(input.imageUrl),
     datasheet_url: input.datasheetUrl?.trim() || null,
     stock_quantity: 1,
     specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
-    ...statusPayload,
+    ...initialStatus,
   }
   const res = await api.post<unknown>('/api/v1/admin/products', payload)
+  const productId = extractProductIdFromResponse(res.data)
+
+  if (input.imageFile) {
+    if (productId == null) {
+      throw new Error(
+        'Product was created but the response did not include a numeric id; image upload was skipped.',
+      )
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console -- temporary upload verification
+      console.info('[admin create product] uploading image for product id', productId)
+    }
+    try {
+      await uploadProductPrimaryImage(productId, input.imageFile)
+    } catch (uploadErr) {
+      throw uploadErr instanceof Error
+        ? new Error(`Product created (id ${productId}) but image upload failed: ${uploadErr.message}`)
+        : uploadErr
+    }
+    if (wantsActive) {
+      await api.put(`/api/v1/admin/products/${productId}`, {
+        is_active: true,
+        availability: 'in_stock',
+      })
+    }
+  }
   return res.data
 }
 
@@ -232,10 +300,24 @@ async function updateAdminProduct(id: number, input: AdminProductFormInput) {
     brand_id: brandId ?? null,
     category_id: categoryId ?? null,
     description: input.description || null,
-    image_url: input.imageUrl?.trim() || null,
+    image_url: normalizeImageUrlForApi(input.imageUrl),
     datasheet_url: input.datasheetUrl?.trim() || null,
     specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
     ...statusPayload,
+  }
+  /** Upload file before PUT so publish-readiness sees the new image when status is Active. */
+  if (input.imageFile) {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console -- temporary upload verification
+      console.info('[admin update product] uploading image for product id', id)
+    }
+    try {
+      await uploadProductPrimaryImage(id, input.imageFile)
+    } catch (uploadErr) {
+      throw uploadErr instanceof Error
+        ? new Error(`Image upload failed for product ${id}: ${uploadErr.message}`)
+        : uploadErr
+    }
   }
   const res = await api.put<unknown>(`/api/v1/admin/products/${id}`, payload)
   return res.data

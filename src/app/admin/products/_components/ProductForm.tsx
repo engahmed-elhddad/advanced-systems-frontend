@@ -65,11 +65,29 @@ export function ProductForm({
 
   const lastAutoCategoryRef = useRef<string>('')
 
-  const previewImage = useMemo(() => form.imageUrl || FALLBACK_IMAGE, [form.imageUrl])
+  /** Blob preview for local `imageFile`; revoked on change/unmount. */
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    return () => {
+      setImagePreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return null
+      })
+    }
+  }, [])
+
+  const previewImage = useMemo(() => {
+    if (imagePreviewUrl) return imagePreviewUrl
+    const u = form.imageUrl?.trim() ?? ''
+    if (u) return u
+    return FALLBACK_IMAGE
+  }, [form.imageUrl, imagePreviewUrl])
 
   const entryWarnings = useMemo(() => {
     const items: string[] = []
-    if (!form.imageUrl?.trim()) items.push('Main image is missing (upload or paste an image URL).')
+    const hasImage = Boolean(form.imageFile || form.imageUrl?.trim())
+    if (!hasImage) items.push('Main image is missing (upload or paste an image URL).')
     if (!form.description?.trim()) items.push('Description is empty.')
     const brandOk = form.brandId?.trim() && brandOptions.some((o) => o.value === form.brandId)
     if (!brandOk) items.push('Brand is not selected (pick one from the list or create a new brand).')
@@ -164,13 +182,19 @@ export function ProductForm({
 
   function onPickImage(file?: File) {
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        patch({ imageUrl: reader.result })
-      }
-    }
-    reader.readAsDataURL(file)
+    setImagePreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(file)
+    })
+    patch({ imageFile: file, imageUrl: '' })
+  }
+
+  function onImageUrlChange(value: string) {
+    setImagePreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+    patch({ imageUrl: value, imageFile: undefined })
   }
 
   async function submitNewBrand() {
@@ -362,10 +386,12 @@ export function ProductForm({
               label="Image URL"
               placeholder="https://..."
               value={form.imageUrl}
-              onChange={(e) => patch({ imageUrl: e.target.value })}
+              onChange={(e) => onImageUrlChange(e.target.value)}
               leftIcon={<ImagePlus className="h-4 w-4" />}
             />
-                    <p className="text-xs text-gray-400">Upload stores a temporary data URL until backend media upload is wired.</p>
+            <p className="text-xs text-gray-400">
+              Upload sends the file to the server after save. Paste a URL here for an external image only.
+            </p>
           </div>
         </Card>
 

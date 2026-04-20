@@ -20,6 +20,10 @@ api.interceptors.request.use((config) => {
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   config.headers["X-Tenant-Id"] = TENANT_ID;
+  // Default Content-Type is application/json; FormData must set multipart boundary automatically.
+  if (config.data instanceof FormData) {
+    delete (config.headers as Record<string, unknown>)["Content-Type"];
+  }
   return config;
 });
 
