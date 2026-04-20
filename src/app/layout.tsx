@@ -1,24 +1,13 @@
 import type { Metadata, Viewport } from 'next'
-import { Suspense } from 'react'
-import dynamic from 'next/dynamic'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
 import { CurrencyProvider } from '@/lib/providers/CurrencyProvider'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ShopAuthProvider } from '@/components/providers/ShopAuthProvider'
-import { SkipLink } from '@/components/shared/SkipLink'
-import { RFQModalGlobal } from './RFQModalGlobal'
-import { RFQFloatingBar } from '@/components/rfq/RFQFloatingBar'
 import { AppToaster } from '@/components/providers/AppToaster'
 import { AnalyticsClient } from '@/components/analytics/AnalyticsClient'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
-
-const IndustrialAssistant = dynamic(
-  () => import('@/components/assistant/IndustrialAssistant').then((m) => ({ default: m.IndustrialAssistant })),
-  { ssr: false }
-)
+import { RootSiteChrome } from './RootSiteChrome'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 
@@ -73,7 +62,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <ShopAuthProvider>
             <CurrencyProvider>
-            <SkipLink />
             <div
               className="fixed inset-0 -z-20 bg-gradient-to-br from-[#0a1629] via-[#121f3d] to-[#1c1530]"
               aria-hidden
@@ -86,22 +74,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               className="pointer-events-none fixed -left-24 top-0 -z-10 h-[min(90vw,480px)] w-[min(90vw,480px)] rounded-full bg-violet-600/[0.14] blur-[140px]"
               aria-hidden
             />
-            <Suspense
-              fallback={
-                <header
-                  className="sticky top-0 z-50 h-[4.75rem] border-b border-white/[0.08] bg-[rgba(11,31,58,0.72)] backdrop-blur-2xl"
-                  aria-hidden
-                />
-              }
-            >
-              <Navbar />
-            </Suspense>
-            <main className="relative min-h-screen">{children}</main>
-            <Footer />
-            <RFQModalGlobal />
-            <RFQFloatingBar />
+            <RootSiteChrome>{children}</RootSiteChrome>
             <AppToaster />
-            <IndustrialAssistant />
             </CurrencyProvider>
           </ShopAuthProvider>
         </QueryProvider>

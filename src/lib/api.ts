@@ -5,7 +5,9 @@ import { API_BASE_URL } from "@/lib/constants";
 
 const API_BASE = API_BASE_URL;
 
-const TENANT_HEADER = (process.env.NEXT_PUBLIC_TENANT_ID || "").trim();
+/** Must match backend `require_tenant_id` default; production refuses missing header. */
+const DEFAULT_TENANT_ID = "default";
+const TENANT_ID = (process.env.NEXT_PUBLIC_TENANT_ID || DEFAULT_TENANT_ID).trim() || DEFAULT_TENANT_ID;
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -17,9 +19,7 @@ api.interceptors.request.use((config) => {
     const token = localStorage.getItem("admin_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
-  if (TENANT_HEADER) {
-    config.headers["X-Tenant-Id"] = TENANT_HEADER;
-  }
+  config.headers["X-Tenant-Id"] = TENANT_ID;
   return config;
 });
 
@@ -33,9 +33,7 @@ export function apiFetch(
     const token = localStorage.getItem("admin_token");
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
-  if (TENANT_HEADER) {
-    headers.set("X-Tenant-Id", TENANT_HEADER);
-  }
+  headers.set("X-Tenant-Id", TENANT_ID);
   return fetch(input, { ...init, headers });
 }
 

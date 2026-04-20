@@ -43,7 +43,7 @@ const shellTrigger =
 const shellBorderOk = 'border-[var(--color-border)]'
 const shellBorderErr = 'border-[var(--color-destructive)]'
 const shellContent =
-  'relative z-[100] max-h-[min(18rem,var(--radix-select-content-available-height))] overflow-hidden rounded-[var(--radius-3)] border border-[var(--color-border)] bg-[var(--color-background-secondary)] py-1 shadow-[var(--shadow-md)]'
+  'relative z-[var(--z-dropdown)] max-h-[min(18rem,var(--radix-select-content-available-height))] overflow-hidden rounded-[var(--radius-3)] border border-[var(--color-border)] bg-[var(--color-background-secondary)] py-1 shadow-[var(--shadow-md)]'
 const shellItem =
   'relative flex w-full cursor-pointer select-none items-center justify-between rounded-sm py-2 pl-3 pr-8 text-sm text-[var(--color-foreground)] outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-[var(--color-background-tertiary)]'
 
@@ -52,7 +52,7 @@ const lightTrigger =
 const lightBorderOk = 'border-slate-200/90'
 const lightBorderErr = 'border-red-400'
 const lightContent =
-  'relative z-[100] max-h-[min(18rem,var(--radix-select-content-available-height))] overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg'
+  'relative z-[var(--z-dropdown)] max-h-[min(18rem,var(--radix-select-content-available-height))] overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg'
 const lightItem =
   'relative flex w-full cursor-pointer select-none items-center justify-between rounded-sm py-2 pl-3 pr-8 text-sm text-slate-900 outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-slate-100'
 
@@ -144,7 +144,7 @@ export function Select({
           </SelectPrimitive.Icon>
         </SelectPrimitive.Trigger>
 
-        <SelectPrimitive.Portal>
+        <SelectPrimitive.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
           <SelectPrimitive.Content
             position="popper"
             sideOffset={4}

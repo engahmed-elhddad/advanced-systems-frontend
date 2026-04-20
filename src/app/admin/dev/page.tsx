@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { API_BASE_URL } from "@/lib/constants"
 
 export default function DevConsole(){
 
@@ -28,8 +29,7 @@ alert("Wrong password")
 
 async function runAI(){
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"
-const res = await fetch(`${apiBase}/ai/dev`,{
+const res = await fetch(`${API_BASE_URL}/ai/dev`,{
 
 method:"POST",
 

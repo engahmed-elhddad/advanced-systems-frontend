@@ -42,7 +42,7 @@ export function AdminShell({
     'rounded-xl py-2.5 pl-3 pr-2 text-sm transition-all duration-300 border-l-2'
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-[#060d1a] via-[#0c1428] to-[#160a22] text-white">
+    <div className="relative flex min-h-screen overflow-x-hidden bg-gradient-to-br from-[#060d1a] via-[#0c1428] to-[#160a22] text-white">
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
         <div className="absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-purple-600/25 blur-[120px]" />
         <div className="absolute -bottom-40 -right-20 h-[440px] w-[440px] rounded-full bg-orange-500/22 blur-[120px]" />

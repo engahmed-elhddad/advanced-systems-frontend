@@ -50,6 +50,7 @@ export function ProductForm({
   const [newCategoryName, setNewCategoryName] = useState('')
   const [creatingBrand, setCreatingBrand] = useState(false)
   const [creatingCategory, setCreatingCategory] = useState(false)
+  const submitInFlight = useRef(false)
 
   const categoryIdNum = Number(form.categoryId)
   const categorySchemaQuery = useAdminCategorySchema(form.categoryId)
@@ -140,6 +141,7 @@ export function ProductForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (submitting || loading || submitInFlight.current) return
     if (entryWarnings.length > 0) {
       const lines = entryWarnings.join('\n')
       const ok = window.confirm(
@@ -147,6 +149,7 @@ export function ProductForm({
       )
       if (!ok) return
     }
+    submitInFlight.current = true
     setSubmitting(true)
     try {
       await onSubmit({
@@ -155,6 +158,7 @@ export function ProductForm({
       })
     } finally {
       setSubmitting(false)
+      submitInFlight.current = false
     }
   }
 
@@ -208,8 +212,9 @@ export function ProductForm({
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Card className="border border-white/10 bg-white/5 p-6 backdrop-blur-xl lg:p-8">
+      <Card className="overflow-visible border border-white/10 bg-white/5 p-6 backdrop-blur-xl lg:p-8">
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wider text-gray-300">Core Details</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input
@@ -378,13 +383,19 @@ export function ProductForm({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" surface="dark" loading={submitting || loading}>
+        <Button
+          type="submit"
+          surface="dark"
+          loading={submitting || loading}
+          disabled={submitting || loading}
+        >
           {mode === 'create' ? 'Save Product' : 'Save Changes'}
         </Button>
         <Button asChild type="button" variant="secondary" surface="dark">
           <Link href="/admin/products">Cancel</Link>
         </Button>
       </div>
+    </form>
 
       <Modal open={brandModalOpen} onClose={() => setBrandModalOpen(false)} title="New brand" size="sm">
         <div className="space-y-3 py-2">
@@ -427,6 +438,6 @@ export function ProductForm({
           </div>
         </div>
       </Modal>
-    </form>
+    </>
   )
 }

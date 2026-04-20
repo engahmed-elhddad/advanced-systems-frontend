@@ -165,19 +165,6 @@ export function conflictProductIdsFromError(err: unknown): number[] {
   return ids
 }
 
-async function requestFirstSuccess<T>(paths: string[], config?: any): Promise<T> {
-  let lastErr: unknown = null
-  for (const path of paths) {
-    try {
-      const res = await api.request<T>({ url: path, ...config })
-      return res.data
-    } catch (err) {
-      lastErr = err
-    }
-  }
-  throw lastErr
-}
-
 function unwrapAdminEnvelope(raw: unknown): { inner: Record<string, unknown>; meta: Record<string, unknown> } {
   if (raw && typeof raw === 'object' && 'data' in raw) {
     const o = raw as { data: Record<string, unknown>; meta?: Record<string, unknown> }
@@ -194,40 +181,16 @@ async function getAdminProducts(
   const size = params.size ?? 50
   const search = params.search?.trim() || undefined
 
-  try {
-    const res = await api.get('/api/v1/admin/products', {
-      params: { page, per_page: size, size, search, sort: 'newest' },
-      signal,
-    })
-    const { inner: data, meta } = unwrapAdminEnvelope(res.data)
-    const rows = data?.items ?? data?.products ?? data?.results ?? []
-    const items = Array.isArray(rows) ? rows.map(normalizeProduct) : []
-    const total = Number(data?.total ?? items.length)
-    const dataVersion = typeof meta.data_version === 'string' ? meta.data_version : undefined
-    return { items, total, dataVersion }
-  } catch (err) {
-    const isCanceled =
-      signal?.aborted ||
-      (typeof err === 'object' &&
-        err !== null &&
-        (err as { code?: string; name?: string }).code === 'ERR_CANCELED')
-    if (isCanceled) throw err
-    return requestFirstSuccess<{ items?: unknown[]; products?: unknown[]; results?: unknown[]; total?: number }>(
-      ['/api/v1/products/'],
-      {
-        method: 'GET',
-        params: { page, per_page: size, size, search },
-        signal,
-      },
-    ).then((raw) => {
-      const { inner: data, meta } = unwrapAdminEnvelope(raw)
-      const rows = data?.items ?? data?.products ?? data?.results ?? []
-      const items = Array.isArray(rows) ? rows.map(normalizeProduct) : []
-      const total = Number(data?.total ?? items.length)
-      const dataVersion = typeof meta.data_version === 'string' ? meta.data_version : undefined
-      return { items, total, dataVersion }
-    })
-  }
+  const res = await api.get('/api/v1/admin/products', {
+    params: { page, per_page: size, size, search, sort: 'newest' },
+    signal,
+  })
+  const { inner: data, meta } = unwrapAdminEnvelope(res.data)
+  const rows = data?.items ?? data?.products ?? data?.results ?? []
+  const items = Array.isArray(rows) ? rows.map(normalizeProduct) : []
+  const total = Number(data?.total ?? items.length)
+  const dataVersion = typeof meta.data_version === 'string' ? meta.data_version : undefined
+  return { items, total, dataVersion }
 }
 
 async function getAdminProductById(id: number): Promise<AdminProduct | null> {
@@ -251,15 +214,14 @@ async function createAdminProduct(input: AdminProductFormInput) {
     brand_id: brandId ?? null,
     category_id: categoryId ?? null,
     description: input.description || null,
-    image_url: input.imageUrl || null,
+    image_url: input.imageUrl?.trim() || null,
+    datasheet_url: input.datasheetUrl?.trim() || null,
     stock_quantity: 1,
     specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
     ...statusPayload,
   }
-  return requestFirstSuccess<any>(['/api/v1/admin/products', '/api/v1/products'], {
-    method: 'POST',
-    data: payload,
-  })
+  const res = await api.post<unknown>('/api/v1/admin/products', payload)
+  return res.data
 }
 
 async function updateAdminProduct(id: number, input: AdminProductFormInput) {
@@ -270,21 +232,20 @@ async function updateAdminProduct(id: number, input: AdminProductFormInput) {
     brand_id: brandId ?? null,
     category_id: categoryId ?? null,
     description: input.description || null,
-    image_url: input.imageUrl || null,
+    image_url: input.imageUrl?.trim() || null,
+    datasheet_url: input.datasheetUrl?.trim() || null,
     specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
     ...statusPayload,
   }
-  return requestFirstSuccess<any>(
-    [`/api/v1/admin/products/${id}`, `/api/v1/products/${id}`],
-    { method: 'PUT', data: payload }
-  )
+  const res = await api.put<unknown>(`/api/v1/admin/products/${id}`, payload)
+  return res.data
 }
 
 async function deleteAdminProduct(id: number, etag: string) {
-  return requestFirstSuccess<any>(
-    [`/api/v1/admin/products/${id}`, `/api/v1/products/${id}`],
-    { method: 'DELETE', headers: { 'If-Match': etag } }
-  )
+  const res = await api.delete<unknown>(`/api/v1/admin/products/${id}`, {
+    headers: { 'If-Match': etag },
+  })
+  return res.data
 }
 
 export function useAdminProducts(params: { page?: number; size?: number; search?: string }) {

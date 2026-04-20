@@ -67,10 +67,11 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
   --shadow-focus: 0 0 0 2px var(--color-ring);
 
-  --z-dropdown: 30;
+  /* Dropdowns above admin chrome (sidebar/header use z-30–z-50); modals above both */
+  --z-dropdown: 60;
   --z-overlay: 35;
-  --z-modal: 40;
-  --z-toast: 50;
+  --z-modal: 110;
+  --z-toast: 120;
 
   /* Backward-compatible aliases */
   --color-background: var(--color-bg);

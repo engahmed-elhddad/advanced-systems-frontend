@@ -132,6 +132,18 @@ export function CatalogEntityAdminPage({
     onError: (e: Error) => toast.error(getApiErrorMessage(e, 'Update failed')),
   })
 
+  const savePending = createMut.isPending || updateMut.isPending
+
+  async function handleModalSave() {
+    if (savePending) return
+    try {
+      if (editing) await updateMut.mutateAsync()
+      else await createMut.mutateAsync()
+    } catch {
+      /* toast via mutation onError */
+    }
+  }
+
   const deleteMut = useMutation({
     mutationFn: async (id: number) => {
       const res = kind === 'brand' ? await admin.deleteAdminBrand(id) : await admin.deleteAdminCategory(id)
@@ -348,11 +360,9 @@ export function CatalogEntityAdminPage({
             <Button
               type="button"
               variant="primary"
-              disabled={createMut.isPending || updateMut.isPending}
-              onClick={() => {
-                if (editing) updateMut.mutate()
-                else createMut.mutate()
-              }}
+              loading={savePending}
+              disabled={savePending}
+              onClick={() => void handleModalSave()}
             >
               {editing ? 'Save' : 'Create'}
             </Button>
