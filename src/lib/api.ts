@@ -41,23 +41,46 @@ export function apiFetch(
   return fetch(input, { ...init, headers });
 }
 
+/** Prefer FastAPI `detail` / `detail.message` over Axios's generic "Request failed with status code …". */
+function messageFromAxiosResponseData(data: Record<string, unknown> | string | undefined): string | null {
+  if (typeof data === "string" && data.trim()) return data;
+  if (!data || typeof data !== "object") return null;
+  const detail = (data as Record<string, unknown>).detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (Array.isArray(detail) && detail.length) return String(detail[0]);
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    const m = (detail as Record<string, unknown>).message;
+    if (typeof m === "string" && m.trim()) return m;
+  }
+  return null;
+}
+
+/** True when backend returned 409 with duplicate `products.part_number` (see admin product create). */
+export function isDuplicatePartNumberConflict(error: unknown): boolean {
+  const e = error as { response?: { status?: number; data?: Record<string, unknown> } } | null;
+  if (e?.response?.status !== 409) return false;
+  const detail = e.response?.data?.detail;
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    return (detail as Record<string, unknown>).constraint === "products.part_number";
+  }
+  return false;
+}
+
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (error == null) return fallback;
   if (typeof error === "string" && error.trim()) return error;
   const e = error as Record<string, unknown>;
-  const msg = e.message;
-  if (typeof msg === "string" && msg.trim()) return msg;
   const response = e.response as Record<string, unknown> | undefined;
   const data = response?.data as Record<string, unknown> | string | undefined;
-  if (typeof data === "string" && data.trim()) return data;
-  if (data && typeof data === "object") {
-    const detail = (data as Record<string, unknown>).detail;
-    if (typeof detail === "string") return detail;
-    if (Array.isArray(detail) && detail.length) return String(detail[0]);
-    if (detail && typeof detail === "object" && !Array.isArray(detail)) {
-      const msg = (detail as Record<string, unknown>).message;
-      if (typeof msg === "string" && msg.trim()) return msg;
-    }
+  const fromBody = messageFromAxiosResponseData(
+    typeof data === "object" && data !== null ? (data as Record<string, unknown>) : data
+  );
+  if (fromBody) return fromBody;
+
+  const msg = e.message;
+  if (typeof msg === "string" && msg.trim()) {
+    const genericAxios = /^Request failed with status code \d+$/.test(msg);
+    if (!genericAxios) return msg;
   }
   return fallback;
 }

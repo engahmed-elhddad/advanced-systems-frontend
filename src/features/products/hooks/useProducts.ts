@@ -52,6 +52,8 @@ export type AdminProduct = {
 
 export type AdminProductFormInput = {
   name: string
+  /** Create only: optional manual part number; blank uses auto-generated value from name + suffix. */
+  partNumber?: string
   brandId: string
   categoryId: string
   description: string
@@ -243,13 +245,16 @@ async function createAdminProduct(input: AdminProductFormInput) {
   /** Publish rules require an image when active; create draft first if we must upload a file then activate. */
   const initialStatus =
     input.imageFile && wantsActive ? toApiStatus('Draft') : toApiStatus(input.status)
+  const trimmedManualPn = input.partNumber?.trim()
   const autoPartNumber = input.name
     .trim()
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 28)
-  const pn = `${autoPartNumber || 'PRODUCT'}-${Date.now().toString().slice(-5)}`
+  const pn =
+    trimmedManualPn ||
+    `${autoPartNumber || 'PRODUCT'}-${Date.now().toString().slice(-5)}`
   const payload = {
     part_number: pn,
     name: input.name,

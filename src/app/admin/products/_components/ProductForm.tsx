@@ -24,6 +24,9 @@ type ProductFormProps = {
   brandOptions: Array<{ value: string; label: string }>
   categoryOptions: Array<{ value: string; label: string }>
   onSubmit: (value: ProductFormValues) => Promise<void> | void
+  /** Create: shown under Part number when API reports duplicate part_number. */
+  partNumberError?: string | null
+  onClearPartNumberError?: () => void
 }
 
 const STATUS_OPTIONS = [
@@ -39,11 +42,17 @@ export function ProductForm({
   brandOptions,
   categoryOptions,
   onSubmit,
+  partNumberError,
+  onClearPartNumberError,
 }: ProductFormProps) {
   const queryClient = useQueryClient()
-  const [form, setForm] = useState<ProductFormValues>(initialValue)
+  const [form, setForm] = useState<ProductFormValues>(() => ({
+    ...initialValue,
+    partNumber: initialValue.partNumber ?? '',
+  }))
   const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const partNumberInputRef = useRef<HTMLInputElement>(null)
   const [brandModalOpen, setBrandModalOpen] = useState(false)
   const [categoryModalOpen, setCategoryModalOpen] = useState(false)
   const [newBrandName, setNewBrandName] = useState('')
@@ -241,14 +250,33 @@ export function ProductForm({
       <Card className="overflow-visible border border-white/10 bg-white/5 p-6 backdrop-blur-xl lg:p-8">
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wider text-gray-300">Core Details</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Input
-            variant="dark"
-            label="Name"
-            value={form.name}
-            onChange={(e) => patch({ name: e.target.value })}
-            placeholder="Product name"
-            required
-          />
+          <div className={mode === 'edit' ? 'md:col-span-2' : undefined}>
+            <Input
+              variant="dark"
+              label="Name"
+              value={form.name}
+              onChange={(e) => patch({ name: e.target.value })}
+              placeholder="Product name"
+              required
+            />
+          </div>
+
+          {mode === 'create' ? (
+            <Input
+              ref={partNumberInputRef}
+              variant="dark"
+              name="part_number"
+              label="Part number"
+              value={form.partNumber ?? ''}
+              onChange={(e) => {
+                onClearPartNumberError?.()
+                patch({ partNumber: e.target.value })
+              }}
+              placeholder="Leave blank to auto-generate"
+              helperText="Must be unique. Leave blank to generate from the product name."
+              error={partNumberError ?? undefined}
+            />
+          ) : null}
 
           <Select
             label="Brand"

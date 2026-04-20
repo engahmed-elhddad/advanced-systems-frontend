@@ -1,12 +1,12 @@
 'use client'
 
-import { Suspense, useMemo, useEffect } from 'react'
+import { Suspense, useMemo, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { useBrands } from '@/features/products/hooks/useBrands'
 import { useCategories } from '@/features/products/hooks/useCategories'
-import { getApiErrorMessage } from '@/lib/api'
+import { getApiErrorMessage, isDuplicatePartNumberConflict } from '@/lib/api'
 import { useAdminProduct, useCreateAdminProduct } from '@/features/products/hooks/useProducts'
 import { Card, Skeleton } from '@/components/ui'
 import { ProductForm } from '../_components/ProductForm'
@@ -14,6 +14,7 @@ import toast from 'react-hot-toast'
 
 const emptyCreateForm = {
   name: '',
+  partNumber: '',
   brandId: '',
   categoryId: '',
   description: '',
@@ -33,6 +34,7 @@ function NewAdminProductPageInner() {
   const categoriesQuery = useCategories()
   const dupQuery = useAdminProduct(dupEnabled ? duplicateId : 0)
   const createMutation = useCreateAdminProduct()
+  const [partNumberError, setPartNumberError] = useState<string | null>(null)
 
   const brandOptions = (brandsQuery.data ?? []).map((b: any) => ({ value: String(b.id), label: String(b.name) }))
   const categoryOptions = (categoriesQuery.data ?? []).map((c: any) => ({ value: String(c.id), label: String(c.name) }))
@@ -43,6 +45,7 @@ function NewAdminProductPageInner() {
     if (!duplicateSource) return null
     return {
       name: `${duplicateSource.name} (copy)`,
+      partNumber: '',
       brandId: duplicateSource.brandId || '',
       categoryId: duplicateSource.categoryId || '',
       description: duplicateSource.description,
@@ -102,12 +105,20 @@ function NewAdminProductPageInner() {
             brandOptions={brandOptions}
             categoryOptions={categoryOptions}
             initialValue={initialValue}
+            partNumberError={partNumberError}
+            onClearPartNumberError={() => setPartNumberError(null)}
             onSubmit={async (payload) => {
+              setPartNumberError(null)
               try {
                 await createMutation.mutateAsync(payload)
                 toast.success('Product created')
                 router.push('/admin/products')
               } catch (error) {
+                if (isDuplicatePartNumberConflict(error)) {
+                  setPartNumberError('Part number already exists')
+                  toast.error('Part number already exists')
+                  return
+                }
                 toast.error(getApiErrorMessage(error, 'Failed to create product'))
               }
             }}
