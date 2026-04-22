@@ -12,8 +12,12 @@
 
 # testing
 /coverage
+playwright/.auth/*.json
+playwright/.e2e-suite-marker.json
 playwright-report/
 test-results/
+/reports/**
+!/reports/.gitignore
 build-log.txt
 .migration_backup_app/
 visual-tests/results/

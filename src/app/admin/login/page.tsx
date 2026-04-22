@@ -50,18 +50,22 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <div
+      className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4"
+      data-testid="admin-login-page"
+    >
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
           <h1 className="text-xl font-bold text-gray-900 mb-2">Admin Login</h1>
           <p className="text-sm text-gray-500 mb-6">Sign in to access the admin panel</p>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" data-testid="admin-login-form">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
               <input
                 id="email"
+                data-testid="admin-login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -77,6 +81,7 @@ export default function AdminLoginPage() {
               </label>
               <input
                 id="password"
+                data-testid="admin-login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -85,9 +90,14 @@ export default function AdminLoginPage() {
                 className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 caret-gray-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
               />
             </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && (
+              <p className="text-sm text-red-600" data-testid="admin-login-error" role="alert">
+                {error}
+              </p>
+            )}
             <button
               type="submit"
+              data-testid="admin-login-submit"
               disabled={loading}
               className="w-full py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white font-medium"
             >

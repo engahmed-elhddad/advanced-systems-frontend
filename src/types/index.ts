@@ -52,17 +52,26 @@ export interface Product {
   description?: string;
   short_description?: string;
   price_usd?: number;
-  availability: "available" | "limited" | "unavailable";
+  /** Storefront / DB label — values vary (e.g. ``available``, ``in_stock``, ``on_request``). */
+  availability?: string;
   stock_quantity?: number;
+  brand_id?: number;
+  category_id?: number;
   brand?: Brand;
   category?: Category;
-  images: ProductImage[];
-  datasheets: ProductDatasheet[];
-  specs: ProductSpec[];
-  is_featured: boolean;
+  /** Canonical single image URL from API; may coexist with ``images[]``. */
+  image_url?: string | null;
+  images?: ProductImage[];
+  datasheets?: ProductDatasheet[];
+  specs?: ProductSpec[];
+  is_featured?: boolean;
+  is_active?: boolean;
+  is_ready_for_publish?: boolean;
   view_count?: number;
   meta_title?: string;
   meta_description?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface RFQFormData {

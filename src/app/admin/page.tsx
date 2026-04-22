@@ -33,7 +33,7 @@ export default function AdminDashboard() {
   }, [dashboardQuery.isError])
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="admin-dashboard">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-white">Dashboard</h1>
         <p className="mt-1 text-sm text-white/55">

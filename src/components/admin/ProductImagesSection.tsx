@@ -20,11 +20,12 @@ type ProductImage = {
 }
 
 export default function ProductImagesSection({
-  partNumber,
+  productId,
   images,
   onChanged,
 }: {
-  partNumber: string
+  /** Numeric product id — must match /api/v1/admin/products/{product_id}/images */
+  productId: number
   images: ProductImage[]
   onChanged: () => Promise<void> | void
 }) {
@@ -58,9 +59,14 @@ export default function ProductImagesSection({
     setMessage("")
     setError("")
     try {
-      const res = await uploadAdminProductImages(partNumber, Array.from(files))
+      const res = await uploadAdminProductImages(productId, Array.from(files))
       if (!res.ok) {
-        setError(res?.data?.message || "Upload failed")
+        const firstFail = Array.isArray(res.data?.failed) && res.data.failed[0]
+        const detail =
+          firstFail && typeof firstFail === "object" && "detail" in firstFail
+            ? String((firstFail as { detail?: unknown }).detail)
+            : "Upload failed"
+        setError(detail)
         return
       }
       const successCount = Array.isArray(res.data?.success) ? res.data.success.length : 0
@@ -74,7 +80,7 @@ export default function ProductImagesSection({
 
   async function handleSetPrimary(imageId: string) {
     setBusy(true)
-    const res = await setAdminProductPrimaryImage(partNumber, imageId)
+    const res = await setAdminProductPrimaryImage(productId, imageId)
     if (!res.ok) {
       setError(res.message || "Failed to set primary image")
       setBusy(false)
@@ -87,7 +93,7 @@ export default function ProductImagesSection({
   async function handleDelete(imageId: string) {
     if (!window.confirm("Delete this image?")) return
     setBusy(true)
-    const res = await deleteAdminProductImage(partNumber, imageId)
+    const res = await deleteAdminProductImage(productId, imageId)
     if (!res.ok) {
       setError(res.message || "Failed to delete image")
       setBusy(false)
@@ -103,7 +109,7 @@ export default function ProductImagesSection({
       image_id: img.id,
       sort_order: Number.isFinite(sortMap[img.id]) ? Number(sortMap[img.id]) : idx,
     }))
-    const res = await reorderAdminProductImages(partNumber, order)
+    const res = await reorderAdminProductImages(productId, order)
     if (!res.ok) {
       setError(res.message || "Failed to reorder images")
       setBusy(false)

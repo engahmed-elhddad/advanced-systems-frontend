@@ -9,8 +9,8 @@ const ADMIN_USER_KEY = "admin_user"
 export function isAdminAuthenticated(): boolean {
   if (typeof window === "undefined") return false
   const token = localStorage.getItem(ADMIN_TOKEN_KEY)
-  const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY
-  return !!(token || apiKey)
+  // Do not treat NEXT_PUBLIC_* env as auth: it is embedded in the client bundle and is not a secret.
+  return Boolean(token?.trim())
 }
 
 export function clearAdminAuth(): void {
@@ -32,8 +32,8 @@ export function getAdminUser(): { email: string; role: string } | null {
 
 export function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { "Content-Type": "application/json" }
-  const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY
-  if (apiKey) headers["api-key"] = apiKey
+  // ISS-02: Do NOT send NEXT_PUBLIC_ADMIN_API_KEY here. That env var is embedded in the
+  // client bundle and visible to anyone in DevTools. Auth is via JWT Bearer token only.
   if (typeof window !== "undefined") {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY)
     if (token) headers["Authorization"] = `Bearer ${token}`

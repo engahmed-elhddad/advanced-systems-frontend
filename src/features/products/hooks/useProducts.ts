@@ -198,9 +198,15 @@ async function getAdminProducts(
   return { items, total, dataVersion }
 }
 
+/** ISS-07: fetch a single product by id directly — no bulk list load. */
 async function getAdminProductById(id: number): Promise<AdminProduct | null> {
-  const rows = await getAdminProducts({ page: 1, size: 200 })
-  return rows.items.find((p) => p.id === id) ?? null
+  try {
+    const res = await api.get<unknown>(`/api/v1/admin/products/${id}`)
+    return normalizeProduct(res.data)
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) return null
+    throw err
+  }
 }
 
 /** Only pass real remote URLs to JSON `image_url` — never data:/blob: strings. */
@@ -283,9 +289,25 @@ async function createAdminProduct(input: AdminProductFormInput) {
     try {
       await uploadProductPrimaryImage(productId, input.imageFile)
     } catch (uploadErr) {
-      throw uploadErr instanceof Error
-        ? new Error(`Product created (id ${productId}) but image upload failed: ${uploadErr.message}`)
-        : uploadErr
+      let rolledBack = false
+      try {
+        await api.delete(`/api/v1/admin/products/${productId}`)
+        rolledBack = true
+      } catch (rollbackErr) {
+        if (process.env.NODE_ENV !== 'production') {
+          // eslint-disable-next-line no-console -- orphan cleanup failure
+          console.error('[admin create product] rollback delete failed', rollbackErr)
+        }
+      }
+      const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
+      if (rolledBack) {
+        throw new Error(
+          `Product was not saved — image upload failed: ${msg}. The draft product was removed.`,
+        )
+      }
+      throw new Error(
+        `Product was not saved — image upload failed: ${msg}. A draft may still exist (id ${productId}); delete it from the admin list if you see a partial product.`,
+      )
     }
     if (wantsActive) {
       await api.put(`/api/v1/admin/products/${productId}`, {

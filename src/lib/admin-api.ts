@@ -112,40 +112,65 @@ export async function updateAdminProduct(productId: number, body: Record<string,
   });
 }
 
-export async function uploadAdminProductImages(partNumber: string, files: File[]) {
-  const form = new FormData();
-  files.forEach((f) => form.append("files", f));
-  const headers = getAuthHeaders();
-  delete headers["Content-Type"];
-  const res = await apiFetch(`${API}/api/v1/admin/products/${encodeURIComponent(partNumber)}/images`, {
-    method: "POST",
-    headers,
-    body: form,
-  });
-  const payload = await parseJsonSafe(res);
-  return { ok: res.ok, status: res.status, data: payload };
+/** POST /api/v1/admin/products/{product_id:int}/images — backend expects `file` + optional `is_primary` per request. */
+export async function uploadAdminProductImages(productId: number, files: File[]) {
+  const headersBase = getAuthHeaders();
+  delete headersBase["Content-Type"];
+  const success: unknown[] = [];
+  const failed: unknown[] = [];
+  let lastStatus = 200;
+  let allOk = true;
+  for (let i = 0; i < files.length; i++) {
+    const form = new FormData();
+    form.append("file", files[i]);
+    form.append("is_primary", i === 0 ? "true" : "false");
+    const res = await apiFetch(`${API}/api/v1/admin/products/${productId}/images`, {
+      method: "POST",
+      headers: { ...headersBase },
+      body: form,
+    });
+    lastStatus = res.status;
+    const payload = await parseJsonSafe(res);
+    if (!res.ok) {
+      allOk = false;
+      failed.push({ index: i, status: res.status, detail: payload });
+    } else {
+      success.push(payload);
+    }
+  }
+  return {
+    ok: allOk,
+    status: lastStatus,
+    data: { success, failed },
+  };
 }
 
 export async function reorderAdminProductImages(
-  partNumber: string,
+  productId: number,
   order: Array<{ image_id: string; sort_order: number }>
 ) {
-  return request(`/api/v1/admin/products/${encodeURIComponent(partNumber)}/images/reorder`, {
+  return request(`/api/v1/admin/products/${productId}/images/reorder`, {
     method: "PATCH",
     body: JSON.stringify({ order }),
   });
 }
 
-export async function setAdminProductPrimaryImage(partNumber: string, imageId: string) {
-  return request(`/api/v1/admin/products/${encodeURIComponent(partNumber)}/images/${encodeURIComponent(imageId)}/primary`, {
-    method: "PATCH",
-  });
+export async function setAdminProductPrimaryImage(productId: number, imageId: string | number) {
+  return request(
+    `/api/v1/admin/products/${productId}/images/${encodeURIComponent(String(imageId))}/primary`,
+    {
+      method: "PATCH",
+    }
+  );
 }
 
-export async function deleteAdminProductImage(partNumber: string, imageId: string) {
-  return request(`/api/v1/admin/products/${encodeURIComponent(partNumber)}/images/${encodeURIComponent(imageId)}`, {
-    method: "DELETE",
-  });
+export async function deleteAdminProductImage(productId: number, imageId: string | number) {
+  return request(
+    `/api/v1/admin/products/${productId}/images/${encodeURIComponent(String(imageId))}`,
+    {
+      method: "DELETE",
+    }
+  );
 }
 
 export async function uploadProductsCsv(file: File, strict = false) {

@@ -246,7 +246,7 @@ export function ProductForm({
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form data-testid="admin-product-form" onSubmit={handleSubmit} className="space-y-6">
       <Card className="overflow-visible border border-white/10 bg-white/5 p-6 backdrop-blur-xl lg:p-8">
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wider text-gray-300">Core Details</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -439,6 +439,7 @@ export function ProductForm({
       <div className="flex flex-wrap items-center gap-3">
         <Button
           type="submit"
+          data-testid="admin-product-save"
           surface="dark"
           loading={submitting || loading}
           disabled={submitting || loading}

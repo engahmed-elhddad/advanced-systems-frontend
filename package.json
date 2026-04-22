@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test -c playwright.e2e.config.ts",
+    "test:e2e:headed": "playwright test -c playwright.e2e.config.ts --headed",
+    "analyze:e2e-report": "node scripts/analyze-playwright-results.mjs",
+    "decide:ai-actions": "node scripts/ai-decide-actions.mjs",
+    "decide:ai-decisions": "node scripts/ai-decision-engine.mjs",
+    "refresh:ai-actions": "node scripts/ai-decide-actions.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -32,12 +38,14 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@tanstack/react-query-devtools": "^5.35.1",
     "@types/node": "^20.12.7",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",
+    "dotenv": "^17.4.2",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.3",
     "postcss": "^8.4.38",

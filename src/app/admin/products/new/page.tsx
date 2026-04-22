@@ -70,7 +70,7 @@ function NewAdminProductPageInner() {
   const dupLoading = dupEnabled && dupQuery.isLoading
 
   return (
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="admin-create-product-page">
         <div className="flex items-center gap-3">
           <Link href="/admin/products" className="inline-flex items-center gap-2 text-sm text-gray-300 transition hover:text-white">
             <ArrowLeft className="h-4 w-4" />
@@ -98,6 +98,7 @@ function NewAdminProductPageInner() {
             Product not found in the current catalog list (first 200 items). Open the product in admin and use Duplicate from the edit screen, or reduce list filters.
           </Card>
         ) : (
+          <div data-testid="admin-product-form-ready">
           <ProductForm
             key={formKey}
             mode="create"
@@ -123,6 +124,7 @@ function NewAdminProductPageInner() {
               }
             }}
           />
+          </div>
         )}
       </div>
   )
