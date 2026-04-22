@@ -1,6 +1,7 @@
 'use client'
 
 import { apiFetch } from '@/lib/api'
+import { API_BASE_URL } from '@/lib/constants'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -9,7 +10,7 @@ import Link from 'next/link'
 const ADMIN_TOKEN_KEY = 'admin_token'
 const ADMIN_USER_KEY = 'admin_user'
 
-const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+const API = API_BASE_URL.replace(/\/$/, '')
 
 export default function AdminLoginPage() {
   const router = useRouter()

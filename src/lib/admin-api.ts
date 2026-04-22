@@ -2,8 +2,10 @@
 
 import { apiFetch } from "@/lib/api";
 import { getAuthHeaders } from "@/lib/admin-auth";
+import { API_BASE_URL } from "@/lib/constants";
 
-const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+/** Same origin normalization as `api` (avoids mixed content if env mistakenly uses http on prod). */
+const API = API_BASE_URL.replace(/\/$/, "");
 
 type ApiResult<T> = { ok: true; data: T } | { ok: false; message: string; status: number };
 

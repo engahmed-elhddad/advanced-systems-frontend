@@ -81,16 +81,22 @@ export function Select({
   const [filter, setFilter] = React.useState('')
   const searchRef = React.useRef<HTMLInputElement>(null)
 
+  /** Radix Select.Item rejects `value=""`; drop invalid options from any caller. */
+  const safeOptions = React.useMemo(
+    () => options.filter((o) => (o.value ?? '').trim() !== ''),
+    [options],
+  )
+
   const filtered = React.useMemo(() => {
     const q = filter.trim().toLowerCase()
-    if (!searchable || !q) return options
-    return options.filter((o) => o.label.toLowerCase().includes(q))
-  }, [options, filter, searchable])
+    if (!searchable || !q) return safeOptions
+    return safeOptions.filter((o) => o.label.toLowerCase().includes(q))
+  }, [safeOptions, filter, searchable])
 
   const describedBy =
     [error ? errId : null, !error && helperText ? helpId : null].filter(Boolean).join(' ') || undefined
 
-  const rootValue = value && options.some((o) => o.value === value) ? value : undefined
+  const rootValue = value && safeOptions.some((o) => o.value === value) ? value : undefined
 
   const isLight = variant === 'light'
   const tCls = isLight ? lightTrigger : shellTrigger

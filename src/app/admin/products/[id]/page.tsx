@@ -23,8 +23,12 @@ export default function AdminEditProductPage() {
 
   const product = productQuery.data
   const loading = productQuery.isLoading
-  const brandOptions = (brandsQuery.data ?? []).map((b: any) => ({ value: String(b.id), label: String(b.name) }))
-  const categoryOptions = (categoriesQuery.data ?? []).map((c: any) => ({ value: String(c.id), label: String(c.name) }))
+  const brandOptions = (brandsQuery.data ?? [])
+    .filter((b: { id?: unknown }) => b.id != null && String(b.id).trim() !== '')
+    .map((b: { id: number | string; name?: string }) => ({ value: String(b.id), label: String(b.name ?? '') }))
+  const categoryOptions = (categoriesQuery.data ?? [])
+    .filter((c: { id?: unknown }) => c.id != null && String(c.id).trim() !== '')
+    .map((c: { id: number | string; name?: string }) => ({ value: String(c.id), label: String(c.name ?? '') }))
 
   return (
       <div className="space-y-6">
