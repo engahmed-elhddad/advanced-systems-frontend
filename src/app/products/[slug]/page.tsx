@@ -62,16 +62,27 @@ const loadByPart = cache(async (pn: string) => {
 })
 
 export async function generateStaticParams() {
+  const pageSize = 100
+  const maxPages = 50
+  const seen = new Set<string>()
+  const out: { slug: string }[] = []
   try {
-    const data = (await getProducts({ page: 1, size: 500 })) as {
-      items?: Array<{ slug?: string; part_number?: string }>
-      products?: Array<{ slug?: string; part_number?: string }>
+    for (let page = 1; page <= maxPages; page++) {
+      const data = (await getProducts({ page, size: pageSize })) as {
+        items?: Array<{ slug?: string; part_number?: string }>
+        products?: Array<{ slug?: string; part_number?: string }>
+      }
+      const rows = data.items ?? data.products ?? []
+      if (!rows.length) break
+      for (const r of rows) {
+        const s = (r.slug || r.part_number || '').trim()
+        if (!s || seen.has(s)) continue
+        seen.add(s)
+        out.push({ slug: encodeURIComponent(s) })
+      }
+      if (rows.length < pageSize) break
     }
-    const rows = data.items ?? data.products ?? []
-    return rows
-      .map((r) => (r.slug || r.part_number || '').trim())
-      .filter(Boolean)
-      .map((s) => ({ slug: encodeURIComponent(s) }))
+    return out
   } catch {
     return []
   }

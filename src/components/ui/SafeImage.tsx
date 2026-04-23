@@ -20,6 +20,8 @@ interface SafeImageProps {
 function shouldUnoptimize(src: string): boolean {
   if (src.includes('/uploads/')) return true
   if (src.startsWith('blob:') || src.startsWith('data:')) return true
+  // Serve CDN URLs directly: avoids /_next/image 404 when the origin object is missing (PNG vs WEBP, etc.).
+  if (src.includes('cdn.advancedsystems-int.com')) return true
   return false
 }
 

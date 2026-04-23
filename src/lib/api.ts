@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { RFQCreateInput, RFQResponse } from "@/types/rfq";
 import { submitPublicRFQ } from "@/lib/rfqSubmit";
-import { API_BASE_URL, PRODUCTION_API_HOST } from "@/lib/constants";
+import { API_BASE_URL, normalizeHttpUrlForFetch, PRODUCTION_API_HOST } from "@/lib/constants";
 
 // Single normalized origin from env (non-local hosts are forced to https in constants).
 const API_BASE = API_BASE_URL;
@@ -60,13 +60,19 @@ export function apiFetch(
   input: string | URL | globalThis.Request,
   init?: RequestInit
 ): Promise<Response> {
+  let resolved: string | URL | globalThis.Request = input;
+  if (typeof input === "string") {
+    resolved = normalizeHttpUrlForFetch(input);
+  } else if (input instanceof URL) {
+    resolved = new URL(normalizeHttpUrlForFetch(input.toString()));
+  }
   const headers = new Headers(init?.headers ?? undefined);
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("admin_token");
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
   headers.set("X-Tenant-Id", TENANT_ID);
-  return fetch(input, { ...init, headers });
+  return fetch(resolved, { ...init, headers });
 }
 
 /** Prefer FastAPI `detail` / `detail.message` over Axios's generic "Request failed with status code …". */

@@ -40,6 +40,22 @@ export const API_BASE_URL = normalizePublicApiBaseUrl(
     "http://localhost:8000",
 )
 
+/** Force https for non-local URLs (RSC fetch / apiFetch) when env was mis-set to http://. */
+export function normalizeHttpUrlForFetch(url: string): string {
+  const t = (url || "").trim()
+  if (!t) return t
+  try {
+    const u = new URL(t)
+    if (!isLocalApiHostname(u.hostname) && u.protocol === "http:") {
+      u.protocol = "https:"
+      return u.href
+    }
+  } catch {
+    /* leave unchanged */
+  }
+  return t
+}
+
 /** Cloudflare CDN for R2 media (images, datasheets) */
 export const CDN_BASE_URL =
   process.env.NEXT_PUBLIC_CDN_URL || "https://cdn.advancedsystems-int.com"

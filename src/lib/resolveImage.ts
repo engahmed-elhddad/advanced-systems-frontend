@@ -12,7 +12,19 @@ export function resolvePublicMediaUrl(src: string | null | undefined): string {
   if (!value || INVALID_URL_TOKENS.has(value.toLowerCase())) {
     return '/placeholder.png'
   }
-  if (value.startsWith('http://') || value.startsWith('https://')) {
+  if (value.startsWith('https://')) {
+    return value
+  }
+  if (value.startsWith('http://')) {
+    try {
+      const u = new URL(value)
+      if (u.hostname.toLowerCase().endsWith('advancedsystems-int.com')) {
+        u.protocol = 'https:'
+        return u.href
+      }
+    } catch {
+      /* fall through */
+    }
     return value
   }
   if (value.startsWith('/uploads/')) {
