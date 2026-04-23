@@ -96,7 +96,11 @@ export function Select({
   const describedBy =
     [error ? errId : null, !error && helperText ? helpId : null].filter(Boolean).join(' ') || undefined
 
-  const rootValue = value && safeOptions.some((o) => o.value === value) ? value : undefined
+  // Always pass a non-undefined value to Radix when value is set so the Root stays in
+  // controlled mode even while options are still loading. If we let it flip to undefined
+  // (uncontrolled), the uncontrolled→controlled transition is unreliable in Radix UI and
+  // the trigger never updates to show the pre-selected label.
+  const rootValue = (value ?? '').trim() || undefined
 
   const isLight = variant === 'light'
   const tCls = isLight ? lightTrigger : shellTrigger
@@ -186,6 +190,13 @@ export function Select({
             ) : null}
 
             <SelectPrimitive.Viewport className="max-h-[min(16rem,280px)] overflow-y-auto p-1">
+              {/* Synthetic item: keeps trigger label populated while real options are still fetching.
+                  Removed once a real option with the same value appears. */}
+              {value && value.trim() && !safeOptions.some((o) => o.value === value) ? (
+                <SelectPrimitive.Item value={value} disabled className="sr-only" aria-hidden>
+                  <SelectPrimitive.ItemText>Loading…</SelectPrimitive.ItemText>
+                </SelectPrimitive.Item>
+              ) : null}
               {filtered.length === 0 ? (
                 <div
                   className={cn('px-3 py-2 text-sm', isLight ? 'text-slate-500' : 'text-[var(--color-foreground-muted)]')}

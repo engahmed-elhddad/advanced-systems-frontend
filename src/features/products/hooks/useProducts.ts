@@ -342,30 +342,48 @@ async function createAdminProduct(input: AdminProductFormInput) {
 async function updateAdminProduct(id: number, input: AdminProductFormInput) {
   const { brandId, categoryId } = await resolveBrandCategoryIds(input)
   const statusPayload = toApiStatus(input.status)
-  const payload = {
-    name: input.name,
-    brand_id: brandId ?? null,
-    category_id: categoryId ?? null,
-    description: input.description || null,
-    image_url: normalizeImageUrlForApi(input.imageUrl),
-    datasheet_url: input.datasheetUrl?.trim() || null,
-    specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
-    ...statusPayload,
-  }
-  /** Upload file before PUT so publish-readiness sees the new image when status is Active. */
+
+  // Upload image first (before PUT) so publish-readiness sees it.
+  // Capture the URL from the upload response so the PUT payload carries the real CDN URL
+  // instead of null — the backend's exclude_unset still applies explicit null as a write.
+  // undefined here means "omit image_url from PUT entirely", preserving the backend value.
+  let imageUrlForPut: string | null | undefined = undefined
+
   if (input.imageFile) {
     if (process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console -- temporary upload verification
       console.info('[admin update product] uploading image for product id', id)
     }
     try {
-      await uploadProductPrimaryImage(id, input.imageFile)
+      const uploadRes = await uploadProductPrimaryImage(id, input.imageFile)
+      const d = uploadRes.data as Record<string, unknown> | null
+      const returned =
+        (typeof d?.image_url === 'string' && d.image_url) ||
+        (typeof d?.url === 'string' && d.url) ||
+        null
+      // Use the returned CDN/local URL when available; omit the field otherwise.
+      imageUrlForPut = returned ?? undefined
     } catch (uploadErr) {
       throw uploadErr instanceof Error
         ? new Error(`Image upload failed for product ${id}: ${uploadErr.message}`)
         : uploadErr
     }
+  } else {
+    // No file: use the form's URL field. Empty string → null clears it intentionally.
+    imageUrlForPut = normalizeImageUrlForApi(input.imageUrl)
   }
+
+  const payload: Record<string, unknown> = {
+    name: input.name,
+    brand_id: brandId ?? null,
+    category_id: categoryId ?? null,
+    description: input.description || null,
+    datasheet_url: input.datasheetUrl?.trim() || null,
+    specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
+    ...statusPayload,
+    ...(imageUrlForPut !== undefined ? { image_url: imageUrlForPut } : {}),
+  }
+
   try {
     const res = await api.put<unknown>(`/api/v1/admin/products/${id}`, payload)
     return res.data
@@ -410,6 +428,7 @@ export function useCreateAdminProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['products'] })
     },
   })
 }
@@ -423,6 +442,7 @@ export function useUpdateAdminProduct() {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['admin-product', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['products'] })
     },
   })
 }
