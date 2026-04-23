@@ -62,7 +62,13 @@ function dispatchToBackend(eventName: TrackingEventName, payload: Record<string,
     payload: merged,
   })
 
-  void fetch(EVENTS_ENDPOINT, {
+  // Upgrade to https when the page is served over HTTPS to prevent mixed-content blocking.
+  const endpoint =
+    typeof window !== 'undefined' && window.location.protocol === 'https:'
+      ? EVENTS_ENDPOINT.replace(/^http:\/\//, 'https://')
+      : EVENTS_ENDPOINT
+
+  void fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body,

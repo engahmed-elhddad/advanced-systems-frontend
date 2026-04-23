@@ -209,7 +209,8 @@ async function getAdminProducts(
 async function getAdminProductById(id: number): Promise<AdminProduct | null> {
   try {
     const res = await api.get<unknown>(`/api/v1/admin/products/${id}`)
-    return normalizeProduct(res.data)
+    const { inner } = unwrapAdminEnvelope(res.data)
+    return normalizeProduct(inner)
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.status === 404) return null
     throw err

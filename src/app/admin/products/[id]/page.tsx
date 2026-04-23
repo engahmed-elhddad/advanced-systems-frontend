@@ -78,8 +78,8 @@ export default function AdminEditProductPage() {
               categoryOptions={categoryOptions}
               initialValue={{
                 name: product.name,
-                brandId: product.brandId,
-                categoryId: product.categoryId,
+                brandId: product.brandId != null ? String(product.brandId) : '',
+                categoryId: product.categoryId != null ? String(product.categoryId) : '',
                 description: product.description,
                 specs: product.specs,
                 imageUrl: product.imageUrl,

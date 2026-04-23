@@ -16,6 +16,11 @@ export function normalizePublicApiBaseUrl(raw: string): string {
       u.protocol = "https:"
       return u.toString().replace(/\/$/, "")
     }
+    // Input had no scheme — return the fully-formed https:// URL instead of the bare hostname,
+    // which browsers would otherwise interpret as a relative path.
+    if (!trimmed.includes("://")) {
+      return u.toString().replace(/\/$/, "")
+    }
     return trimmed
   } catch {
     return trimmed
