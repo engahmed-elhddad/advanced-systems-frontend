@@ -84,14 +84,21 @@ async function fetchCategories(): Promise<CategoryRow[]> {
 }
 
 async function resolveBrandCategoryIds(input: AdminProductFormInput) {
-  const selectedBrandId = Number(input.brandId)
-  const selectedCategoryId = Number(input.categoryId)
-  if (Number.isFinite(selectedBrandId) && Number.isFinite(selectedCategoryId)) {
+  const brandTrim = input.brandId?.trim() ?? ''
+  const categoryTrim = input.categoryId?.trim() ?? ''
+  const selectedBrandId = Number(brandTrim)
+  const selectedCategoryId = Number(categoryTrim)
+  // ``Number('')`` is ``0``; do not treat empty selection as id 0 (FK violation on create).
+  const brandOk =
+    brandTrim !== '' && Number.isFinite(selectedBrandId) && selectedBrandId > 0
+  const categoryOk =
+    categoryTrim !== '' && Number.isFinite(selectedCategoryId) && selectedCategoryId > 0
+  if (brandOk && categoryOk) {
     return { brandId: selectedBrandId, categoryId: selectedCategoryId }
   }
   const [brands, categories] = await Promise.all([fetchBrands(), fetchCategories()])
-  const brandId = brands.find((b) => String(b.id) === input.brandId)?.id
-  const categoryId = categories.find((c) => String(c.id) === input.categoryId)?.id
+  const brandId = brands.find((b) => String(b.id) === brandTrim)?.id
+  const categoryId = categories.find((c) => String(c.id) === categoryTrim)?.id
   return { brandId, categoryId }
 }
 
