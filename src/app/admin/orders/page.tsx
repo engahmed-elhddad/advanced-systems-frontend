@@ -10,6 +10,10 @@ export default function OrdersPage() {
   const {
     statusFilter,
     setStatusFilter,
+    listPage,
+    setListPage,
+    hasNextOrdersPage,
+    hasPrevOrdersPage,
     selectedOrderId,
     setSelectedOrderId,
     orders,
@@ -47,7 +51,29 @@ export default function OrdersPage() {
 
       {ordersError ? (
         <div className="rounded-[4px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          Failed to load orders. Check backend endpoints and try again.
+          Failed to load orders. Confirm you are signed in to admin and the B2B API is available, then use Refresh.
+        </div>
+      ) : null}
+
+      {!ordersError && (hasPrevOrdersPage || hasNextOrdersPage) ? (
+        <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-[#6B7280]">
+          <span className="font-mono">Page {listPage}</span>
+          <button
+            type="button"
+            disabled={!hasPrevOrdersPage || ordersLoading}
+            onClick={() => setListPage((p: number) => Math.max(1, p - 1))}
+            className="rounded-[2px] border border-[#E5E7EB] bg-white px-2 py-1 font-medium text-[#1A1A1A] disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            disabled={!hasNextOrdersPage || ordersLoading}
+            onClick={() => setListPage((p: number) => p + 1)}
+            className="rounded-[2px] border border-[#E5E7EB] bg-white px-2 py-1 font-medium text-[#1A1A1A] disabled:opacity-40"
+          >
+            Next
+          </button>
         </div>
       ) : null}
 

@@ -292,6 +292,14 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
 
   const job = data?.job
   const rows = data?.rows ?? []
+
+  useEffect(() => {
+    if (!editingRow) return
+    if (!rows.some((r) => r.id === editingRow.id)) {
+      setEditingRow(null)
+    }
+  }, [rows, editingRow])
+
   const statusCounts = data?.status_counts ?? {}
   const totalFiltered = data?.total_rows_filtered ?? 0
   const totalPages = Math.max(1, Math.ceil(totalFiltered / 50))

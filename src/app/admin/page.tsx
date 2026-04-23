@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect } from "react"
 import { Activity, Database, Package, RefreshCw, UploadCloud } from "lucide-react"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button, Card, Skeleton } from "@/components/ui"
 import { useDashboard, useCatalogReadinessSummary } from '@/features/admin/hooks/useDashboard'
 import { api } from '@/lib/api'
@@ -13,6 +13,7 @@ const glassTile =
   "rounded-xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl transition-all duration-300 hover:border-white/[0.14] hover:bg-white/[0.07] hover:shadow-lg hover:shadow-orange-500/10"
 
 export default function AdminDashboard() {
+  const queryClient = useQueryClient()
   const dashboardQuery = useDashboard()
   const readinessQuery = useCatalogReadinessSummary()
   const kpis = dashboardQuery.data
@@ -21,10 +22,26 @@ export default function AdminDashboard() {
   const reindexMutation = useMutation({
     mutationFn: () => api.post('/api/v1/admin/search/reindex'),
     onSuccess: (res) => {
-      toast.success(typeof res.data?.message === 'string' ? res.data.message : 'Search index rebuilt')
+      const msg =
+        typeof res.data?.message === 'string' ? res.data.message : 'Search reindex job accepted.'
+      toast.success(
+        `${msg} Large catalogs may take several minutes; refresh the product list or try a search shortly.`,
+      )
+      void queryClient.invalidateQueries({ queryKey: ['admin-products'] })
     },
     onError: () => toast.error('Reindex failed'),
   })
+
+  const runReindex = () => {
+    if (
+      !window.confirm(
+        'Rebuild the full product search index? This can take several minutes on large catalogs and increases load on the server.',
+      )
+    ) {
+      return
+    }
+    reindexMutation.mutate()
+  }
 
   useEffect(() => {
     if (dashboardQuery.isError) {
@@ -131,7 +148,7 @@ export default function AdminDashboard() {
                   variant="secondary"
                   leftIcon={<RefreshCw className={`h-3.5 w-3.5 ${reindexMutation.isPending ? 'animate-spin' : ''}`} />}
                   disabled={reindexMutation.isPending}
-                  onClick={() => reindexMutation.mutate()}
+                  onClick={runReindex}
                 >
                   Rebuild search index
                 </Button>

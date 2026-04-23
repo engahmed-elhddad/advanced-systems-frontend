@@ -11,6 +11,10 @@ export function QuotationsPage() {
     setStatusFilter,
     search,
     setSearch,
+    quotationListPage,
+    setQuotationListPage,
+    hasNextQuotationPage,
+    hasPrevQuotationPage,
     selectedQuotationId,
     setSelectedQuotationId,
     creatingNew,
@@ -53,6 +57,28 @@ export function QuotationsPage() {
       {quotationsError ? (
         <div className="rounded-[4px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           Failed to load quotations.
+        </div>
+      ) : null}
+
+      {!quotationsError && !search.trim() && (hasPrevQuotationPage || hasNextQuotationPage) ? (
+        <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-[#6B7280]">
+          <span className="font-mono">Page {quotationListPage}</span>
+          <button
+            type="button"
+            disabled={!hasPrevQuotationPage || quotationsLoading}
+            onClick={() => setQuotationListPage((p: number) => Math.max(1, p - 1))}
+            className="rounded-[2px] border border-[#E5E7EB] bg-white px-2 py-1 font-medium text-[#1A1A1A] disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            disabled={!hasNextQuotationPage || quotationsLoading}
+            onClick={() => setQuotationListPage((p: number) => p + 1)}
+            className="rounded-[2px] border border-[#E5E7EB] bg-white px-2 py-1 font-medium text-[#1A1A1A] disabled:opacity-40"
+          >
+            Next
+          </button>
         </div>
       ) : null}
 

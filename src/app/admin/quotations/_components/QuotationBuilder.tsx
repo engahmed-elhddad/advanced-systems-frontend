@@ -10,6 +10,7 @@ import type {
   UpdateQuotationPayload,
 } from '@/features/admin/services/adminService'
 import type { Product } from '@/types/product'
+import toast from 'react-hot-toast'
 import { QuotationItemsTable, type BuilderItem } from './QuotationItemsTable'
 import { QuotationSummary } from './QuotationSummary'
 import { QuotationActions } from './QuotationActions'
@@ -40,7 +41,9 @@ function nextTempId(): string {
 
 function toBuilderItems(quotation: QuotationDetail | null): BuilderItem[] {
   if (!quotation) return []
-  return quotation.items.map((item) => ({
+  const rawItems = quotation.items
+  if (!Array.isArray(rawItems)) return []
+  return rawItems.map((item) => ({
     tempId: nextTempId(),
     id: item.id,
     product_id: item.product_id,
@@ -70,6 +73,23 @@ function toPayloadItems(items: BuilderItem[]) {
     quantity: item.quantity,
     unit_price: item.unit_price,
   }))
+}
+
+function validateQuotationForClientAction(draft: BuilderDraft): string | null {
+  if (!draft.customer_id) return 'Select a customer.'
+  if (!draft.items.length) return 'Add at least one line item.'
+  for (const item of draft.items) {
+    if (item.product_id == null || !Number.isFinite(Number(item.product_id))) {
+      return 'Each line must have a product selected.'
+    }
+    if (!Number.isFinite(item.quantity) || item.quantity < 1) {
+      return 'Each line must have quantity at least 1.'
+    }
+    if (!Number.isFinite(item.unit_price) || item.unit_price < 0) {
+      return 'Unit prices cannot be negative.'
+    }
+  }
+  return null
 }
 
 export function QuotationBuilder({
@@ -180,7 +200,14 @@ export function QuotationBuilder({
 
   const handleSaveDraft = () => {
     const payloadItems = toPayloadItems(draft.items).filter((i) => i.description && i.quantity > 0)
-    if (!payloadItems.length || !draft.customer_id) return
+    if (!draft.customer_id) {
+      toast.error('Select a customer before saving.')
+      return
+    }
+    if (!payloadItems.length) {
+      toast.error('Add at least one valid line item (description and quantity).')
+      return
+    }
 
     if (creatingNew || !quotation) {
       onCreate({
@@ -294,9 +321,31 @@ export function QuotationBuilder({
           hasItems={hasItems}
           hasCustomer={hasCustomer}
           onSaveDraft={handleSaveDraft}
-          onSend={() => quotation && onAction(quotation.id, 'send')}
-          onApprove={() => quotation && onAction(quotation.id, 'approve')}
-          onReject={() => quotation && onAction(quotation.id, 'reject')}
+          onSend={() => {
+            if (!quotation) return
+            const err = validateQuotationForClientAction(draft)
+            if (err) {
+              toast.error(err)
+              return
+            }
+            if (!window.confirm('Send this quotation to the client?')) return
+            onAction(quotation.id, 'send')
+          }}
+          onApprove={() => {
+            if (!quotation) return
+            const err = validateQuotationForClientAction(draft)
+            if (err) {
+              toast.error(err)
+              return
+            }
+            if (!window.confirm('Approve this quotation?')) return
+            onAction(quotation.id, 'approve')
+          }}
+          onReject={() => {
+            if (!quotation) return
+            if (!window.confirm('Reject this quotation?')) return
+            onAction(quotation.id, 'reject')
+          }}
         />
         {!creatingNew && dirty ? (
           <p className="text-xs text-[#6B7280]">Unsaved changes — auto-save in progress...</p>

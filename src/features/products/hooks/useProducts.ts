@@ -366,8 +366,17 @@ async function updateAdminProduct(id: number, input: AdminProductFormInput) {
         : uploadErr
     }
   }
-  const res = await api.put<unknown>(`/api/v1/admin/products/${id}`, payload)
-  return res.data
+  try {
+    const res = await api.put<unknown>(`/api/v1/admin/products/${id}`, payload)
+    return res.data
+  } catch (err) {
+    if (input.imageFile) {
+      throw new Error(
+        'Image was uploaded but saving product details failed. Refresh the product and try saving again, or remove the duplicate image in admin.',
+      )
+    }
+    throw err
+  }
 }
 
 async function deleteAdminProduct(id: number, etag: string) {

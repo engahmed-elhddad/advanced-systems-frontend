@@ -127,6 +127,13 @@ function priorityRowClass(row: CrmLead & Record<string, unknown>): string | unde
 }
 
 const LEADS_SORT_STORAGE_KEY = 'admin-leads-sort-v1'
+const LEADS_PAGE_SIZE = 50
+
+function isValidEmailOptional(value: string): boolean {
+  const t = value.trim()
+  if (!t) return true
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)
+}
 
 function readStoredLeadSort(): adminService.AdminLeadSort {
   if (typeof window === 'undefined') return 'score_desc'
@@ -150,6 +157,7 @@ export default function AdminLeadsPage() {
   const queryClient = useQueryClient()
   const [filterStatus, setFilterStatus] = useState('')
   const [attentionOnly, setAttentionOnly] = useState(false)
+  const [leadsPage, setLeadsPage] = useState(1)
   const [sortBy, setSortBy] = useState<adminService.AdminLeadSort>(() => readStoredLeadSort())
   const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null)
   const [selected, setSelected] = useState<CrmLead | null>(null)
@@ -165,23 +173,30 @@ export default function AdminLeadsPage() {
     }
   }, [sortBy])
 
+  useEffect(() => {
+    setLeadsPage(1)
+  }, [filterStatus, attentionOnly, sortBy])
+
   const statsQuery = useQuery({
     queryKey: ['admin-leads-stats'],
     queryFn: adminService.getAdminLeadStats,
   })
 
   const leadsQuery = useQuery({
-    queryKey: ['admin-leads', filterStatus, sortBy, attentionOnly],
+    queryKey: ['admin-leads', filterStatus, sortBy, attentionOnly, leadsPage],
     queryFn: () =>
       adminService.getAdminLeads({
         status: filterStatus || undefined,
-        size: 200,
+        page: leadsPage,
+        size: LEADS_PAGE_SIZE,
         sort: sortBy,
         needs_attention: attentionOnly ? true : undefined,
       }),
   })
 
   const items = leadsQuery.data?.items ?? []
+  const leadsTotal = leadsQuery.data?.total ?? 0
+  const leadsTotalPages = Math.max(1, Math.ceil(leadsTotal / LEADS_PAGE_SIZE))
 
   const stats = useMemo(() => {
     const m: Record<string, number> = {}
@@ -279,6 +294,10 @@ export default function AdminLeadsPage() {
 
   const handleSave = useCallback(() => {
     if (!form.name.trim()) return
+    if (!isValidEmailOptional(form.email)) {
+      toast.error('Enter a valid email address or leave email empty.')
+      return
+    }
     const base = {
       name: form.name.trim(),
       company: form.company.trim() || undefined,
@@ -571,6 +590,36 @@ export default function AdminLeadsPage() {
           onRowClick={(row) => openDrawer(row as CrmLead)}
           rowClassName={(row) => priorityRowClass(row as CrmLead & Record<string, unknown>)}
         />
+
+        {leadsTotal > LEADS_PAGE_SIZE ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/50">
+            <span>
+              Page <span className="font-mono text-white/80">{leadsPage}</span> of{' '}
+              <span className="font-mono text-white/80">{leadsTotalPages}</span>
+              <span className="text-white/35"> · {leadsTotal.toLocaleString()} leads</span>
+            </span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={leadsPage <= 1 || leadsQuery.isLoading}
+                onClick={() => setLeadsPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={leadsPage >= leadsTotalPages || leadsQuery.isLoading}
+                onClick={() => setLeadsPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         <p className="text-center text-[11px] text-white/35">
           Tip: Esc closes the drawer. Red row tint + badge = needs attention (stale vs next action). Attention filter scans up to 2000 leads server-side.

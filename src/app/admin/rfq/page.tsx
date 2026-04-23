@@ -66,6 +66,13 @@ export default function AdminRFQPage() {
 
   const handleSave = useCallback(() => {
     if (!selected) return
+    if (formState.status === 'quoted') {
+      const price = parseFloat(formState.quoted_price_usd)
+      if (!Number.isFinite(price) || price <= 0) {
+        toast.error('Enter a positive quoted price (USD) before setting status to Quoted.')
+        return
+      }
+    }
     if (
       formState.status === 'quoted' &&
       selected.status !== 'quoted' &&

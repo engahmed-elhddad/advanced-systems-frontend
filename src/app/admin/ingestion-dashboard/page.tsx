@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import {
   getIngestionDashboard,
   type IngestionDashboardResponse,
@@ -52,18 +53,34 @@ const EVENT_COLORS: Record<string, string> = {
 }
 
 export default function IngestionDashboardPage() {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['ingestion-dashboard'],
     queryFn: getIngestionDashboard,
     refetchInterval: 30_000,
   })
 
   if (isLoading) return <DashboardSkeleton />
-  if (isError || !data) {
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-20 text-[#6B7280]">
+        <AlertTriangle className="h-8 w-8 text-amber-600" />
+        <p className="text-sm">Failed to load dashboard data.</p>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          loading={isFetching}
+          onClick={() => void refetch()}
+        >
+          Retry
+        </Button>
+      </div>
+    )
+  }
+  if (!data) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-[#6B7280]">
-        <AlertTriangle className="mb-3 h-8 w-8" />
-        <p className="text-sm">Failed to load dashboard data.</p>
+        <p className="text-sm">No dashboard data.</p>
       </div>
     )
   }
@@ -577,8 +594,17 @@ function formatEventDetail(
   meta: Record<string, unknown>,
 ): string {
   switch (eventType) {
-    case 'upload':
-      return `${meta.filename ?? ''} (${formatBytes(meta.file_size_bytes as number)})`
+    case 'upload': {
+      const rawSize = meta.file_size_bytes
+      const bytes =
+        typeof rawSize === 'number' && Number.isFinite(rawSize)
+          ? rawSize
+          : typeof rawSize === 'string' && /^\d+$/.test(rawSize)
+            ? Number(rawSize)
+            : undefined
+      const sizePart = bytes != null ? ` (${formatBytes(bytes)})` : ''
+      return `${String(meta.filename ?? '')}${sizePart}`.trim() || 'Upload'
+    }
     case 'parse_complete':
       return `${meta.total_rows ?? 0} rows parsed`
     case 'validation_complete':

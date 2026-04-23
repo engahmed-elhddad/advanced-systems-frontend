@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
@@ -17,18 +17,25 @@ type OrderFilter = 'all' | 'pending' | 'confirmed' | 'delivered' | 'cancelled'
 
 export type OrderAction = 'confirmed' | 'cancelled' | 'delivered'
 
+const ORDERS_LIST_PAGE_SIZE = 50
+
 export function useOrdersPage() {
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState<OrderFilter>('all')
+  const [listPage, setListPage] = useState(1)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
 
+  useEffect(() => {
+    setListPage(1)
+  }, [statusFilter])
+
   const ordersQuery = useQuery({
-    queryKey: ['orders', { statusFilter }],
+    queryKey: ['orders', { statusFilter, listPage }],
     queryFn: () =>
       getOrders({
         status: statusFilter === 'all' ? undefined : statusFilter,
-        page: 1,
-        per_page: 100,
+        page: listPage,
+        per_page: ORDERS_LIST_PAGE_SIZE,
       }),
     staleTime: 30_000,
   })
@@ -103,10 +110,17 @@ export function useOrdersPage() {
 
   const selectedOrder = detailQuery.data
   const orders = ordersQuery.data?.items ?? []
+  const hasNextOrdersPage = orders.length >= ORDERS_LIST_PAGE_SIZE
+  const hasPrevOrdersPage = listPage > 1
 
   return {
     statusFilter,
     setStatusFilter,
+    listPage,
+    setListPage,
+    ordersListPageSize: ORDERS_LIST_PAGE_SIZE,
+    hasNextOrdersPage,
+    hasPrevOrdersPage,
     selectedOrderId,
     setSelectedOrderId,
     orders,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
@@ -25,16 +25,31 @@ function normalize(value: string): string {
   return value.trim().toLowerCase()
 }
 
+const QUOTATION_LIST_PAGE_SIZE = 50
+
 export function useQuotationsPage() {
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState<QuotationStatusFilter>('all')
   const [search, setSearch] = useState('')
+  const [quotationListPage, setQuotationListPage] = useState(1)
   const [selectedQuotationId, setSelectedQuotationId] = useState<number | null>(null)
   const [creatingNew, setCreatingNew] = useState(false)
 
+  const searchNorm = normalize(search)
+
+  useEffect(() => {
+    setQuotationListPage(1)
+  }, [statusFilter, search])
+
   const quotationsQuery = useQuery({
-    queryKey: ['quotations'],
-    queryFn: () => getQuotations({ page: 1, per_page: 200 }),
+    queryKey: ['quotations', 'list', statusFilter, quotationListPage, searchNorm],
+    queryFn: () => {
+      const st = statusFilter === 'all' ? undefined : statusFilter
+      if (searchNorm) {
+        return getQuotations({ status: st, page: 1, per_page: 200 })
+      }
+      return getQuotations({ status: st, page: quotationListPage, per_page: QUOTATION_LIST_PAGE_SIZE })
+    },
     staleTime: 20_000,
   })
 
@@ -63,7 +78,7 @@ export function useQuotationsPage() {
   const createMutation = useMutation({
     mutationFn: (payload: CreateQuotationPayload) => createQuotation(payload),
     onSuccess: (created) => {
-      queryClient.invalidateQueries({ queryKey: ['quotations'] })
+      queryClient.invalidateQueries({ queryKey: ['quotations', 'list'] })
       queryClient.setQueryData(['quotation-detail', created.id], created)
       setSelectedQuotationId(created.id)
       setCreatingNew(false)
@@ -76,7 +91,7 @@ export function useQuotationsPage() {
       updateQuotation(id, payload),
     onSuccess: (updated) => {
       queryClient.setQueryData(['quotation-detail', updated.id], updated)
-      queryClient.invalidateQueries({ queryKey: ['quotations'] })
+      queryClient.invalidateQueries({ queryKey: ['quotations', 'list'] })
     },
     onError: () => toast.error('Could not save quotation. Please try again.'),
   })
@@ -90,14 +105,16 @@ export function useQuotationsPage() {
     onMutate: async ({ id, action }) => {
       await Promise.all([
         queryClient.cancelQueries({ queryKey: ['quotation-detail', id] }),
-        queryClient.cancelQueries({ queryKey: ['quotations'] }),
+        queryClient.cancelQueries({ queryKey: ['quotations', 'list'] }),
       ])
 
       const targetStatus: QuotationDetail['status'] =
         action === 'send' ? 'sent' : action === 'approve' ? 'approved' : 'rejected'
 
       const detailSnapshot = queryClient.getQueryData<QuotationDetail>(['quotation-detail', id])
-      const listSnapshot = queryClient.getQueryData<{ items: QuotationListItem[]; total: number }>(['quotations'])
+      const listSnapshots = queryClient.getQueriesData<{ items: QuotationListItem[]; total: number }>({
+        queryKey: ['quotations', 'list'],
+      })
 
       if (detailSnapshot) {
         queryClient.setQueryData<QuotationDetail>(['quotation-detail', id], {
@@ -106,21 +123,20 @@ export function useQuotationsPage() {
         })
       }
 
-      if (listSnapshot) {
-        queryClient.setQueryData<{ items: QuotationListItem[]; total: number }>(['quotations'], {
-          ...listSnapshot,
-          items: listSnapshot.items.map((q) =>
-            q.id === id ? { ...q, status: targetStatus } : q,
-          ),
+      listSnapshots.forEach(([key, data]) => {
+        if (!data?.items) return
+        queryClient.setQueryData<{ items: QuotationListItem[]; total: number }>(key, {
+          ...data,
+          items: data.items.map((q) => (q.id === id ? { ...q, status: targetStatus } : q)),
         })
-      }
+      })
 
-      return { id, detailSnapshot, listSnapshot }
+      return { id, detailSnapshot, listSnapshots }
     },
     onError: (_error, _vars, ctx) => {
       if (!ctx) return
       queryClient.setQueryData(['quotation-detail', ctx.id], ctx.detailSnapshot)
-      queryClient.setQueryData(['quotations'], ctx.listSnapshot)
+      ctx.listSnapshots.forEach(([key, data]) => queryClient.setQueryData(key, data))
       toast.error('Quotation status action failed. Please try again.')
     },
     onSuccess: (updated) => {
@@ -128,7 +144,7 @@ export function useQuotationsPage() {
     },
     onSettled: (_data, _error, vars) => {
       queryClient.invalidateQueries({ queryKey: ['quotation-detail', vars.id] })
-      queryClient.invalidateQueries({ queryKey: ['quotations'] })
+      queryClient.invalidateQueries({ queryKey: ['quotations', 'list'] })
     },
   })
 
@@ -145,11 +161,18 @@ export function useQuotationsPage() {
     })
   }, [quotations, statusFilter, q])
 
+  const hasNextQuotationPage = !searchNorm && quotations.length >= QUOTATION_LIST_PAGE_SIZE
+  const hasPrevQuotationPage = !searchNorm && quotationListPage > 1
+
   return {
     statusFilter,
     setStatusFilter,
     search,
     setSearch,
+    quotationListPage,
+    setQuotationListPage,
+    hasNextQuotationPage,
+    hasPrevQuotationPage,
     selectedQuotationId,
     setSelectedQuotationId,
     creatingNew,

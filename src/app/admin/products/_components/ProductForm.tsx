@@ -34,6 +34,8 @@ const STATUS_OPTIONS = [
   { value: 'Draft', label: 'Draft' },
 ]
 const FALLBACK_IMAGE = 'https://placehold.co/120x120/111827/9CA3AF?text=No+Img'
+/** Align with backend ``MAX_FILE_SIZE`` default (10 MB) for admin image pipeline. */
+const MAX_PRODUCT_IMAGE_BYTES = 10 * 1024 * 1024
 
 export function ProductForm({
   initialValue,
@@ -191,6 +193,10 @@ export function ProductForm({
 
   function onPickImage(file?: File) {
     if (!file) return
+    if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
+      toast.error('Image too large. Maximum size is 10 MB.')
+      return
+    }
     setImagePreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return URL.createObjectURL(file)
