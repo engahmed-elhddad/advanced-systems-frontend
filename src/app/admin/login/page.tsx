@@ -1,7 +1,6 @@
 'use client'
 
-import { apiFetch } from '@/lib/api'
-import { API_BASE_URL } from '@/lib/constants'
+import { adminApi, getApiErrorMessage } from '@/lib/api'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -9,8 +8,6 @@ import Link from 'next/link'
 
 const ADMIN_TOKEN_KEY = 'admin_token'
 const ADMIN_USER_KEY = 'admin_user'
-
-const API = API_BASE_URL.replace(/\/$/, '')
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -24,16 +21,8 @@ export default function AdminLoginPage() {
     setError('')
     setLoading(true)
     try {
-      const res = await apiFetch(`${API}/admin/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setError(data.detail || 'Login failed')
-        return
-      }
+      const res = await adminApi.login(email, password)
+      const data = res.data as { access_token?: string; user?: unknown }
       const token = data.access_token
       const user = data.user
       if (token) {
@@ -43,8 +32,8 @@ export default function AdminLoginPage() {
       } else {
         setError('Invalid response from server')
       }
-    } catch {
-      setError('Network error. Please check the API is running.')
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Network error. Please check the API is running.'))
     } finally {
       setLoading(false)
     }

@@ -294,6 +294,12 @@ export function ProductForm({
             addNew={{ label: '+ Add new category', onClick: () => setCategoryModalOpen(true) }}
           />
 
+          {categorySchemaQuery.isError ? (
+            <p className="text-xs text-red-400 md:col-span-2">
+              Could not load category spec schema. Add specs manually.
+            </p>
+          ) : null}
+
           <Select
             label="Status"
             value={form.status}

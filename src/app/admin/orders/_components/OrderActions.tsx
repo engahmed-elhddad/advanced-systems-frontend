@@ -51,7 +51,10 @@ export function OrderActions({ order, pending, onAction }: OrderActionsProps) {
           variant="destructive"
           disabled={!canCancel || pending}
           loading={pending && canCancel}
-          onClick={() => onAction('cancelled')}
+          onClick={() => {
+            if (!window.confirm('Cancel this order? This cannot be undone.')) return
+            onAction('cancelled')
+          }}
         >
           Cancel order
         </Button>

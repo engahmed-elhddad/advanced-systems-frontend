@@ -8,6 +8,11 @@ const API_BASE = API_BASE_URL;
 /** Must match backend `require_tenant_id` default; production refuses missing header. */
 const DEFAULT_TENANT_ID = "default";
 const TENANT_ID = (process.env.NEXT_PUBLIC_TENANT_ID || DEFAULT_TENANT_ID).trim() || DEFAULT_TENANT_ID;
+if (process.env.NODE_ENV !== "production" && TENANT_ID === DEFAULT_TENANT_ID) {
+  console.warn(
+    '[api] NEXT_PUBLIC_TENANT_ID is not set — using "default". Set it in .env.local for tenant-accurate requests.',
+  );
+}
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -26,6 +31,21 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      const reqUrl = String(error.config?.url ?? "");
+      if (!reqUrl.includes("/api/v1/admin/login")) {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_user");
+        window.location.href = "/admin/login";
+      }
+    }
+    return Promise.reject(error);
+  },
+);
 
 /** Native fetch for RSC / routes; supports `next: { revalidate }` and attaches admin token in the browser. */
 export function apiFetch(

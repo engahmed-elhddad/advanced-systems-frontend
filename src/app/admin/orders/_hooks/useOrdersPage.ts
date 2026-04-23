@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import {
   cancelB2BOrder,
   confirmB2BOrder,
@@ -92,6 +93,7 @@ export function useOrdersPage() {
       if (!ctx) return
       ctx.ordersSnapshots.forEach(([key, data]) => queryClient.setQueryData(key, data))
       queryClient.setQueryData(['order-detail', ctx.orderId], ctx.detailSnapshot)
+      toast.error('Order status update failed. Please try again.')
     },
     onSettled: (_data, _error, vars) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
@@ -102,11 +104,6 @@ export function useOrdersPage() {
   const selectedOrder = detailQuery.data
   const orders = ordersQuery.data?.items ?? []
 
-  const selectedOrderFromList = useMemo(
-    () => orders.find((o) => o.id === selectedOrderId) ?? null,
-    [orders, selectedOrderId],
-  )
-
   return {
     statusFilter,
     setStatusFilter,
@@ -116,7 +113,6 @@ export function useOrdersPage() {
     ordersLoading: ordersQuery.isLoading,
     ordersError: ordersQuery.isError,
     selectedOrder,
-    selectedOrderFromList,
     detailLoading: detailQuery.isLoading,
     statusMutation,
     refresh: ordersQuery.refetch,

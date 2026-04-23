@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import {
   approveQuotation,
   createQuotation,
@@ -67,6 +68,7 @@ export function useQuotationsPage() {
       setSelectedQuotationId(created.id)
       setCreatingNew(false)
     },
+    onError: () => toast.error('Could not create quotation. Please try again.'),
   })
 
   const updateMutation = useMutation({
@@ -76,6 +78,7 @@ export function useQuotationsPage() {
       queryClient.setQueryData(['quotation-detail', updated.id], updated)
       queryClient.invalidateQueries({ queryKey: ['quotations'] })
     },
+    onError: () => toast.error('Could not save quotation. Please try again.'),
   })
 
   const statusMutation = useMutation({
@@ -118,6 +121,7 @@ export function useQuotationsPage() {
       if (!ctx) return
       queryClient.setQueryData(['quotation-detail', ctx.id], ctx.detailSnapshot)
       queryClient.setQueryData(['quotations'], ctx.listSnapshot)
+      toast.error('Quotation status action failed. Please try again.')
     },
     onSuccess: (updated) => {
       queryClient.setQueryData(['quotation-detail', updated.id], updated)

@@ -33,8 +33,10 @@ import {
   publishIngestionJob,
   type IngestionJob,
   type StagedRow,
-  type JobDetailResponse,
 } from '@/features/admin/services/adminService'
+import toast from 'react-hot-toast'
+
+const MAX_CSV_BYTES = 20 * 1024 * 1024
 
 // ── Status config ────────────────────────────────────────────────────────────
 
@@ -95,6 +97,10 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
   const handleFile = useCallback(
     (file: File) => {
       if (!file.name.endsWith('.csv')) return
+      if (file.size > MAX_CSV_BYTES) {
+        toast.error('File too large. Maximum upload size is 20 MB.')
+        return
+      }
       uploadMutation.mutate(file)
     },
     [uploadMutation],
@@ -241,7 +247,12 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
   const [editingRow, setEditingRow] = useState<StagedRow | null>(null)
 
-  const { data, isLoading, refetch } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError: detailError,
+    refetch: refetchDetail,
+  } = useQuery({
     queryKey: ['ingestion-job', jobId, statusFilter, page],
     queryFn: () =>
       getIngestionJobDetail(jobId, {
@@ -317,6 +328,26 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
     return tabs
   }, [statusCounts, job?.total_rows])
 
+  if (detailError) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="rounded-[2px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Failed to load job details.{' '}
+          <button
+            type="button"
+            className="font-medium text-red-900 underline hover:no-underline"
+            onClick={() => void refetchDetail()}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -356,7 +387,7 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
             Job #{job.id} &middot; {job.created_at ? new Date(job.created_at).toLocaleString() : ''}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => refetch()} aria-label="Refresh">
+        <Button variant="ghost" size="sm" onClick={() => void refetchDetail()} aria-label="Refresh">
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>

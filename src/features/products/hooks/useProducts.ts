@@ -99,6 +99,12 @@ async function resolveBrandCategoryIds(input: AdminProductFormInput) {
   const [brands, categories] = await Promise.all([fetchBrands(), fetchCategories()])
   const brandId = brands.find((b) => String(b.id) === brandTrim)?.id
   const categoryId = categories.find((c) => String(c.id) === categoryTrim)?.id
+  if (brandTrim !== '' && brandId === undefined) {
+    throw new Error('Could not resolve brand. Refresh the page or pick a brand from the list.')
+  }
+  if (categoryTrim !== '' && categoryId === undefined) {
+    throw new Error('Could not resolve category. Refresh the page or pick a category from the list.')
+  }
   return { brandId, categoryId }
 }
 
@@ -318,10 +324,16 @@ async function createAdminProduct(input: AdminProductFormInput) {
       )
     }
     if (wantsActive) {
-      await api.put(`/api/v1/admin/products/${productId}`, {
-        is_active: true,
-        availability: 'in_stock',
-      })
+      try {
+        await api.put(`/api/v1/admin/products/${productId}`, {
+          is_active: true,
+          availability: 'in_stock',
+        })
+      } catch {
+        throw new Error(
+          'Product created but could not be activated. Check the product list and activate manually.',
+        )
+      }
     }
   }
   return res.data

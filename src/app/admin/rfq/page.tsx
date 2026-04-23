@@ -66,6 +66,15 @@ export default function AdminRFQPage() {
 
   const handleSave = useCallback(() => {
     if (!selected) return
+    if (
+      formState.status === 'quoted' &&
+      selected.status !== 'quoted' &&
+      !window.confirm(
+        'Set status to Quoted? This typically emails the customer with the quote. Continue?',
+      )
+    ) {
+      return
+    }
     const data: Record<string, unknown> = { status: formState.status }
     if (formState.quoted_price_usd) data.quoted_price_usd = parseFloat(formState.quoted_price_usd)
     if (formState.lead_time) data.lead_time = formState.lead_time

@@ -78,6 +78,7 @@ const labelClass = adminLightLabelClass
 
 const SORT_OPTIONS: { value: adminService.AdminLeadSort; label: string }[] = [
   { value: 'score_desc', label: 'Score · high → low' },
+  { value: 'created_at_desc', label: 'Created · newest first' },
   { value: 'last_activity_desc', label: 'Last activity · recent first' },
   { value: 'last_activity_asc', label: 'Last activity · stale first' },
 ]
