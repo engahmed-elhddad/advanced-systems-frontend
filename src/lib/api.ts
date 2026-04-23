@@ -1,8 +1,9 @@
 import axios from "axios";
 import type { RFQCreateInput, RFQResponse } from "@/types/rfq";
 import { submitPublicRFQ } from "@/lib/rfqSubmit";
-import { API_BASE_URL } from "@/lib/constants";
+import { API_BASE_URL, PRODUCTION_API_HOST } from "@/lib/constants";
 
+// Single normalized origin from env (non-local hosts are forced to https in constants).
 const API_BASE = API_BASE_URL;
 
 /** Must match backend `require_tenant_id` default; production refuses missing header. */
@@ -20,6 +21,13 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  // Belt-and-suspenders: never send http:// to the production API host from the browser.
+  if (config.baseURL?.startsWith(`http://${PRODUCTION_API_HOST}`)) {
+    config.baseURL = config.baseURL.replace(
+      `http://${PRODUCTION_API_HOST}`,
+      `https://${PRODUCTION_API_HOST}`,
+    );
+  }
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("admin_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;

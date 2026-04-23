@@ -1,9 +1,18 @@
 const LOCAL_API_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"])
 
+/** Canonical production API host (must use HTTPS when loaded from https:// pages). */
+export const PRODUCTION_API_HOST = "api.advancedsystems-int.com"
+
+function isLocalApiHostname(hostname: string): boolean {
+  return LOCAL_API_HOSTS.has(hostname.toLowerCase())
+}
+
 /**
- * Normalize the public API origin for browser builds: mistaken `http://` on production
- * API hosts is upgraded to `https://` to avoid mixed-content blocking on HTTPS pages.
- * Local dev hosts keep `http://` when configured.
+ * Normalize the public API origin for browser builds.
+ *
+ * Policy: any non-local host (including api.advancedsystems-int.com) always uses `https:`
+ * so the Next.js bundle never emits mixed-content `http://` calls on the live site.
+ * Local dev hosts keep `http://` when that is what you configure.
  */
 export function normalizePublicApiBaseUrl(raw: string): string {
   const trimmed = (raw || "").trim().replace(/\/$/, "")
@@ -11,13 +20,11 @@ export function normalizePublicApiBaseUrl(raw: string): string {
   try {
     const withProto = trimmed.includes("://") ? trimmed : `https://${trimmed}`
     const u = new URL(withProto)
-    const isLocal = LOCAL_API_HOSTS.has(u.hostname)
-    if (!isLocal && u.protocol === "http:") {
+    if (!isLocalApiHostname(u.hostname)) {
       u.protocol = "https:"
       return u.toString().replace(/\/$/, "")
     }
-    // Input had no scheme — return the fully-formed https:// URL instead of the bare hostname,
-    // which browsers would otherwise interpret as a relative path.
+    // Local: preserve caller scheme (typically http:// for Docker / dev server).
     if (!trimmed.includes("://")) {
       return u.toString().replace(/\/$/, "")
     }
