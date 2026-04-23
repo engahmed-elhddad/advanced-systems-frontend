@@ -12,7 +12,25 @@ const GOOGLE_ADS_WHATSAPP_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_WHATSAPP_LA
 const GOOGLE_ADS_RFQ_SUBMIT_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_RFQ_SUBMIT_LABEL || ''
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''
 
-const EVENTS_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/api/v1/events`
+// Enforce https at construction time (not just at call time) so the constant is
+// always a safe URL regardless of what NEXT_PUBLIC_API_URL was baked in at build.
+// Local API hosts (localhost / 127.0.0.1 / [::1]) keep http:// for dev convenience.
+const EVENTS_ENDPOINT = (() => {
+  const raw = `${API_BASE_URL.replace(/\/$/, '')}/api/v1/events`
+  try {
+    const u = new URL(raw)
+    if (
+      u.protocol === 'http:' &&
+      u.hostname !== 'localhost' &&
+      u.hostname !== '127.0.0.1' &&
+      u.hostname !== '[::1]'
+    ) {
+      u.protocol = 'https:'
+      return u.href
+    }
+  } catch { /* malformed base URL — proceed with raw */ }
+  return raw
+})()
 
 export const TRACKING_EVENT_NAMES = [
   'page_view',
@@ -62,13 +80,7 @@ function dispatchToBackend(eventName: TrackingEventName, payload: Record<string,
     payload: merged,
   })
 
-  // Upgrade to https when the page is served over HTTPS to prevent mixed-content blocking.
-  const endpoint =
-    typeof window !== 'undefined' && window.location.protocol === 'https:'
-      ? EVENTS_ENDPOINT.replace(/^http:\/\//, 'https://')
-      : EVENTS_ENDPOINT
-
-  void fetch(endpoint, {
+  void fetch(EVENTS_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body,
