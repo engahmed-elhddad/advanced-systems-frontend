@@ -1,9 +1,9 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { apiFetch } from '@/lib/api'
 import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
-
-import { useEffect, useState } from "react"
+import { Button, Input, Modal } from "@/components/ui"
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
 
@@ -98,32 +98,32 @@ export default function AdminSuppliersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen px-4 py-10">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Supplier Management</h1>
-            <p className="text-slate-500 text-sm mt-0.5">Manage your verified supplier network</p>
+            <h1 className="text-2xl font-bold text-white">Supplier Management</h1>
+            <p className="mt-0.5 text-sm text-white/50">Manage your verified supplier network</p>
           </div>
-          <button
+          <Button
+            variant="primary"
             onClick={() => { setEditing(null); setForm(EMPTY_SUPPLIER); setShowForm(true) }}
-            className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold transition"
           >
             + Add Supplier
-          </button>
+          </Button>
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-slate-400">Loading…</div>
+          <div className="py-20 text-center text-white/40">Loading…</div>
         ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]">
             {suppliers.length === 0 ? (
-              <div className="text-center py-20 text-slate-400">No suppliers added yet.</div>
+              <div className="py-20 text-center text-white/40">No suppliers added yet.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100 bg-slate-50">
+                    <tr className="border-b border-white/10 bg-white/[0.04] text-left text-xs uppercase tracking-wider text-white/40">
                       <th className="px-5 py-3">Name</th>
                       <th className="px-5 py-3">Country</th>
                       <th className="px-5 py-3">Email</th>
@@ -134,21 +134,25 @@ export default function AdminSuppliersPage() {
                   </thead>
                   <tbody>
                     {suppliers.map(s => (
-                      <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50 transition">
-                        <td className="px-5 py-3 font-medium text-slate-800">{s.name}</td>
-                        <td className="px-5 py-3 text-slate-600">{s.country}</td>
+                      <tr key={s.id} className="border-b border-white/[0.06] transition hover:bg-white/[0.04]">
+                        <td className="px-5 py-3 font-medium text-white">{s.name}</td>
+                        <td className="px-5 py-3 text-white/70">{s.country}</td>
                         <td className="px-5 py-3">
-                          <a href={`mailto:${s.email}`} className="text-sky-600 hover:underline">{s.email}</a>
+                          <a href={`mailto:${s.email}`} className="text-sky-400 hover:underline">{s.email}</a>
                         </td>
                         <td className="px-5 py-3">
                           {s.website ? (
-                            <a href={s.website} target="_blank" rel="noreferrer" className="text-sky-600 hover:underline truncate max-w-[150px] block">{s.website.replace(/^https?:\/\//, "")}</a>
+                            <a href={s.website} target="_blank" rel="noreferrer" className="block max-w-[150px] truncate text-sky-400 hover:underline">
+                              {s.website.replace(/^https?:\/\//, "")}
+                            </a>
                           ) : "—"}
                         </td>
-                        <td className="px-5 py-3 text-slate-500 truncate max-w-[200px]">{s.notes || "—"}</td>
-                        <td className="px-5 py-3 flex gap-3">
-                          <button onClick={() => startEdit(s)} className="text-xs font-medium text-sky-600 hover:text-sky-800 transition">Edit</button>
-                          <button onClick={() => handleDelete(s.id)} className="text-xs font-medium text-red-500 hover:text-red-700 transition">Delete</button>
+                        <td className="max-w-[200px] truncate px-5 py-3 text-white/50">{s.notes || "—"}</td>
+                        <td className="px-5 py-3">
+                          <div className="flex gap-3">
+                            <button onClick={() => startEdit(s)} className="text-xs font-medium text-sky-400 transition hover:text-sky-300">Edit</button>
+                            <button onClick={() => handleDelete(s.id)} className="text-xs font-medium text-red-400 transition hover:text-red-300">Delete</button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -159,51 +163,55 @@ export default function AdminSuppliersPage() {
           </div>
         )}
 
-        {/* Add/Edit modal */}
-        {showForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-5">{editing ? "Edit Supplier" : "Add Supplier"}</h2>
-              <div className="space-y-3 mb-5">
-                {(["name", "country", "email", "website"] as const).map(field => (
-                  <div key={field}>
-                    <label className="block text-xs font-medium text-slate-600 mb-1 capitalize">{field.replace("_", " ")}</label>
-                    <input
-                      name={field}
-                      type={field === "email" ? "email" : "text"}
-                      value={form[field] ?? ""}
-                      onChange={handleChange}
-                      required={field !== "website"}
-                      placeholder={field === "website" ? "https://example.com" : ""}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-                ))}
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Notes</label>
-                  <textarea
-                    name="notes"
-                    rows={3}
-                    value={form.notes ?? ""}
-                    onChange={handleChange}
-                    placeholder="Specialties, certifications, terms…"
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-sky-500 resize-none"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => { setShowForm(false); setEditing(null) }} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm hover:bg-slate-50 transition">Cancel</button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !form.name || !form.email}
-                  className="flex-1 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold disabled:opacity-60 transition"
-                >
-                  {saving ? "Saving…" : editing ? "Update" : "Add Supplier"}
-                </button>
-              </div>
+        <Modal
+          open={showForm}
+          onClose={() => { setShowForm(false); setEditing(null) }}
+          title={editing ? "Edit Supplier" : "Add Supplier"}
+        >
+          <div className="space-y-3 py-2">
+            {(["name", "country", "email", "website"] as const).map(field => (
+              <Input
+                key={field}
+                label={field.charAt(0).toUpperCase() + field.slice(1).replace("_", " ")}
+                name={field}
+                type={field === "email" ? "email" : "text"}
+                value={form[field] ?? ""}
+                onChange={handleChange}
+                required={field !== "website"}
+                placeholder={field === "website" ? "https://example.com" : ""}
+              />
+            ))}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-white/50">Notes</label>
+              <textarea
+                name="notes"
+                rows={3}
+                value={form.notes ?? ""}
+                onChange={handleChange}
+                placeholder="Specialties, certifications, terms…"
+                className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/20"
+              />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => { setShowForm(false); setEditing(null) }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                fullWidth
+                loading={saving}
+                disabled={saving || !form.name || !form.email}
+                onClick={handleSave}
+              >
+                {editing ? "Update" : "Add Supplier"}
+              </Button>
             </div>
           </div>
-        )}
+        </Modal>
       </div>
     </div>
   )
