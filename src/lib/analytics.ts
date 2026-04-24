@@ -16,7 +16,8 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''
 // always a safe URL regardless of what NEXT_PUBLIC_API_URL was baked in at build.
 // Local API hosts (localhost / 127.0.0.1 / [::1]) keep http:// for dev convenience.
 const EVENTS_ENDPOINT = (() => {
-  const raw = `${API_BASE_URL.replace(/\/$/, '')}/api/v1/events`
+  // Trailing slash avoids 307 redirect from FastAPI (POST body can be dropped on redirect).
+  const raw = `${API_BASE_URL.replace(/\/$/, '')}/api/v1/events/`
   try {
     const u = new URL(raw)
     if (
