@@ -6,62 +6,25 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { API_BASE_URL } from '@/lib/constants'
-import { BRAND_MAP } from '@/lib/brands'
 
 interface BrandItem {
   name: string
   slug: string
+  logo_url?: string | null
 }
 
-function slugFromName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-}
-
-function brandDisplayName(name: string): string {
-  if (!name || !name.trim()) return name
-  const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-  const fromMap = BRAND_MAP[slug] ?? BRAND_MAP[slug.split('-')[0]]
-  if (fromMap) return fromMap
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ')
-}
-
-async function fetchMergedBrands(): Promise<BrandItem[]> {
-  const bySlug = new Map<string, BrandItem>()
-
-  const ingest = (products: Array<Record<string, unknown>>) => {
-    for (const p of products) {
-      const raw = String(p.brand ?? p.manufacturer ?? '').trim()
-      if (!raw) continue
-      const slug = slugFromName(raw)
-      if (!bySlug.has(slug)) bySlug.set(slug, { name: brandDisplayName(raw), slug })
-    }
-  }
-
-  let productsRes = await apiFetch(`${API_BASE_URL}/api/v1/products/?page=1&size=100`)
-  if (productsRes.ok) {
-    const data = await productsRes.json()
-    const products = (data.items ?? data.products ?? data.results ?? []) as Array<Record<string, unknown>>
-    if (Array.isArray(products)) ingest(products)
-  }
-  if (bySlug.size < 8) {
-    productsRes = await apiFetch(`${API_BASE_URL}/products?limit=500`)
-    if (productsRes.ok) {
-      const data = await productsRes.json()
-      const products = (data.products ?? data.results ?? []) as Array<Record<string, unknown>>
-      if (Array.isArray(products)) ingest(products)
-    }
-  }
-
-  const list = Array.from(bySlug.values())
-  list.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }))
-  return list
+async function fetchBrands(): Promise<BrandItem[]> {
+  const res = await apiFetch(`${API_BASE_URL}/api/v1/brands/`)
+  if (!res.ok) return []
+  const data = await res.json()
+  const brands = Array.isArray(data) ? data : []
+  return brands
+    .filter((b: Record<string, unknown>) => b.slug && b.name)
+    .map((b: Record<string, unknown>) => ({
+      name: String(b.name),
+      slug: String(b.slug),
+      logo_url: b.logo_url ? String(b.logo_url) : null,
+    }))
 }
 
 export function BrandCarousel() {
@@ -70,7 +33,7 @@ export function BrandCarousel() {
 
   useEffect(() => {
     let cancelled = false
-    fetchMergedBrands()
+    fetchBrands()
       .then((list) => {
         if (!cancelled) setBrands(list)
       })
@@ -110,7 +73,7 @@ export function BrandCarousel() {
             <BrandLogo
               brand={brand.name}
               variant="default"
-              logoSrc={`https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`}
+              logoSrc={brand.logo_url || `https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`}
             />
           </Link>
         ))}

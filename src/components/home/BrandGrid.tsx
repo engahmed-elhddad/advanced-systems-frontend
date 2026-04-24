@@ -12,6 +12,7 @@ import { API_BASE_URL } from '@/lib/constants'
 export interface BrandItem {
   name: string
   slug?: string
+  logo_url?: string | null
   product_count?: number
   count?: number
 }
@@ -151,7 +152,7 @@ export function BrandGrid({
                 <BrandLogo
                   brand={brand.name}
                   variant="default"
-                  logoSrc={`https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`}
+                  logoSrc={brand.logo_url || `https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`}
                   logoClassName="h-10 object-contain mb-2 transition duration-300 group-hover:scale-110"
                   badgeClassName="hidden"
                 />
