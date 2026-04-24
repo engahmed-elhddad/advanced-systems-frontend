@@ -80,7 +80,7 @@ export function CategoryHeroGrid() {
         <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
           {categories.map((cat) => {
             const Icon = getCategoryIcon(cat.name)
-            const href = `/category/${encodeURIComponent(cat.slug)}`
+            const href = `/categories/${encodeURIComponent(cat.slug)}`
             const count = cat.product_count ?? 0
             return (
               <Link

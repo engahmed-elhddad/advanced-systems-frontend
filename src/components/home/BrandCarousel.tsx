@@ -4,6 +4,7 @@ import { apiFetch } from '@/lib/api'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 import { API_BASE_URL } from '@/lib/constants'
 import { BRAND_MAP } from '@/lib/brands'
 
@@ -106,7 +107,11 @@ export function BrandCarousel() {
             className="flex w-[150px] flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-md transition-all duration-300 hover:scale-[1.05] hover:border-orange-400/30 hover:shadow-[0_0_24px_rgba(255,122,0,0.12)]"
             aria-label={brand.name}
           >
-            <span className="text-center text-sm font-semibold text-white/85 md:text-base">{brand.name}</span>
+            <BrandLogo
+              brand={brand.name}
+              variant="default"
+              logoSrc={`https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`}
+            />
           </Link>
         ))}
       </div>

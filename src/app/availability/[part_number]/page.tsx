@@ -63,7 +63,7 @@ export default async function AvailabilityPage({ params }: Props) {
           <span className="mx-2">/</span>
           {categoryName && (
             <>
-              <Link href={categoryToSlug(String(categoryName)) ? `/category/${categoryToSlug(String(categoryName))}` : `/search?category=${encodeURIComponent(categoryName)}`} className="hover:text-primary-600">{categoryName}</Link>
+              <Link href={categoryToSlug(String(categoryName)) ? `/categories/${categoryToSlug(String(categoryName))}` : `/search?category=${encodeURIComponent(categoryName)}`} className="hover:text-primary-600">{categoryName}</Link>
               <span className="mx-2">/</span>
             </>
           )}

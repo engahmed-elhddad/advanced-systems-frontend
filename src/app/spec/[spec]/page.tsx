@@ -139,7 +139,7 @@ export default async function SpecPage({ params, searchParams }: Props) {
                         {p.part_number}
                       </Link>
                       {p.category && (
-                        <Link href={`/category/${categoryToSlug(p.category)}`} className="text-xs text-gray-500 hover:text-primary-600 truncate">
+                        <Link href={`/categories/${categoryToSlug(p.category)}`} className="text-xs text-gray-500 hover:text-primary-600 truncate">
                           {p.category}
                         </Link>
                       )}

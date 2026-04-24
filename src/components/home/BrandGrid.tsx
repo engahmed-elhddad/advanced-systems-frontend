@@ -151,6 +151,7 @@ export function BrandGrid({
                 <BrandLogo
                   brand={brand.name}
                   variant="default"
+                  logoSrc={`https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`}
                   logoClassName="h-10 object-contain mb-2 transition duration-300 group-hover:scale-110"
                   badgeClassName="hidden"
                 />
