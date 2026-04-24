@@ -1,14 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as adminService from '@/features/admin/services/adminService'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
-import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
+import { type ColumnDef } from '@tanstack/react-table'
+import { DataTable, type DataTableColumnMeta, Badge, Button, Modal, Input, Select } from '@/components/ui'
 import type { RFQDetail } from '@/types/rfq'
 import { formatRfqStatusLabel } from '@/lib/rfqExperience'
 import toast from 'react-hot-toast'
@@ -98,70 +94,83 @@ export default function AdminRFQPage() {
     { label: 'Closed', value: stats?.closed ?? 0 },
   ]
 
-  const columns: DataTableColumn<RFQDetail & Record<string, unknown>>[] = [
-    {
-      key: 'reference',
-      header: 'Reference',
-      render: (row) => <span className="font-mono text-xs text-[#6B7280]">{row.reference}</span>,
-    },
-    {
-      key: 'part_number',
-      header: 'Part Number',
-      render: (row) => <span className="font-mono font-semibold text-[#0072CE]">{row.part_number}</span>,
-    },
-    {
-      key: 'quantity',
-      header: 'Qty',
-      render: (row) => <span>{row.quantity}</span>,
-    },
-    {
-      key: 'company',
-      header: 'Company',
-      className: 'max-w-[120px]',
-      render: (row) => <span className="truncate block max-w-[120px]">{row.company ?? '—'}</span>,
-    },
-    {
-      key: 'email',
-      header: 'Email',
-      render: (row) => (
-        <a href={`mailto:${row.email}`} className="text-[#0072CE] hover:underline text-xs">
-          {row.email}
-        </a>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (row) => (
-        <Badge variant={STATUS_BADGE_MAP[row.status] ?? 'default'} size="sm">
-          {formatRfqStatusLabel(row.status)}
-        </Badge>
-      ),
-    },
-    {
-      key: 'quoted_price_usd',
-      header: 'Price',
-      render: (row) => (
-        <span className="text-xs">{row.quoted_price_usd ? `$${Number(row.quoted_price_usd).toFixed(2)}` : '—'}</span>
-      ),
-    },
-    {
-      key: 'created_at',
-      header: 'Date',
-      render: (row) => (
-        <span className="text-xs text-[#6B7280] whitespace-nowrap">{new Date(row.created_at).toLocaleDateString()}</span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      render: (row) => (
-        <Button variant="ghost" size="sm" onClick={() => openEdit(row as RFQDetail)}>
-          {row.status === 'pending' ? 'Quote' : 'Edit'}
-        </Button>
-      ),
-    },
-  ]
+  const columns: ColumnDef<RFQDetail & Record<string, unknown>, unknown>[] = useMemo(
+    () => [
+      {
+        id: 'reference',
+        header: 'Reference',
+        cell: ({ row }) => (
+          <span className="font-mono text-xs text-white/50">{row.original.reference}</span>
+        ),
+      },
+      {
+        id: 'part_number',
+        header: 'Part Number',
+        cell: ({ row }) => (
+          <span className="font-mono font-semibold text-orange-300">{row.original.part_number}</span>
+        ),
+      },
+      {
+        id: 'quantity',
+        header: 'Qty',
+        cell: ({ row }) => <span className="text-white/80">{row.original.quantity}</span>,
+      },
+      {
+        id: 'company',
+        header: 'Company',
+        meta: { className: 'max-w-[120px]' } as DataTableColumnMeta,
+        cell: ({ row }) => (
+          <span className="block max-w-[120px] truncate text-white/80">{row.original.company ?? '—'}</span>
+        ),
+      },
+      {
+        id: 'email',
+        header: 'Email',
+        cell: ({ row }) => (
+          <a href={`mailto:${row.original.email}`} className="text-xs text-sky-400 hover:text-sky-300 hover:underline">
+            {row.original.email}
+          </a>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        cell: ({ row }) => (
+          <Badge variant={STATUS_BADGE_MAP[row.original.status] ?? 'default'} size="sm">
+            {formatRfqStatusLabel(row.original.status)}
+          </Badge>
+        ),
+      },
+      {
+        id: 'quoted_price_usd',
+        header: 'Price',
+        cell: ({ row }) => (
+          <span className="text-xs text-white/80">
+            {row.original.quoted_price_usd ? `$${Number(row.original.quoted_price_usd).toFixed(2)}` : '—'}
+          </span>
+        ),
+      },
+      {
+        id: 'created_at',
+        header: 'Date',
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-xs text-white/50">
+            {new Date(row.original.created_at).toLocaleDateString()}
+          </span>
+        ),
+      },
+      {
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => (
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original as RFQDetail) }}>
+            {row.original.status === 'pending' ? 'Quote' : 'Edit'}
+          </Button>
+        ),
+      },
+    ],
+    [openEdit],
+  )
 
   const filterTabs = [
     { value: '', label: 'All' },
@@ -171,34 +180,32 @@ export default function AdminRFQPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] py-8 px-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen px-4 py-8">
+      <div className="mx-auto max-w-7xl space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1A1A]">RFQ Management</h1>
-          <p className="text-sm text-[#6B7280] mt-0.5">View and respond to quote requests</p>
+          <h1 className="text-2xl font-bold text-white">RFQ Management</h1>
+          <p className="mt-0.5 text-sm text-white/50">View and respond to quote requests</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {statCards.map((s) => (
-            <div key={s.label} className="bg-white border border-[#E5E7EB] rounded-[4px] p-4">
-              <p className="text-2xl font-bold text-[#1A1A1A]">{s.value}</p>
-              <p className="text-xs text-[#6B7280] mt-0.5">{s.label}</p>
+            <div key={s.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+              <p className="text-2xl font-bold text-white">{s.value}</p>
+              <p className="mt-0.5 text-xs text-white/50">{s.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex gap-1 border-b border-[#E5E7EB] pb-px">
+        <div className="flex gap-1 border-b border-white/10 pb-px">
           {filterTabs.map((tab) => (
             <button
               key={tab.value}
               type="button"
               onClick={() => setFilterStatus(tab.value)}
-              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              className={`relative px-4 py-2 text-sm font-medium transition-colors ${
                 filterStatus === tab.value
-                  ? 'text-[#0072CE] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#0072CE]'
-                  : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                  ? 'text-orange-300 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-orange-400'
+                  : 'text-white/50 hover:text-white'
               }`}
             >
               {tab.label}
@@ -206,19 +213,21 @@ export default function AdminRFQPage() {
           ))}
         </div>
 
-        {/* Table */}
         <DataTable
-          allowLegacyTable
+          tableId="admin-rfq"
           columns={columns}
           data={rfqs as (RFQDetail & Record<string, unknown>)[]}
-          loading={rfqsQuery.isLoading}
-          emptyMessage={`No RFQs${filterStatus ? ` with status "${filterStatus}"` : ''}`}
-          rowKey={(row) => String(row.id)}
+          isLoading={rfqsQuery.isLoading}
+          emptyState={
+            <p className="py-10 text-center text-sm text-white/50">
+              {`No RFQs${filterStatus ? ` with status "${filterStatus}"` : ''}`}
+            </p>
+          }
+          getRowId={(row) => String(row.id)}
           stickyHeader
         />
       </div>
 
-      {/* Edit Modal */}
       {selected && (
         <Modal
           open={Boolean(selected)}
@@ -228,8 +237,8 @@ export default function AdminRFQPage() {
         >
           <div className="space-y-4 py-2">
             {selected.message && (
-              <div className="rounded-[2px] bg-[#F9FAFB] border border-[#E5E7EB] px-3 py-2 text-sm text-[#6B7280]">
-                <strong className="text-[#1A1A1A]">Customer note:</strong> {selected.message}
+              <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/50">
+                <strong className="text-white">Customer note:</strong> {selected.message}
               </div>
             )}
 
@@ -249,13 +258,15 @@ export default function AdminRFQPage() {
               placeholder="e.g. 3-5 business days"
             />
             <div className="w-full">
-              <label htmlFor="admin-rfq-notes" className="mb-1 block text-xs font-medium text-[#6B7280]">Admin Notes (internal)</label>
+              <label htmlFor="admin-rfq-notes" className="mb-1 block text-xs font-medium text-white/50">
+                Admin Notes (internal)
+              </label>
               <textarea
                 id="admin-rfq-notes"
                 value={formState.admin_notes}
                 onChange={(e) => setFormState((s) => ({ ...s, admin_notes: e.target.value }))}
                 rows={2}
-                className="w-full border border-[#E5E7EB] rounded-[2px] px-3 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#0072CE] focus:ring-1 focus:ring-[#0072CE]/20 resize-none"
+                className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/20"
               />
             </div>
             <Select
@@ -272,7 +283,7 @@ export default function AdminRFQPage() {
             />
 
             {updateMutation.isError && (
-              <p className="text-[#EF4444] text-xs">Failed to update RFQ. Please try again.</p>
+              <p className="text-xs text-red-500">Failed to update RFQ. Please try again.</p>
             )}
 
             <div className="flex gap-3 pt-2">
