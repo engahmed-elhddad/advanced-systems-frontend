@@ -11,7 +11,6 @@ import { API_BASE_URL, normalizeCategoryQueryForApi, SITE_URL } from '@/lib/cons
 import { absoluteUrl, canonicalPath, truncateMetaDescription } from '@/lib/seo'
 import { normalizeProductVariants } from '@/lib/productVariants'
 import { ProductDetail } from './ProductDetail'
-import { ProductPageSearchStrip } from './ProductPageSearchStrip'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { ViewProductTracker } from '@/components/analytics/ViewProductTracker'
 
@@ -511,8 +510,6 @@ export default async function ProductSlugPage({ params }: Props) {
             </li>
           </ol>
         </nav>
-
-        <ProductPageSearchStrip className="mb-10" />
 
         <ViewProductTracker
           partNumber={partNum}
