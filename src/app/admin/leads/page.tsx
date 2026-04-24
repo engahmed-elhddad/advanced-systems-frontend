@@ -4,11 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as adminService from '@/features/admin/services/adminService'
 import type { CrmLead, CrmLeadStatus } from '@/features/admin/services/adminService'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
-import { Select } from '@/components/ui/Select'
+import { type ColumnDef } from '@tanstack/react-table'
+import { DataTable, type DataTableColumnMeta, Badge, Button, Modal, Select } from '@/components/ui'
 import { adminLightInputClass, adminLightTextareaClass, adminLightLabelClass } from '@/lib/adminFormClasses'
 import toast from 'react-hot-toast'
 import { LeadDetailsDrawer } from '@/app/admin/leads/LeadDetailsDrawer'
@@ -26,7 +23,7 @@ function LeadActivityTimeline({ leadId }: { leadId: number }) {
     queryFn: () => adminService.getAdminLeadActivity(leadId),
   })
   if (q.isLoading) {
-    return <p className="text-xs text-[#6B7280]">Loading activity…</p>
+    return <p className="text-xs text-white/50">Loading activity…</p>
   }
   if (q.isError) {
     return <p className="text-xs text-red-600">Could not load activity.</p>
@@ -52,20 +49,20 @@ function LeadActivityTimeline({ leadId }: { leadId: number }) {
   ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
 
   if (merged.length === 0) {
-    return <p className="text-xs text-[#6B7280]">No activity rows yet.</p>
+    return <p className="text-xs text-white/50">No activity rows yet.</p>
   }
 
   return (
-    <ul className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-[#E5E7EB] bg-white p-2 text-xs">
+    <ul className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-white/[0.04] p-2 text-xs">
       {merged.slice(0, 20).map((row, i) => (
-        <li key={`${row.kind}-${i}`} className="border-b border-[#F3F4F6] pb-2 last:border-0 last:pb-0">
+        <li key={`${row.kind}-${i}`} className="border-b border-white/[0.06] pb-2 last:border-0 last:pb-0">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="font-medium capitalize text-[#111827]">{row.label}</span>
-            <time className="shrink-0 text-[10px] text-[#9CA3AF]" dateTime={row.at}>
+            <span className="font-medium capitalize text-white">{row.label}</span>
+            <time className="shrink-0 text-[10px] text-white/40" dateTime={row.at}>
               {new Date(row.at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
             </time>
           </div>
-          {row.sub ? <p className="mt-0.5 text-[#6B7280]">{row.sub}</p> : null}
+          {row.sub ? <p className="mt-0.5 text-white/50">{row.sub}</p> : null}
         </li>
       ))}
     </ul>
@@ -337,35 +334,39 @@ export default function AdminLeadsPage() {
     deleteMutation.mutate(selected.id)
   }, [selected, deleteMutation])
 
-  const columns: DataTableColumn<CrmLead & Record<string, unknown>>[] = useMemo(
+  const columns: ColumnDef<CrmLead & Record<string, unknown>, unknown>[] = useMemo(
     () => [
       {
-        key: 'contact',
+        id: 'contact',
         header: 'Contact',
-        className: 'min-w-[200px]',
-        render: (row) => (
-          <div className="flex flex-col gap-0.5 py-0.5">
-            <span className="font-semibold text-white/95">{row.name}</span>
-            {row.email ? (
-              <a
-                href={`mailto:${row.email}`}
-                onClick={(e) => e.stopPropagation()}
-                className="text-xs text-sky-300/90 hover:text-sky-200 hover:underline"
-              >
-                {row.email}
-              </a>
-            ) : (
-              <span className="text-xs text-white/35">No email</span>
-            )}
-          </div>
-        ),
+        meta: { className: 'min-w-[200px]' } as DataTableColumnMeta,
+        cell: ({ row }) => {
+          const r = row.original
+          return (
+            <div className="flex flex-col gap-0.5 py-0.5">
+              <span className="font-semibold text-white/95">{r.name}</span>
+              {r.email ? (
+                <a
+                  href={`mailto:${r.email}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-sky-300/90 hover:text-sky-200 hover:underline"
+                >
+                  {r.email}
+                </a>
+              ) : (
+                <span className="text-xs text-white/35">No email</span>
+              )}
+            </div>
+          )
+        },
       },
       {
-        key: 'lead_score',
+        id: 'lead_score',
         header: 'Score',
-        render: (row) => {
-          const score = row.lead_score
-          if (score == null && !row.visitor_id && !row.rfq_id) {
+        cell: ({ row }) => {
+          const r = row.original
+          const score = r.lead_score
+          if (score == null && !r.visitor_id && !r.rfq_id) {
             return <span className="font-mono text-sm text-white/35">—</span>
           }
           return (
@@ -374,10 +375,11 @@ export default function AdminLeadsPage() {
         },
       },
       {
-        key: 'priority',
+        id: 'priority',
         header: 'Priority',
-        render: (row) => {
-          const cls = (row.lead_priority || row.lead_classification || 'cold').toString().toLowerCase()
+        cell: ({ row }) => {
+          const r = row.original
+          const cls = (r.lead_priority || r.lead_classification || 'cold').toString().toLowerCase()
           const label = cls === 'hot' ? 'Hot' : cls === 'warm' ? 'Warm' : 'Cold'
           const chip =
             cls === 'hot'
@@ -395,14 +397,15 @@ export default function AdminLeadsPage() {
         },
       },
       {
-        key: 'next_action',
+        id: 'next_action',
         header: 'Next action',
-        className: 'max-w-[190px]',
-        render: (row) => {
-          const na = (row.next_action || row.suggested_action) as string | null | undefined
+        meta: { className: 'max-w-[190px]' } as DataTableColumnMeta,
+        cell: ({ row }) => {
+          const r = row.original
+          const na = (r.next_action || r.suggested_action) as string | null | undefined
           if (!na) return <span className="text-xs text-white/35">—</span>
           const { emoji, text } = nextActionBadge(na)
-          const ur = String(row.urgency || 'low').toLowerCase()
+          const ur = String(r.urgency || 'low').toLowerCase()
           return (
             <div className="flex flex-col gap-1 py-0.5" onClick={(e) => e.stopPropagation()}>
               <span className="text-xs font-semibold leading-tight text-white/90">
@@ -421,11 +424,12 @@ export default function AdminLeadsPage() {
         },
       },
       {
-        key: 'needs_attention',
+        id: 'needs_attention',
         header: 'Attention',
-        className: 'w-[130px]',
-        render: (row) =>
-          row.needs_attention === true ? (
+        meta: { className: 'w-[130px]' } as DataTableColumnMeta,
+        cell: ({ row }) => {
+          const r = row.original
+          return r.needs_attention === true ? (
             <div onClick={(e) => e.stopPropagation()}>
               <Badge variant="danger" size="sm" className="whitespace-nowrap shadow-[0_0_16px_rgba(239,68,68,0.25)]">
                 Needs attention
@@ -433,13 +437,15 @@ export default function AdminLeadsPage() {
             </div>
           ) : (
             <span className="text-[11px] text-white/25">—</span>
-          ),
+          )
+        },
       },
       {
-        key: 'last_activity_at',
+        id: 'last_activity_at',
         header: 'Last activity',
-        render: (row) => {
-          const raw = row.last_activity_at as string | null | undefined
+        cell: ({ row }) => {
+          const r = row.original
+          const raw = r.last_activity_at as string | null | undefined
           if (!raw) return <span className="text-xs text-white/35">—</span>
           return (
             <span className="whitespace-nowrap text-xs text-white/60">
@@ -449,10 +455,11 @@ export default function AdminLeadsPage() {
         },
       },
       {
-        key: 'rfq_count',
+        id: 'rfq_count',
         header: 'RFQs',
-        render: (row) => {
-          const n = typeof row.rfq_count === 'number' ? row.rfq_count : 0
+        cell: ({ row }) => {
+          const r = row.original
+          const n = typeof r.rfq_count === 'number' ? r.rfq_count : 0
           return <span className="font-mono text-sm tabular-nums text-white/80">{n}</span>
         },
       },
@@ -471,19 +478,6 @@ export default function AdminLeadsPage() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden px-4 py-8">
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[#030712]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -left-32 top-0 h-[420px] w-[420px] -z-10 rounded-full bg-orange-600/15 blur-[100px]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute bottom-0 right-0 h-[380px] w-[480px] -z-10 rounded-full bg-violet-600/10 blur-[110px]"
-        aria-hidden
-      />
-
       <div className="relative z-10 mx-auto max-w-6xl space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -573,22 +567,23 @@ export default function AdminLeadsPage() {
         </div>
 
         <DataTable
-          allowLegacyTable
-          variant="dark"
+          tableId="admin-leads"
           columns={columns}
           data={items as (CrmLead & Record<string, unknown>)[]}
-          loading={leadsQuery.isLoading}
-          emptyMessage={
-            attentionOnly
-              ? 'No leads need attention in this view — great execution.'
-              : filterStatus
-                ? `No leads in “${labelStatus(filterStatus)}”.`
-                : 'No leads yet — add one or sync from RFQs.'
+          isLoading={leadsQuery.isLoading}
+          emptyState={
+            <p className="py-10 text-center text-sm text-white/50">
+              {attentionOnly
+                ? 'No leads need attention in this view — great execution.'
+                : filterStatus
+                  ? `No leads in "${labelStatus(filterStatus)}".`
+                  : 'No leads yet — add one or sync from RFQs.'}
+            </p>
           }
-          rowKey={(row) => String(row.id)}
+          getRowId={(row) => String(row.id)}
           stickyHeader
           onRowClick={(row) => openDrawer(row as CrmLead)}
-          rowClassName={(row) => priorityRowClass(row as CrmLead & Record<string, unknown>)}
+          getBodyRowClassName={(row) => priorityRowClass(row as CrmLead & Record<string, unknown>)}
         />
 
         {leadsTotal > LEADS_PAGE_SIZE ? (
@@ -696,7 +691,7 @@ export default function AdminLeadsPage() {
                 value={form.visitor_id}
                 onChange={(e) => setForm((f) => ({ ...f, visitor_id: e.target.value }))}
               />
-              <p className="mt-1 text-[11px] text-[#9CA3AF]">
+              <p className="mt-1 text-[11px] text-white/40">
                 Optional. If empty, score may still appear when a linked RFQ has a visitor_id.
               </p>
             </div>
@@ -708,7 +703,7 @@ export default function AdminLeadsPage() {
                 value={form.rfq_reference}
                 onChange={(e) => setForm((f) => ({ ...f, rfq_reference: e.target.value }))}
               />
-              <p className="mt-1 text-[11px] text-[#9CA3AF]">Must match an existing RFQ reference.</p>
+              <p className="mt-1 text-[11px] text-white/40">Must match an existing RFQ reference.</p>
             </div>
             <div>
               <label className={labelClass}>Notes</label>
@@ -721,14 +716,14 @@ export default function AdminLeadsPage() {
             </div>
 
             {modalMode === 'edit' && selected ? (
-              <div className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-3">
-                <p className="mb-2 text-xs font-semibold text-[#374151]">Quick activity</p>
+              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                <p className="mb-2 text-xs font-semibold text-white/70">Quick activity</p>
                 <LeadActivityTimeline leadId={selected.id} />
               </div>
             ) : null}
 
             {modalMode === 'edit' && selected ? (
-              <div className="flex flex-wrap gap-2 border-t border-[#E5E7EB] pt-3">
+              <div className="flex flex-wrap gap-2 border-t border-white/10 pt-3">
                 <Button type="button" variant="secondary" size="sm" onClick={linkLatestRfq} loading={updateMutation.isPending}>
                   Link latest RFQ by email
                 </Button>
