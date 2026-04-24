@@ -1,6 +1,7 @@
 'use client'
 
 import { RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui'
 import { QuotationList } from './QuotationList'
 import { QuotationBuilder } from './QuotationBuilder'
 import { useQuotationsPage } from '../_hooks/useQuotationsPage'
@@ -39,46 +40,47 @@ export function QuotationsPage() {
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-[#1A1A1A]">Quotation Management</h1>
-          <p className="text-sm text-[#6B7280]">
+          <h1 className="text-xl font-bold text-white">Quotation Management</h1>
+          <p className="text-sm text-white/50">
             Draft-based hybrid quotations with inline editing and auto-save
           </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => refresh()}
-          className="inline-flex items-center gap-1.5 rounded-[2px] border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors hover:bg-[#F9FAFB]"
+          className="inline-flex items-center gap-1.5"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {quotationsError ? (
-        <div className="rounded-[4px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           Failed to load quotations.
         </div>
       ) : null}
 
       {!quotationsError && !search.trim() && (hasPrevQuotationPage || hasNextQuotationPage) ? (
-        <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-[#6B7280]">
+        <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-white/50">
           <span className="font-mono">Page {quotationListPage}</span>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             disabled={!hasPrevQuotationPage || quotationsLoading}
             onClick={() => setQuotationListPage((p: number) => Math.max(1, p - 1))}
-            className="rounded-[2px] border border-[#E5E7EB] bg-white px-2 py-1 font-medium text-[#1A1A1A] disabled:opacity-40"
           >
             Previous
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             disabled={!hasNextQuotationPage || quotationsLoading}
             onClick={() => setQuotationListPage((p: number) => p + 1)}
-            className="rounded-[2px] border border-[#E5E7EB] bg-white px-2 py-1 font-medium text-[#1A1A1A] disabled:opacity-40"
           >
             Next
-          </button>
+          </Button>
         </div>
       ) : null}
 
@@ -116,4 +118,3 @@ export function QuotationsPage() {
     </div>
   )
 }
-

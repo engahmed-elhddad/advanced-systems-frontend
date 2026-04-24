@@ -1,8 +1,6 @@
 'use client'
 
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
+import { Button, Input, Select } from '@/components/ui'
 import type { Product } from '@/types/product'
 
 export interface BuilderItem {
@@ -49,9 +47,9 @@ export function QuotationItemsTable({
   const options = toOptions(products)
 
   return (
-    <div className="rounded-[4px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#1A1A1A]">Items</h3>
+        <h3 className="text-sm font-semibold text-white">Items</h3>
         <Button size="sm" variant="secondary" onClick={onAddItem} disabled={disabled || !canAddRemove}>
           Add Item
         </Button>
@@ -59,7 +57,7 @@ export function QuotationItemsTable({
 
       <div className="space-y-3">
         {items.map((item) => (
-          <div key={item.tempId} className="rounded-[2px] border border-[#E5E7EB] p-3">
+          <div key={item.tempId} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
             <div className="mb-2 grid gap-2 md:grid-cols-2">
               <Select
                 value={item.product_id ? String(item.product_id) : ''}
@@ -104,7 +102,7 @@ export function QuotationItemsTable({
                 placeholder="Unit Price"
                 disabled={disabled}
               />
-              <div className="flex items-center rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-sm font-semibold text-[#1A1A1A]">
+              <div className="flex items-center rounded-lg border border-white/10 bg-white/[0.04] px-3 text-sm font-semibold text-white">
                 Line Total: ${item.line_total.toFixed(2)}
               </div>
               <Button
@@ -122,4 +120,3 @@ export function QuotationItemsTable({
     </div>
   )
 }
-

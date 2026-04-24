@@ -1,8 +1,8 @@
 'use client'
 
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
-import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { useMemo } from 'react'
+import { type ColumnDef } from '@tanstack/react-table'
+import { DataTable, type DataTableColumnMeta, Badge, Button, Input } from '@/components/ui'
 import type { QuotationListItem } from '@/features/admin/services/adminService'
 import type { QuotationStatusFilter } from '../_hooks/useQuotationsPage'
 
@@ -26,13 +26,11 @@ const FILTERS: Array<{ value: QuotationStatusFilter; label: string }> = [
   { value: 'rejected', label: 'Rejected' },
 ]
 
-function statusClasses(status: string): string {
-  const s = status.toLowerCase()
-  if (s === 'draft') return 'bg-[#F3F4F6] text-[#6B7280]'
-  if (s === 'sent') return 'bg-[#E8F4FD] text-[#005BA4]'
-  if (s === 'approved') return 'bg-emerald-100 text-emerald-700'
-  if (s === 'rejected') return 'bg-red-100 text-red-700'
-  return 'bg-[#F3F4F6] text-[#6B7280]'
+const QUOTATION_STATUS_BADGE: Record<string, 'default' | 'info' | 'success' | 'error' | 'pending'> = {
+  draft: 'default',
+  sent: 'info',
+  approved: 'success',
+  rejected: 'error',
 }
 
 function formatCurrency(value: number): string {
@@ -50,56 +48,70 @@ export function QuotationList({
   onSelect,
   onCreate,
 }: QuotationListProps) {
-  const columns: DataTableColumn<QuotationListItem & Record<string, unknown>>[] = [
-    {
-      key: 'id',
-      header: 'ID',
-      render: (row) => (
-        <span className="font-mono text-xs font-semibold text-[#0072CE]">
-          Q-{String(row.id).padStart(5, '0')}
-        </span>
-      ),
-    },
-    {
-      key: 'customer',
-      header: 'Customer',
-      render: (row) => (
-        <span className="text-sm text-[#1A1A1A]">{row.customer_name ?? `Customer #${row.customer_id}`}</span>
-      ),
-    },
-    {
-      key: 'total',
-      header: 'Total',
-      render: (row) => <span className="text-sm font-semibold text-[#1A1A1A]">{formatCurrency(row.total_amount)}</span>,
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (row) => (
-        <span className={`rounded-[2px] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider ${statusClasses(row.status)}`}>
-          {row.status}
-        </span>
-      ),
-    },
-    {
-      key: 'created_at',
-      header: 'Created',
-      render: (row) => <span className="text-xs text-[#6B7280]">{new Date(row.created_at).toLocaleString()}</span>,
-    },
-  ]
+  const columns: ColumnDef<QuotationListItem & Record<string, unknown>, unknown>[] = useMemo(
+    () => [
+      {
+        id: 'id',
+        header: 'ID',
+        cell: ({ row }) => (
+          <span className="font-mono text-xs font-semibold text-orange-300">
+            Q-{String(row.original.id).padStart(5, '0')}
+          </span>
+        ),
+      },
+      {
+        id: 'customer',
+        header: 'Customer',
+        cell: ({ row }) => (
+          <span className="text-sm text-white/80">
+            {row.original.customer_name ?? `Customer #${row.original.customer_id}`}
+          </span>
+        ),
+      },
+      {
+        id: 'total',
+        header: 'Total',
+        cell: ({ row }) => (
+          <span className="text-sm font-semibold text-white">{formatCurrency(row.original.total_amount)}</span>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        cell: ({ row }) => (
+          <Badge
+            variant={QUOTATION_STATUS_BADGE[row.original.status.toLowerCase()] ?? 'default'}
+            size="sm"
+          >
+            {row.original.status}
+          </Badge>
+        ),
+      },
+      {
+        id: 'created_at',
+        header: 'Created',
+        cell: ({ row }) => (
+          <span className="text-xs text-white/50">
+            {new Date(row.original.created_at).toLocaleString()}
+          </span>
+        ),
+      },
+    ],
+    [],
+  )
 
   return (
-    <div className="rounded-[4px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {FILTERS.map((tab) => (
           <button
             key={tab.value}
             type="button"
             onClick={() => onStatusFilterChange(tab.value)}
-            className={`rounded-[2px] border px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               statusFilter === tab.value
-                ? 'border-[#0072CE] bg-[#E8F4FD] text-[#005BA4]'
-                : 'border-[#E5E7EB] bg-white text-[#6B7280] hover:bg-[#F9FAFB]'
+                ? 'border-orange-400/50 bg-orange-500/10 text-orange-200'
+                : 'border-white/10 bg-transparent text-white/50 hover:bg-white/[0.05] hover:text-white'
             }`}
           >
             {tab.label}
@@ -119,22 +131,21 @@ export function QuotationList({
       </div>
 
       <DataTable
-        allowLegacyTable
+        tableId="admin-quotations"
         columns={columns}
         data={quotations as (QuotationListItem & Record<string, unknown>)[]}
-        loading={loading}
+        isLoading={loading}
         stickyHeader
-        emptyMessage="No quotations found"
+        emptyState={<p className="py-10 text-center text-sm text-white/50">No quotations found</p>}
         onRowClick={(row) => onSelect(row.id)}
-        rowKey={(row) => row.id}
+        getRowId={(row) => String(row.id)}
       />
 
       {selectedId ? (
-        <p className="mt-2 text-xs text-[#6B7280]">
-          Selected: <span className="font-mono text-[#1A1A1A]">Q-{String(selectedId).padStart(5, '0')}</span>
+        <p className="mt-2 text-xs text-white/50">
+          Selected: <span className="font-mono text-white/80">Q-{String(selectedId).padStart(5, '0')}</span>
         </p>
       ) : null}
     </div>
   )
 }
-

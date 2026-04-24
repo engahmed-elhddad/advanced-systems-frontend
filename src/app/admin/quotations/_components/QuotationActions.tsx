@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui'
 
 interface QuotationActionsProps {
   status: string
@@ -31,8 +31,8 @@ export function QuotationActions({
   const canReject = s === 'sent'
 
   return (
-    <div className="rounded-[4px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <h3 className="mb-3 text-sm font-semibold text-[#1A1A1A]">Actions</h3>
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <h3 className="mb-3 text-sm font-semibold text-white">Actions</h3>
       <div className="grid grid-cols-2 gap-2">
         <Button
           size="sm"
@@ -74,4 +74,3 @@ export function QuotationActions({
     </div>
   )
 }
-

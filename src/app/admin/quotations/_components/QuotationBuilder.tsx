@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
+import { Input, Select } from '@/components/ui'
 import type {
   B2BCustomerOption,
   CreateQuotationPayload,
@@ -255,7 +254,7 @@ export function QuotationBuilder({
     return (
       <div className="space-y-3">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-24 animate-pulse rounded-[4px] bg-[#F3F4F6]" />
+          <div key={i} className="h-24 animate-pulse rounded-xl bg-white/[0.08]" />
         ))}
       </div>
     )
@@ -264,8 +263,8 @@ export function QuotationBuilder({
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
       <div className="space-y-3">
-        <div className="rounded-[4px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-sm font-semibold text-[#1A1A1A]">Quotation Builder</h3>
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+          <h3 className="mb-3 text-sm font-semibold text-white">Quotation Builder</h3>
           <div className="grid gap-2 md:grid-cols-2">
             <Select
               value={draft.customer_id ? String(draft.customer_id) : ''}
@@ -348,10 +347,9 @@ export function QuotationBuilder({
           }}
         />
         {!creatingNew && dirty ? (
-          <p className="text-xs text-[#6B7280]">Unsaved changes — auto-save in progress...</p>
+          <p className="text-xs text-white/50">Unsaved changes — auto-save in progress...</p>
         ) : null}
       </div>
     </div>
   )
 }
-
