@@ -7,6 +7,7 @@ import { useRFQListStore } from '@/state/rfqListStore'
 import { trackAddToRfq, trackClickProduct } from '@/lib/analytics'
 import { useCurrency } from '@/lib/hooks/useCurrency'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 import { HighlightMatch } from '@/components/search/SearchHighlight'
 import { cn } from '@/lib/utils'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
@@ -71,6 +72,8 @@ export interface ProductCardProps {
     coil_voltage?: string
     mounting_type?: string
   }
+  brand_slug?: string
+  brand_logo_url?: string
   variant?: 'default' | 'compact'
   productBasePath?: string
   /** When set (e.g. catalog search), matching tokens are emphasized in title lines. */
@@ -86,6 +89,8 @@ function ProductCardInner({
   part_number,
   brand,
   manufacturer,
+  brand_slug,
+  brand_logo_url,
   category,
   description,
   image_url,
@@ -161,9 +166,16 @@ function ProductCardInner({
       </Link>
 
       <div className={compact ? 'flex flex-1 flex-col p-3' : 'flex flex-1 flex-col p-4'}>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">
-          {highlightQuery?.trim() ? <HighlightMatch text={maker} query={highlightQuery} /> : maker}
-        </p>
+        <div className="mb-1 flex items-center gap-2">
+          <BrandLogo
+            brand={maker}
+            logoSrc={brand_logo_url || (brand_slug ? `https://cdn.advancedsystems-int.com/cdn/brands/${brand_slug}.webp` : null)}
+            variant="default"
+          />
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">
+            {highlightQuery?.trim() ? <HighlightMatch text={maker} query={highlightQuery} /> : maker}
+          </p>
+        </div>
         <Link
           href={productHref}
           onClick={() => logProductClick('card_title')}
