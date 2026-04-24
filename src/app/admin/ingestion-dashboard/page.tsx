@@ -17,8 +17,7 @@ import {
   Shield,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
+import { Badge, Button } from '@/components/ui'
 import {
   getIngestionDashboard,
   type IngestionDashboardResponse,
@@ -40,16 +39,16 @@ const EVENT_LABELS: Record<string, string> = {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-  upload: 'text-[#0072CE]',
-  parse_complete: 'text-sky-500',
-  validation_complete: 'text-sky-600',
-  rows_approved: 'text-emerald-600',
-  rows_rejected: 'text-red-500',
-  publish_start: 'text-amber-500',
-  publish_complete: 'text-emerald-600',
-  publish_error: 'text-red-600',
-  ai_enrich_queued: 'text-purple-500',
-  job_deleted: 'text-[#6B7280]',
+  upload: 'text-sky-400',
+  parse_complete: 'text-sky-400',
+  validation_complete: 'text-sky-300',
+  rows_approved: 'text-emerald-400',
+  rows_rejected: 'text-red-400',
+  publish_start: 'text-amber-400',
+  publish_complete: 'text-emerald-400',
+  publish_error: 'text-red-400',
+  ai_enrich_queued: 'text-purple-400',
+  job_deleted: 'text-white/50',
 }
 
 export default function IngestionDashboardPage() {
@@ -62,8 +61,8 @@ export default function IngestionDashboardPage() {
   if (isLoading) return <DashboardSkeleton />
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-20 text-[#6B7280]">
-        <AlertTriangle className="h-8 w-8 text-amber-600" />
+      <div className="flex flex-col items-center justify-center gap-3 py-20 text-white/50">
+        <AlertTriangle className="h-8 w-8 text-amber-400" />
         <p className="text-sm">Failed to load dashboard data.</p>
         <Button
           type="button"
@@ -79,7 +78,7 @@ export default function IngestionDashboardPage() {
   }
   if (!data) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-[#6B7280]">
+      <div className="flex flex-col items-center justify-center py-20 text-white/50">
         <p className="text-sm">No dashboard data.</p>
       </div>
     )
@@ -88,19 +87,16 @@ export default function IngestionDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-[#1A1A1A]">Ingestion Pipeline Health</h1>
-        <p className="mt-1 text-sm text-[#6B7280]">
+        <h1 className="text-xl font-bold text-white">Ingestion Pipeline Health</h1>
+        <p className="mt-1 text-sm text-white/50">
           Real-time observability for bulk product ingestion.
         </p>
       </div>
 
-      {/* Warnings */}
       {data.warnings.length > 0 && <AlertsPanel warnings={data.warnings} />}
 
-      {/* Overview Cards */}
       <OverviewCards overview={data.overview} />
 
-      {/* Charts Row */}
       <div className="grid gap-4 lg:grid-cols-2">
         <DailyChart metrics={data.daily_metrics} />
         <QualityPanel
@@ -109,10 +105,8 @@ export default function IngestionDashboardPage() {
         />
       </div>
 
-      {/* Performance Section */}
       <PerformanceSection averages={data.overview.performance_averages} />
 
-      {/* Recent Jobs + Events */}
       <div className="grid gap-4 lg:grid-cols-2">
         <RecentJobsTable jobs={data.recent_jobs} />
         <EventTimeline events={data.recent_events} />
@@ -137,19 +131,19 @@ function OverviewCards({ overview }: { overview: IngestionDashboardResponse['ove
         value={overview.total_rows_processed}
       />
       <StatCard
-        icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+        icon={<CheckCircle2 className="h-4 w-4 text-emerald-400" />}
         label="Published Jobs"
         value={overview.total_published_jobs}
-        color="text-emerald-600"
+        color="text-emerald-400"
       />
       <StatCard
-        icon={<TrendingUp className="h-4 w-4 text-[#0072CE]" />}
+        icon={<TrendingUp className="h-4 w-4 text-sky-400" />}
         label="Success Rate"
         value={`${overview.overall_success_rate}%`}
-        color="text-[#0072CE]"
+        color="text-sky-400"
       />
       <StatCard
-        icon={<Shield className="h-4 w-4 text-amber-500" />}
+        icon={<Shield className="h-4 w-4 text-amber-400" />}
         label="Avg Quality"
         value={
           overview.avg_quality_score !== null
@@ -158,8 +152,8 @@ function OverviewCards({ overview }: { overview: IngestionDashboardResponse['ove
         }
         color={
           overview.avg_quality_score !== null && overview.avg_quality_score >= 0.7
-            ? 'text-emerald-600'
-            : 'text-amber-600'
+            ? 'text-emerald-400'
+            : 'text-amber-400'
         }
       />
     </div>
@@ -178,12 +172,12 @@ const StatCard = React.memo(function StatCard({
   color?: string
 }) {
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-3">
-      <div className="flex items-center gap-2 text-[#6B7280]">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+      <div className="flex items-center gap-2 text-white/50">
         {icon}
         <span className="text-[11px] font-medium uppercase tracking-wider">{label}</span>
       </div>
-      <p className={cn('mt-1.5 text-2xl font-bold', color ?? 'text-[#1A1A1A]')}>{value}</p>
+      <p className={cn('mt-1.5 text-2xl font-bold', color ?? 'text-white')}>{value}</p>
     </div>
   )
 })
@@ -197,23 +191,23 @@ function AlertsPanel({ warnings }: { warnings: IngestionDashboardResponse['warni
         <div
           key={i}
           className={cn(
-            'flex items-start gap-3 rounded-[2px] border p-3',
+            'flex items-start gap-3 rounded-xl border p-3',
             w.severity === 'error'
-              ? 'border-red-200 bg-red-50'
-              : 'border-amber-200 bg-amber-50',
+              ? 'border-red-500/30 bg-red-500/10'
+              : 'border-amber-500/30 bg-amber-500/10',
           )}
         >
           <AlertTriangle
             className={cn(
               'mt-0.5 h-4 w-4 shrink-0',
-              w.severity === 'error' ? 'text-red-600' : 'text-amber-600',
+              w.severity === 'error' ? 'text-red-400' : 'text-amber-400',
             )}
           />
           <div className="flex-1">
             <p
               className={cn(
                 'text-sm font-medium',
-                w.severity === 'error' ? 'text-red-800' : 'text-amber-800',
+                w.severity === 'error' ? 'text-red-200' : 'text-amber-200',
               )}
             >
               {w.message}
@@ -221,7 +215,7 @@ function AlertsPanel({ warnings }: { warnings: IngestionDashboardResponse['warni
             {w.details.length > 0 && (
               <div className="mt-1.5 space-y-1">
                 {w.details.slice(0, 5).map((d, j) => (
-                  <p key={j} className="text-xs text-[#6B7280]">
+                  <p key={j} className="text-xs text-white/50">
                     {w.type === 'stuck_jobs'
                       ? `Job #${d.job_id} (${d.filename}) — ${d.hours_stuck}h stuck in "${d.status}"`
                       : `Job #${d.job_id} (${d.filename}) — score: ${d.quality_score}`}
@@ -244,12 +238,12 @@ function DailyChart({ metrics }: { metrics: DailyMetric[] }) {
 
   if (sorted.length === 0) {
     return (
-      <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
-          <BarChart3 className="h-4 w-4 text-[#6B7280]" />
+      <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+          <BarChart3 className="h-4 w-4 text-white/50" />
           Daily Volume
         </h3>
-        <p className="mt-6 text-center text-sm text-[#6B7280]">
+        <p className="mt-6 text-center text-sm text-white/50">
           No data yet. Upload a CSV to see trends.
         </p>
       </div>
@@ -257,9 +251,9 @@ function DailyChart({ metrics }: { metrics: DailyMetric[] }) {
   }
 
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-4">
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
-        <BarChart3 className="h-4 w-4 text-[#6B7280]" />
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+        <BarChart3 className="h-4 w-4 text-white/50" />
         Daily Volume (last 14 days)
       </h3>
       <div className="mt-4 flex items-end gap-1" style={{ height: 120 }}>
@@ -268,13 +262,11 @@ function DailyChart({ metrics }: { metrics: DailyMetric[] }) {
           const barH = Math.max(4, (m.total_rows / maxRows) * 100)
           return (
             <div key={m.day} className="group relative flex flex-1 flex-col items-center">
-              <div
-                className="absolute -top-14 z-10 hidden whitespace-nowrap rounded-[2px] bg-[#1A1A1A] px-2 py-1 text-[10px] text-white shadow-sm group-hover:block"
-              >
+              <div className="absolute -top-14 z-10 hidden whitespace-nowrap rounded-lg bg-black/80 px-2 py-1 text-[10px] text-white shadow-sm group-hover:block">
                 {m.day}: {m.total_rows} rows ({m.success_rate}% valid)
               </div>
               <div
-                className="w-full rounded-t-[1px] transition-all"
+                className="w-full rounded-t transition-all"
                 style={{
                   height: `${barH}%`,
                   background:
@@ -289,11 +281,11 @@ function DailyChart({ metrics }: { metrics: DailyMetric[] }) {
           )
         })}
       </div>
-      <div className="mt-2 flex justify-between text-[10px] text-[#6B7280]">
+      <div className="mt-2 flex justify-between text-[10px] text-white/50">
         <span>{sorted[0]?.day}</span>
         <span>{sorted[sorted.length - 1]?.day}</span>
       </div>
-      <div className="mt-2 flex gap-3 text-[10px] text-[#6B7280]">
+      <div className="mt-2 flex gap-3 text-[10px] text-white/50">
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> ≥80% valid
         </span>
@@ -320,17 +312,16 @@ function QualityPanel({
   const pct = avgScore !== null ? Math.round(avgScore * 100) : null
 
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-4">
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
-        <Shield className="h-4 w-4 text-[#6B7280]" />
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+        <Shield className="h-4 w-4 text-white/50" />
         Data Quality
       </h3>
 
-      {/* Score Ring */}
       <div className="mt-4 flex items-center gap-6">
         <div className="relative flex h-20 w-20 shrink-0 items-center justify-center">
           <svg viewBox="0 0 36 36" className="h-20 w-20 -rotate-90">
-            <circle cx="18" cy="18" r="16" fill="none" stroke="#E5E7EB" strokeWidth="3" />
+            <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
             <circle
               cx="18"
               cy="18"
@@ -342,35 +333,34 @@ function QualityPanel({
               strokeLinecap="round"
             />
           </svg>
-          <span className="absolute text-lg font-bold text-[#1A1A1A]">
+          <span className="absolute text-lg font-bold text-white">
             {pct !== null ? `${pct}%` : '—'}
           </span>
         </div>
-        <div className="text-xs text-[#6B7280]">
-          <p className="font-medium text-[#1A1A1A]">Average Quality Score</p>
+        <div className="text-xs text-white/50">
+          <p className="font-medium text-white">Average Quality Score</p>
           <p className="mt-0.5">
             40% validation pass · 30% brand resolution · 20% dedup · 10% descriptions
           </p>
         </div>
       </div>
 
-      {/* Top Errors */}
       {topErrors.length > 0 && (
         <div className="mt-4">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280]">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-white/40">
             Top Validation Errors
           </p>
           <div className="mt-2 space-y-1.5">
             {topErrors.map((e, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between rounded-[2px] bg-[#F9FAFB] px-2 py-1.5"
+                className="flex items-center justify-between rounded-lg bg-white/[0.04] px-2 py-1.5"
               >
                 <div className="text-xs">
-                  <span className="font-medium text-[#1A1A1A]">{e.field}</span>
-                  <span className="ml-1 text-[#6B7280]">{e.error}</span>
+                  <span className="font-medium text-white">{e.field}</span>
+                  <span className="ml-1 text-white/50">{e.error}</span>
                 </div>
-                <span className="font-mono text-xs text-red-600">{e.count}×</span>
+                <span className="font-mono text-xs text-red-400">{e.count}×</span>
               </div>
             ))}
           </div>
@@ -390,41 +380,41 @@ function PerformanceSection({ averages }: { averages: PerformanceAverages }) {
       label: 'Avg Parse Time',
       value: averages.avg_parse_seconds,
       desc: 'CSV read + DB insert',
-      color: 'text-[#0072CE]',
+      color: 'text-sky-400',
     },
     {
       label: 'Avg Validation',
       value: averages.avg_validation_seconds,
       desc: 'Business rule checks',
-      color: 'text-sky-600',
+      color: 'text-sky-300',
     },
     {
       label: 'Avg Review Wait',
       value: averages.avg_review_wait_seconds,
       desc: 'Validated → publish triggered',
-      color: 'text-amber-600',
+      color: 'text-amber-400',
     },
     {
       label: 'Avg Publish',
       value: averages.avg_publish_seconds,
       desc: 'DB insert to products',
-      color: 'text-emerald-600',
+      color: 'text-emerald-400',
     },
     {
       label: 'Avg Total',
       value: averages.avg_total_seconds,
       desc: 'End-to-end wall clock',
-      color: 'text-[#1A1A1A]',
+      color: 'text-white',
     },
   ]
 
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-4">
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
-        <Timer className="h-4 w-4 text-[#6B7280]" />
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+        <Timer className="h-4 w-4 text-white/50" />
         Pipeline Performance
         {!hasData && (
-          <span className="ml-1 text-[11px] font-normal text-[#6B7280]">
+          <span className="ml-1 text-[11px] font-normal text-white/50">
             — data available after next upload
           </span>
         )}
@@ -433,20 +423,20 @@ function PerformanceSection({ averages }: { averages: PerformanceAverages }) {
         {cards.map((c) => (
           <div
             key={c.label}
-            className="rounded-[2px] border border-[#F3F4F6] bg-[#F9FAFB] p-3"
+            className="rounded-lg border border-white/10 bg-white/[0.04] p-3"
           >
-            <p className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280]">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-white/50">
               {c.label}
             </p>
-            <p className={cn('mt-1 text-xl font-bold font-mono', c.color)}>
+            <p className={cn('mt-1 font-mono text-xl font-bold', c.color)}>
               {c.value !== null ? formatDuration(c.value) : '—'}
             </p>
-            <p className="mt-0.5 text-[10px] text-[#6B7280]">{c.desc}</p>
+            <p className="mt-0.5 text-[10px] text-white/40">{c.desc}</p>
           </div>
         ))}
       </div>
       {hasData && averages.avg_review_wait_seconds !== null && averages.avg_review_wait_seconds > 3600 && (
-        <p className="mt-3 text-xs text-amber-700">
+        <p className="mt-3 text-xs text-amber-300">
           ⚠ Average review wait exceeds 1 hour — consider reviewing staged jobs more frequently.
         </p>
       )}
@@ -476,31 +466,31 @@ function RecentJobsTable({ jobs }: { jobs: IngestionDashboardResponse['recent_jo
   }
 
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white">
-      <div className="border-b border-[#E5E7EB] px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
-          <Clock className="h-4 w-4 text-[#6B7280]" />
+    <div className="rounded-xl border border-white/10 bg-white/[0.04]">
+      <div className="border-b border-white/10 px-4 py-3">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+          <Clock className="h-4 w-4 text-white/50" />
           Recent Jobs
         </h3>
       </div>
       {jobs.length === 0 ? (
-        <p className="px-4 py-6 text-center text-sm text-[#6B7280]">No jobs yet.</p>
+        <p className="px-4 py-6 text-center text-sm text-white/50">No jobs yet.</p>
       ) : (
         <div className="max-h-[300px] overflow-y-auto">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-[#F9FAFB]">
-              <tr className="border-b border-[#E5E7EB]">
-                <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">File</th>
-                <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Status</th>
-                <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Rows</th>
-                <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Quality</th>
-                <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Time</th>
+            <thead className="sticky top-0 z-10 bg-[#030712]">
+              <tr className="border-b border-white/10">
+                <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">File</th>
+                <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Status</th>
+                <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Rows</th>
+                <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Quality</th>
+                <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Time</th>
               </tr>
             </thead>
             <tbody>
               {jobs.map((j) => (
-                <tr key={j.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
-                  <td className="max-w-[120px] truncate px-3 py-2 text-xs font-medium text-[#1A1A1A]">
+                <tr key={j.id} className="border-b border-white/[0.06] hover:bg-white/[0.04]">
+                  <td className="max-w-[120px] truncate px-3 py-2 text-xs font-medium text-white">
                     {j.filename}
                   </td>
                   <td className="px-3 py-2">
@@ -509,16 +499,16 @@ function RecentJobsTable({ jobs }: { jobs: IngestionDashboardResponse['recent_jo
                     </Badge>
                   </td>
                   <td className="px-3 py-2 text-right font-mono text-xs">
-                    <span className="text-emerald-600">{j.valid_rows}</span>
-                    <span className="text-[#6B7280]">/</span>
-                    <span>{j.total_rows}</span>
+                    <span className="text-emerald-400">{j.valid_rows}</span>
+                    <span className="text-white/40">/</span>
+                    <span className="text-white/80">{j.total_rows}</span>
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-xs">
+                  <td className="px-3 py-2 text-right font-mono text-xs text-white/80">
                     {j.quality_score !== null && j.quality_score !== undefined
                       ? `${Math.round(j.quality_score * 100)}%`
                       : '—'}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-xs text-[#6B7280]">
+                  <td className="px-3 py-2 text-right font-mono text-xs text-white/50">
                     {j.durations?.total_seconds != null
                       ? formatDuration(j.durations.total_seconds)
                       : '—'}
@@ -537,20 +527,20 @@ function RecentJobsTable({ jobs }: { jobs: IngestionDashboardResponse['recent_jo
 
 function EventTimeline({ events }: { events: IngestionDashboardResponse['recent_events'] }) {
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white">
-      <div className="border-b border-[#E5E7EB] px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
-          <Activity className="h-4 w-4 text-[#6B7280]" />
+    <div className="rounded-xl border border-white/10 bg-white/[0.04]">
+      <div className="border-b border-white/10 px-4 py-3">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+          <Activity className="h-4 w-4 text-white/50" />
           Event Log
         </h3>
       </div>
       {events.length === 0 ? (
-        <p className="px-4 py-6 text-center text-sm text-[#6B7280]">No events recorded yet.</p>
+        <p className="px-4 py-6 text-center text-sm text-white/50">No events recorded yet.</p>
       ) : (
         <div className="max-h-[300px] space-y-0 overflow-y-auto">
           {events.map((e) => {
             const label = EVENT_LABELS[e.event_type] ?? e.event_type
-            const color = EVENT_COLORS[e.event_type] ?? 'text-[#6B7280]'
+            const color = EVENT_COLORS[e.event_type] ?? 'text-white/50'
             const time = e.created_at
               ? new Date(e.created_at).toLocaleString(undefined, {
                   month: 'short',
@@ -565,7 +555,7 @@ function EventTimeline({ events }: { events: IngestionDashboardResponse['recent_
             return (
               <div
                 key={e.id}
-                className="flex items-start gap-3 border-b border-[#F3F4F6] px-4 py-2.5 last:border-b-0"
+                className="flex items-start gap-3 border-b border-white/[0.06] px-4 py-2.5 last:border-b-0"
               >
                 <div className={cn('mt-0.5', color)}>
                   <Zap className="h-3.5 w-3.5" />
@@ -574,12 +564,12 @@ function EventTimeline({ events }: { events: IngestionDashboardResponse['recent_
                   <div className="flex items-center gap-2">
                     <span className={cn('text-xs font-medium', color)}>{label}</span>
                     {e.job_id && (
-                      <span className="text-[10px] text-[#6B7280]">Job #{e.job_id}</span>
+                      <span className="text-[10px] text-white/40">Job #{e.job_id}</span>
                     )}
                   </div>
-                  {detail && <p className="mt-0.5 text-[11px] text-[#6B7280]">{detail}</p>}
+                  {detail && <p className="mt-0.5 text-[11px] text-white/50">{detail}</p>}
                 </div>
-                <span className="shrink-0 text-[10px] text-[#6B7280]">{time}</span>
+                <span className="shrink-0 text-[10px] text-white/40">{time}</span>
               </div>
             )
           })}
@@ -641,22 +631,22 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="h-6 w-60 animate-pulse rounded bg-[#E5E7EB]" />
-        <div className="mt-2 h-4 w-80 animate-pulse rounded bg-[#E5E7EB]" />
+        <div className="h-6 w-60 animate-pulse rounded bg-white/10" />
+        <div className="mt-2 h-4 w-80 animate-pulse rounded bg-white/10" />
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-20 animate-pulse rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB]" />
+          <div key={i} className="h-20 animate-pulse rounded-xl border border-white/10 bg-white/[0.08]" />
         ))}
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="h-48 animate-pulse rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB]" />
-        <div className="h-48 animate-pulse rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB]" />
+        <div className="h-48 animate-pulse rounded-xl border border-white/10 bg-white/[0.08]" />
+        <div className="h-48 animate-pulse rounded-xl border border-white/10 bg-white/[0.08]" />
       </div>
-      <div className="h-24 animate-pulse rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB]" />
+      <div className="h-24 animate-pulse rounded-xl border border-white/10 bg-white/[0.08]" />
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="h-64 animate-pulse rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB]" />
-        <div className="h-64 animate-pulse rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB]" />
+        <div className="h-64 animate-pulse rounded-xl border border-white/10 bg-white/[0.08]" />
+        <div className="h-64 animate-pulse rounded-xl border border-white/10 bg-white/[0.08]" />
       </div>
     </div>
   )
