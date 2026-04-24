@@ -29,9 +29,9 @@ const ACTIONS: ActionButton[] = [
 ]
 
 const VARIANT_CLASSES: Record<ActionButton['variant'], string> = {
-  primary: 'text-[#0072CE] hover:bg-[#E8F4FD]',
-  danger:  'text-red-600 hover:bg-red-50',
-  publish: 'text-emerald-700 hover:bg-emerald-50',
+  primary: 'text-orange-400 hover:bg-orange-400/10',
+  danger:  'text-red-400 hover:bg-red-400/10',
+  publish: 'text-emerald-400 hover:bg-emerald-400/10',
 }
 
 export function BulkActionBar({ rows, selection, mutations, jobId }: Props) {
@@ -90,19 +90,19 @@ export function BulkActionBar({ rows, selection, mutations, jobId }: Props) {
       <div
         className={cn(
           'sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2',
-          'rounded-[2px] border border-[#0072CE]/20 bg-[#E8F4FD] px-4 py-2.5',
+          'rounded-xl border border-orange-400/20 bg-orange-400/10 px-4 py-2.5',
         )}
       >
         {/* Left: count + clear */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-[#0072CE]">
+          <span className="text-xs font-semibold text-orange-400">
             {count} row{count !== 1 ? 's' : ''} selected
           </span>
           <button
             type="button"
             onClick={selection.clearSelection}
             aria-label="Clear selection"
-            className="rounded-[2px] p-1 text-[#6B7280] transition-colors hover:bg-white hover:text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30"
+            className="rounded-[2px] p-1 text-white/50 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/20"
           >
             <X className="h-3.5 w-3.5" aria-hidden />
           </button>
@@ -118,7 +118,7 @@ export function BulkActionBar({ rows, selection, mutations, jobId }: Props) {
               disabled={isPending}
               className={cn(
                 'inline-flex items-center gap-1 rounded-[2px] px-2.5 py-1.5 text-xs font-medium',
-                'transition-colors focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30',
+                'transition-colors focus:outline-none focus:ring-2 focus:ring-white/20',
                 'disabled:cursor-not-allowed disabled:opacity-50',
                 VARIANT_CLASSES[variant],
               )}

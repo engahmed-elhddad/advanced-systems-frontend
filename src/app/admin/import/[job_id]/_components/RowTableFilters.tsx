@@ -2,7 +2,7 @@
 
 import { Search, RotateCcw, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Select } from '@/components/ui/Select'
+import { Select } from '@/components/ui'
 import { SELECT_EMPTY, sentinelToEmpty } from '@/lib/formSentinels'
 import type { ValidationInsights } from '@/features/admin/services/adminService'
 import type { RowStatusFilter } from '../_hooks/useJobDashboard'
@@ -137,17 +137,17 @@ function StatusTabs({
             onClick={() => onChange(tab.value)}
             className={cn(
               'inline-flex items-center gap-1.5 rounded-[2px] px-2.5 py-1.5 text-xs font-medium',
-              'transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30',
+              'transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-white/20',
               isActive
-                ? 'border border-[#E5E7EB] bg-white text-[#0072CE] shadow-sm'
-                : 'text-[#6B7280] hover:bg-white/60 hover:text-[#1A1A1A]',
+                ? 'border border-white/10 bg-white/[0.08] text-orange-400 shadow-sm'
+                : 'text-white/50 hover:bg-white/[0.04] hover:text-white',
             )}
           >
             {tab.label}
             <span
               className={cn(
                 'font-mono text-[11px]',
-                isActive ? 'text-[#0072CE]' : 'text-[#9CA3AF]',
+                isActive ? 'text-orange-400' : 'text-white/30',
               )}
             >
               {tab.count}
@@ -199,7 +199,7 @@ function SearchInput({
   return (
     <div className="relative">
       <Search
-        className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9CA3AF]"
+        className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30"
         aria-hidden
       />
       <input
@@ -209,9 +209,9 @@ function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          'h-8 w-44 rounded-[2px] border border-[#E5E7EB] bg-white py-0 pl-8 pr-3 text-xs text-[#1A1A1A]',
-          'placeholder:text-[#9CA3AF]',
-          'focus:border-[#0072CE] focus:outline-none focus:ring-1 focus:ring-[#0072CE]/20',
+          'h-8 w-44 rounded-[2px] border border-white/10 bg-white/[0.04] py-0 pl-8 pr-3 text-xs text-white',
+          'placeholder:text-white/30',
+          'focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/20',
         )}
       />
     </div>
@@ -225,13 +225,13 @@ function Chip({ chip }: { chip: ActiveChip }) {
       onClick={chip.onRemove}
       aria-label={`Remove filter: ${chip.label}`}
       className={cn(
-        'inline-flex items-center gap-1 rounded-[2px] border border-[#E5E7EB] bg-white',
-        'px-2 py-0.5 text-[11px] font-medium text-[#1A1A1A]',
-        'transition-colors hover:bg-[#F3F4F6] focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30',
+        'inline-flex items-center gap-1 rounded-[2px] border border-white/10 bg-white/[0.08]',
+        'px-2 py-0.5 text-[11px] font-medium text-white',
+        'transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20',
       )}
     >
       {chip.label}
-      <X className="h-3 w-3 text-[#6B7280]" aria-hidden />
+      <X className="h-3 w-3 text-white/50" aria-hidden />
     </button>
   )
 }
@@ -243,9 +243,9 @@ function ResetButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       aria-label="Reset all filters"
       className={cn(
-        'inline-flex items-center gap-1 rounded-[2px] px-2 py-1 text-xs font-medium text-[#6B7280]',
-        'transition-colors hover:bg-[#F3F4F6] hover:text-[#1A1A1A]',
-        'focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30',
+        'inline-flex items-center gap-1 rounded-[2px] px-2 py-1 text-xs font-medium text-white/50',
+        'transition-colors hover:bg-white/[0.06] hover:text-white',
+        'focus:outline-none focus:ring-2 focus:ring-white/20',
       )}
     >
       <RotateCcw className="h-3 w-3" aria-hidden />
@@ -273,7 +273,7 @@ export function RowTableFilters({
   const isDirty     = hasActiveFilters(statusFilter, fieldFilter, searchQuery)
 
   return (
-    <div className="space-y-2 rounded-t-[2px] border-b border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3">
+    <div className="space-y-2 border-b border-white/10 bg-white/[0.04] px-4 py-3">
       {/* Row 1: tabs + controls */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <StatusTabs tabs={tabs} active={statusFilter} onChange={onStatusChange} />
@@ -288,7 +288,7 @@ export function RowTableFilters({
       {/* Row 2: active filter chips — only rendered when filters are applied */}
       {chips.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] text-[#6B7280]">Active:</span>
+          <span className="text-[11px] text-white/50">Active:</span>
           {chips.map((chip) => (
             <Chip key={chip.key} chip={chip} />
           ))}

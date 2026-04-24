@@ -106,19 +106,19 @@ function VerdictCard({
           <p className={cn('text-base font-semibold', SEVERITY_TEXT[severity])}>
             {label}
           </p>
-          <p className="mt-1 text-xs text-[#6B7280]">{description}</p>
+          <p className="mt-1 text-xs text-white/50">{description}</p>
         </div>
       </div>
 
       {/* Score callout */}
       <div className="mt-5">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/50">
           Quality Score
         </p>
         <p className={cn('mt-0.5 font-mono text-3xl font-bold', SEVERITY_TEXT[severity])}>
           {pct(insights.quality_score)}
         </p>
-        <p className="mt-1 text-[11px] text-[#6B7280]">
+        <p className="mt-1 text-[11px] text-white/50">
           40% validation · 30% brand · 20% dedup · 10% descriptions
         </p>
       </div>
@@ -128,14 +128,14 @@ function VerdictCard({
 
 function QuickStatCard({ stat }: { stat: QuickStat }) {
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-white/50">
         {stat.label}
       </p>
       <p className={cn('mt-1 font-mono text-2xl font-bold', SEVERITY_TEXT[stat.severity])}>
         {stat.value}
       </p>
-      <p className="mt-1 text-[11px] text-[#6B7280]">{stat.sub}</p>
+      <p className="mt-1 text-[11px] text-white/50">{stat.sub}</p>
     </div>
   )
 }

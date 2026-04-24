@@ -104,12 +104,12 @@ function ResolutionBar({ metric }: { metric: ResolutionMetric }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-[#1A1A1A]">{metric.label}</p>
+        <p className="text-xs font-medium text-white">{metric.label}</p>
         <span className={cn('font-mono text-xs font-semibold', SEVERITY_TEXT[metric.severity])}>
           {metric.percentLabel}
         </span>
       </div>
-      <div className="h-2 rounded-[2px] bg-[#F3F4F6]">
+      <div className="h-2 rounded-[2px] bg-white/[0.08]">
         <div
           className={cn('h-full rounded-[2px] transition-all duration-150', SEVERITY_BAR[metric.severity])}
           style={{ width: `${metric.rate * 100}%` }}
@@ -120,7 +120,7 @@ function ResolutionBar({ metric }: { metric: ResolutionMetric }) {
           aria-valuenow={Math.round(metric.rate * 100)}
         />
       </div>
-      <p className="text-[11px] text-[#6B7280]">{metric.description}</p>
+      <p className="text-[11px] text-white/50">{metric.description}</p>
     </div>
   )
 }
@@ -129,10 +129,10 @@ function ResolutionRatesCard({ insights }: { insights: ValidationInsights }) {
   const metrics = buildResolutionMetrics(insights)
 
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-4">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
       <header className="mb-3 flex items-center gap-2">
-        <BarChart3 className="h-4 w-4 text-[#6B7280]" aria-hidden />
-        <h3 className="text-sm font-semibold text-[#1A1A1A]">Resolution Rates</h3>
+        <BarChart3 className="h-4 w-4 text-white/50" aria-hidden />
+        <h3 className="text-sm font-semibold text-white">Resolution Rates</h3>
       </header>
 
       <div className="space-y-4">
@@ -146,14 +146,14 @@ function ResolutionRatesCard({ insights }: { insights: ValidationInsights }) {
 
 function SnapshotTile({ metric }: { metric: SnapshotMetric }) {
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB] p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-white/50">
         {metric.label}
       </p>
       <p className={cn('mt-1 font-mono text-2xl font-bold', SEVERITY_TEXT[metric.severity])}>
         {metric.valueLabel}
       </p>
-      <p className="mt-1 text-[11px] text-[#6B7280]">{metric.helper}</p>
+      <p className="mt-1 text-[11px] text-white/50">{metric.helper}</p>
     </div>
   )
 }
@@ -162,10 +162,10 @@ function CoverageSnapshotCard({ insights }: { insights: ValidationInsights }) {
   const metrics = buildSnapshotMetrics(insights)
 
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-4">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
       <header className="mb-3 flex items-center gap-2">
-        <Layers className="h-4 w-4 text-[#6B7280]" aria-hidden />
-        <h3 className="text-sm font-semibold text-[#1A1A1A]">Coverage Snapshot</h3>
+        <Layers className="h-4 w-4 text-white/50" aria-hidden />
+        <h3 className="text-sm font-semibold text-white">Coverage Snapshot</h3>
       </header>
 
       <div className="grid gap-2">

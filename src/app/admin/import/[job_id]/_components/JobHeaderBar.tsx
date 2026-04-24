@@ -1,5 +1,5 @@
 import { FileSpreadsheet } from 'lucide-react'
-import { Badge, type BadgeVariant } from '@/components/ui/Badge'
+import { Badge, type BadgeVariant } from '@/components/ui'
 import type { IngestionJob } from '@/features/admin/services/adminService'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -61,17 +61,17 @@ export function JobHeaderBar({ job }: Props) {
   const statusVariant = getStatusVariant(job.status)
 
   return (
-    <div className="flex flex-col gap-2 rounded-[2px] border border-[#E5E7EB] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       {/* Left: filename + meta */}
       <div className="flex min-w-0 items-start gap-3">
         <FileSpreadsheet
-          className="mt-0.5 h-4 w-4 shrink-0 text-[#6B7280]"
+          className="mt-0.5 h-4 w-4 shrink-0 text-white/50"
           aria-hidden
         />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className="truncate font-mono text-sm font-semibold text-[#1A1A1A]"
+              className="truncate font-mono text-sm font-semibold text-white"
               title={job.filename}
             >
               {job.filename}
@@ -80,16 +80,16 @@ export function JobHeaderBar({ job }: Props) {
               {job.status.replace(/_/g, ' ')}
             </Badge>
           </div>
-          <p className="mt-0.5 text-xs text-[#6B7280]">{summary}</p>
+          <p className="mt-0.5 text-xs text-white/50">{summary}</p>
         </div>
       </div>
 
       {/* Right: row count */}
       <div className="shrink-0 text-right">
-        <span className="font-mono text-lg font-bold text-[#1A1A1A]">
+        <span className="font-mono text-lg font-bold text-white">
           {job.total_rows.toLocaleString()}
         </span>
-        <span className="ml-1 text-xs text-[#6B7280]">rows</span>
+        <span className="ml-1 text-xs text-white/50">rows</span>
       </div>
     </div>
   )

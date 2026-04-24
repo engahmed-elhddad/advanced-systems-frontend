@@ -4,7 +4,7 @@ import { memo, useEffect, useMemo, useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { ChevronRight, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Badge, type BadgeProps } from '@/components/ui/Badge'
+import { Badge, type BadgeProps } from '@/components/ui'
 import type { StagedRow } from '@/features/admin/services/adminService'
 import { useJobDashboard, type EditRowPayload } from '../_hooks/useJobDashboard'
 import { RowInlineEdit } from './RowInlineEdit'
@@ -55,7 +55,7 @@ const C = {
   edit:   'w-8 shrink-0 px-2 py-2',
 } as const
 
-const TH = 'text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]'
+const TH = 'text-[11px] font-semibold uppercase tracking-wider text-white/40'
 
 // ── Row helpers ───────────────────────────────────────────────────────────────
 
@@ -98,7 +98,7 @@ function TableSkeleton() {
   return (
     <div className="space-y-2 p-4">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="h-10 animate-pulse rounded-[2px] bg-[#F3F4F6]" />
+        <div key={i} className="h-10 animate-pulse rounded-[2px] bg-white/[0.08]" />
       ))}
     </div>
   )
@@ -106,7 +106,7 @@ function TableSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="p-8 text-center text-sm text-[#6B7280]">
+    <div className="p-8 text-center text-sm text-white/50">
       No rows available for this job.
     </div>
   )
@@ -114,7 +114,7 @@ function EmptyState() {
 
 function ErrorState() {
   return (
-    <div className="p-8 text-center text-sm text-[#B45309]">
+    <div className="p-8 text-center text-sm text-amber-400">
       Failed to load rows. Please retry.
     </div>
   )
@@ -154,9 +154,9 @@ const VirtualRow = memo(function VirtualRow({
         role="row"
         aria-rowindex={ariaRowIndex}
         className={cn(
-          'flex items-center border-b border-[#F3F4F6] transition-colors',
-          isSelected && 'bg-[#E8F4FD]',
-          isExpanded ? 'bg-[#F0F7FF]' : !isSelected && 'hover:bg-[#F9FAFB]',
+          'flex items-center border-b border-white/[0.06] transition-colors',
+          isSelected && 'bg-orange-400/10',
+          isExpanded ? 'bg-orange-400/5' : !isSelected && 'hover:bg-white/[0.04]',
         )}
       >
         <div role="cell" className={C.select}>
@@ -165,7 +165,7 @@ const VirtualRow = memo(function VirtualRow({
             checked={isSelected}
             onChange={() => onSelect(display.id)}
             aria-label={`Select row ${display.rowNumber}`}
-            className="h-3.5 w-3.5 rounded-[2px] border-[#E5E7EB] accent-[#0072CE]"
+            className="h-3.5 w-3.5 rounded-[2px] border-white/10 accent-orange-400"
           />
         </div>
 
@@ -175,7 +175,7 @@ const VirtualRow = memo(function VirtualRow({
             onClick={() => onToggle(display.id)}
             aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
             aria-expanded={isExpanded}
-            className="rounded-[2px] p-1 text-[#6B7280] transition-colors hover:bg-[#E5E7EB] hover:text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30"
+            className="rounded-[2px] p-1 text-white/50 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/20"
           >
             <ChevronRight
               className={cn(
@@ -187,18 +187,18 @@ const VirtualRow = memo(function VirtualRow({
           </button>
         </div>
 
-        <div role="cell" className={cn(C.row, 'font-mono text-xs text-[#6B7280]')}>
+        <div role="cell" className={cn(C.row, 'font-mono text-xs text-white/50')}>
           {display.rowNumber}
         </div>
 
-        <div role="cell" className={cn(C.pn, 'truncate font-mono text-xs font-semibold text-[#1A1A1A]')}>
+        <div role="cell" className={cn(C.pn, 'truncate font-mono text-xs font-semibold text-white')}>
           {display.partNumber}
         </div>
 
         <div role="cell" className={C.brand}>
           <div className="flex flex-col truncate">
-            <span className="truncate text-xs text-[#1A1A1A]">{display.brandRaw}</span>
-            <span className={cn('text-[11px]', display.brandResolved ? 'text-emerald-700' : 'text-[#6B7280]')}>
+            <span className="truncate text-xs text-white">{display.brandRaw}</span>
+            <span className={cn('text-[11px]', display.brandResolved ? 'text-emerald-400' : 'text-white/50')}>
               {display.brandResolved ? 'resolved' : 'unresolved'}
             </span>
           </div>
@@ -206,14 +206,14 @@ const VirtualRow = memo(function VirtualRow({
 
         <div role="cell" className={C.cat}>
           <div className="flex flex-col truncate">
-            <span className="truncate text-xs text-[#1A1A1A]">{display.categoryRaw}</span>
-            <span className={cn('text-[11px]', display.categoryResolved ? 'text-emerald-700' : 'text-[#6B7280]')}>
+            <span className="truncate text-xs text-white">{display.categoryRaw}</span>
+            <span className={cn('text-[11px]', display.categoryResolved ? 'text-emerald-400' : 'text-white/50')}>
               {display.categoryResolved ? 'resolved' : 'unresolved'}
             </span>
           </div>
         </div>
 
-        <div role="cell" className={cn(C.stock, 'font-mono text-xs text-[#1A1A1A]')}>
+        <div role="cell" className={cn(C.stock, 'font-mono text-xs text-white')}>
           {display.stock}
         </div>
 
@@ -223,7 +223,7 @@ const VirtualRow = memo(function VirtualRow({
           </Badge>
         </div>
 
-        <div role="cell" className={cn(C.errors, 'truncate text-xs text-[#6B7280]')}>
+        <div role="cell" className={cn(C.errors, 'truncate text-xs text-white/50')}>
           {display.errorFields}
         </div>
 
@@ -232,7 +232,7 @@ const VirtualRow = memo(function VirtualRow({
             type="button"
             onClick={() => onToggle(display.id)}
             aria-label="Edit row"
-            className="rounded-[2px] p-1 text-[#6B7280] transition-colors hover:bg-[#E8F4FD] hover:text-[#0072CE] focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30"
+            className="rounded-[2px] p-1 text-white/50 transition-colors hover:bg-orange-400/10 hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-white/20"
           >
             <Pencil className="h-3.5 w-3.5" aria-hidden />
           </button>
@@ -295,7 +295,7 @@ export function RowTable({ jobId }: Props) {
   // ── Boundary states ──────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <section className="rounded-[2px] border border-[#E5E7EB] bg-white">
+      <section className="rounded-xl border border-white/10 bg-white/[0.04]">
         <TableSkeleton />
       </section>
     )
@@ -303,7 +303,7 @@ export function RowTable({ jobId }: Props) {
 
   if (isError) {
     return (
-      <section className="rounded-[2px] border border-[#E5E7EB] bg-white">
+      <section className="rounded-xl border border-white/10 bg-white/[0.04]">
         <ErrorState />
       </section>
     )
@@ -311,7 +311,7 @@ export function RowTable({ jobId }: Props) {
 
   if (displayRows.length === 0) {
     return (
-      <section className="rounded-[2px] border border-[#E5E7EB] bg-white">
+      <section className="rounded-xl border border-white/10 bg-white/[0.04]">
         <EmptyState />
       </section>
     )
@@ -329,7 +329,7 @@ export function RowTable({ jobId }: Props) {
         jobId={jobId}
       />
 
-      <div className="overflow-hidden rounded-[2px] border border-[#E5E7EB] bg-white">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]">
         <div
           ref={scrollRef}
           className="overflow-auto"
@@ -344,7 +344,7 @@ export function RowTable({ jobId }: Props) {
             {/* ── Sticky header ─────────────────────────────────────────── */}
             <div
               role="rowgroup"
-              className="sticky top-0 z-10 border-b border-[#E5E7EB] bg-[#F9FAFB]"
+              className="sticky top-0 z-10 border-b border-white/10 bg-[#030712]"
             >
               <div role="row" className="flex items-center">
                 <div role="columnheader" className={cn(C.select, TH)}>
@@ -353,7 +353,7 @@ export function RowTable({ jobId }: Props) {
                     checked={selection.isAllSelected}
                     onChange={selection.toggleAllOnPage}
                     aria-label="Select all rows on this page"
-                    className="h-3.5 w-3.5 rounded-[2px] border-[#E5E7EB] accent-[#0072CE]"
+                    className="h-3.5 w-3.5 rounded-[2px] border-white/10 accent-orange-400"
                   />
                 </div>
                 <div role="columnheader" className={cn(C.expand, TH)} />

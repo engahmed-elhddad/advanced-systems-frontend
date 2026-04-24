@@ -21,9 +21,7 @@ import {
   Copy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { Modal } from '@/components/ui/Modal'
+import { Button, Badge, Modal } from '@/components/ui'
 import {
   getIngestionJobs,
   uploadIngestionFile,
@@ -121,8 +119,8 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-[#1A1A1A]">Bulk Product Import</h1>
-        <p className="mt-1 text-sm text-[#6B7280]">
+        <h1 className="text-xl font-bold text-white">Bulk Product Import</h1>
+        <p className="mt-1 text-sm text-white/50">
           Upload CSV files to stage, validate, review, and publish products.
         </p>
       </div>
@@ -131,7 +129,7 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
       <div
         className={cn(
           'flex flex-col items-center justify-center rounded-[2px] border-2 border-dashed p-10 transition-colors',
-          dragOver ? 'border-[#0072CE] bg-[#E8F4FD]' : 'border-[#E5E7EB] bg-[#F9FAFB]',
+          dragOver ? 'border-orange-400 bg-orange-400/10' : 'border-white/10 bg-white/[0.04]',
           uploadMutation.isPending && 'pointer-events-none opacity-60',
         )}
         onDragOver={(e) => {
@@ -141,11 +139,11 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
       >
-        <Upload className="mb-3 h-8 w-8 text-[#6B7280]" />
-        <p className="text-sm font-medium text-[#1A1A1A]">
+        <Upload className="mb-3 h-8 w-8 text-white/50" />
+        <p className="text-sm font-medium text-white">
           {uploadMutation.isPending ? 'Uploading & validating...' : 'Drop CSV file here or click to browse'}
         </p>
-        <p className="mt-1 text-xs text-[#6B7280]">
+        <p className="mt-1 text-xs text-white/50">
           Required column: part_number. Optional: brand, category, stock_quantity, description, image_url, price
         </p>
         <Button
@@ -172,35 +170,35 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
       </div>
 
       {uploadMutation.isError && (
-        <div className="rounded-[2px] border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
           {(uploadMutation.error as Error)?.message || 'Upload failed'}
         </div>
       )}
 
       {/* Jobs Table */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-[#1A1A1A]">Import History</h2>
+        <h2 className="mb-3 text-sm font-semibold text-white">Import History</h2>
         {jobsLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-12 animate-pulse rounded-[2px] bg-[#E5E7EB]" />
+              <div key={i} className="h-12 animate-pulse rounded-[2px] bg-white/10" />
             ))}
           </div>
         ) : jobs.length === 0 ? (
-          <p className="py-8 text-center text-sm text-[#6B7280]">No import jobs yet. Upload a CSV to get started.</p>
+          <p className="py-8 text-center text-sm text-white/50">No import jobs yet. Upload a CSV to get started.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">ID</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">File</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Status</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Total</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Valid</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Invalid</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Date</th>
-                  <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]" />
+                <tr className="border-b border-white/10 bg-white/[0.04]">
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">ID</th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">File</th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Status</th>
+                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Total</th>
+                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Valid</th>
+                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Invalid</th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Date</th>
+                  <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-white/40" />
                 </tr>
               </thead>
               <tbody>
@@ -209,22 +207,22 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
                   return (
                     <tr
                       key={job.id}
-                      className="cursor-pointer border-b border-[#F3F4F6] transition-colors hover:bg-[#F9FAFB]"
+                      className="cursor-pointer border-b border-white/[0.06] transition-colors hover:bg-white/[0.04]"
                       onClick={() => onSelectJob(job.id)}
                     >
-                      <td className="px-3 py-2.5 font-mono text-xs text-[#6B7280]">#{job.id}</td>
-                      <td className="px-3 py-2.5 font-medium text-[#1A1A1A]">{job.filename}</td>
+                      <td className="px-3 py-2.5 font-mono text-xs text-white/50">#{job.id}</td>
+                      <td className="px-3 py-2.5 font-medium text-white">{job.filename}</td>
                       <td className="px-3 py-2.5">
                         <Badge variant={st.variant} size="sm">{st.label}</Badge>
                       </td>
                       <td className="px-3 py-2.5 text-right font-mono">{job.total_rows}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-emerald-600">{job.valid_rows}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-red-600">{job.invalid_rows}</td>
-                      <td className="px-3 py-2.5 text-xs text-[#6B7280]">
+                      <td className="px-3 py-2.5 text-right font-mono text-emerald-400">{job.valid_rows}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-red-400">{job.invalid_rows}</td>
+                      <td className="px-3 py-2.5 text-xs text-white/50">
                         {job.created_at ? new Date(job.created_at).toLocaleDateString() : '—'}
                       </td>
                       <td className="px-3 py-2.5">
-                        <ChevronRight className="h-4 w-4 text-[#6B7280]" />
+                        <ChevronRight className="h-4 w-4 text-white/50" />
                       </td>
                     </tr>
                   )
@@ -342,11 +340,11 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="rounded-[2px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
           Failed to load job details.{' '}
           <button
             type="button"
-            className="font-medium text-red-900 underline hover:no-underline"
+            className="font-medium text-red-200 underline hover:no-underline"
             onClick={() => void refetchDetail()}
           >
             Retry
@@ -359,16 +357,16 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-48 animate-pulse rounded-[2px] bg-[#E5E7EB]" />
-        <div className="h-32 animate-pulse rounded-[2px] bg-[#E5E7EB]" />
-        <div className="h-64 animate-pulse rounded-[2px] bg-[#E5E7EB]" />
+        <div className="h-8 w-48 animate-pulse rounded-[2px] bg-white/10" />
+        <div className="h-32 animate-pulse rounded-[2px] bg-white/10" />
+        <div className="h-64 animate-pulse rounded-[2px] bg-white/10" />
       </div>
     )
   }
 
   if (!job) {
     return (
-      <div className="py-12 text-center text-[#6B7280]">
+      <div className="py-12 text-center text-white/50">
         <p>Job not found.</p>
         <Button variant="secondary" size="sm" className="mt-4" onClick={onBack}>
           <ArrowLeft className="h-4 w-4" /> Back
@@ -387,11 +385,11 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-lg font-bold text-[#1A1A1A]">
+          <h1 className="text-lg font-bold text-white">
             {job.filename}
             <Badge variant={jobSt.variant} size="sm" className="ml-2">{jobSt.label}</Badge>
           </h1>
-          <p className="mt-0.5 text-xs text-[#6B7280]">
+          <p className="mt-0.5 text-xs text-white/50">
             Job #{job.id} &middot; {job.created_at ? new Date(job.created_at).toLocaleString() : ''}
           </p>
         </div>
@@ -403,19 +401,19 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SummaryCard label="Total Rows" value={job.total_rows} />
-        <SummaryCard label="Valid" value={job.valid_rows} color="text-emerald-600" />
-        <SummaryCard label="Invalid" value={job.invalid_rows} color="text-red-600" />
-        <SummaryCard label="Approved" value={approvedCount} color="text-[#0072CE]" />
+        <SummaryCard label="Valid" value={job.valid_rows} color="text-emerald-400" />
+        <SummaryCard label="Invalid" value={job.invalid_rows} color="text-red-400" />
+        <SummaryCard label="Approved" value={approvedCount} color="text-orange-400" />
       </div>
 
       {/* Validation Progress */}
       {job.total_rows > 0 && (
         <div>
-          <div className="mb-1 flex justify-between text-xs text-[#6B7280]">
+          <div className="mb-1 flex justify-between text-xs text-white/50">
             <span>Validation progress</span>
             <span>{Math.round(((statusCounts['valid'] ?? 0) / job.total_rows) * 100)}% valid</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all"
               style={{ width: `${Math.round(((statusCounts['valid'] ?? 0) / job.total_rows) * 100)}%` }}
@@ -425,7 +423,7 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
       )}
 
       {/* Action Bar */}
-      <div className="flex flex-wrap items-center gap-2 rounded-[2px] border border-[#E5E7EB] bg-[#F9FAFB] p-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-3">
         <Button
           variant="primary"
           size="sm"
@@ -490,12 +488,12 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
 
       {/* Publish result */}
       {publishMutation.isSuccess && publishMutation.data && (
-        <div className="rounded-[2px] border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-300">
           Published {publishMutation.data.published} product{publishMutation.data.published !== 1 ? 's' : ''} successfully.
           {publishMutation.data.errors.length > 0 && (
             <ul className="mt-2 space-y-1">
               {publishMutation.data.errors.map((e, i) => (
-                <li key={i} className="text-red-700">Row {e.row}: {e.error}</li>
+                <li key={i} className="text-red-400">Row {e.row}: {e.error}</li>
               ))}
             </ul>
           )}
@@ -503,13 +501,13 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
       )}
 
       {bulkMutation.isError && (
-        <div className="rounded-[2px] border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
           {(bulkMutation.error as Error)?.message || 'Action failed'}
         </div>
       )}
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b border-[#E5E7EB]">
+      <div className="flex gap-1 overflow-x-auto border-b border-white/10">
         {statusTabs.map((tab) => (
           <button
             key={tab.key}
@@ -521,8 +519,8 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
             className={cn(
               'whitespace-nowrap px-3 py-2 text-xs font-medium transition-colors',
               statusFilter === tab.key
-                ? 'border-b-2 border-[#0072CE] text-[#0072CE]'
-                : 'text-[#6B7280] hover:text-[#1A1A1A]',
+                ? 'border-b-2 border-orange-400 text-orange-400'
+                : 'text-white/50 hover:text-white',
             )}
           >
             {tab.label} ({tab.count})
@@ -534,7 +532,7 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10">
-            <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+            <tr className="sticky top-0 z-10 border-b border-white/10 bg-[#030712]">
               <th className="w-8 px-2 py-2.5">
                 <input
                   type="checkbox"
@@ -544,21 +542,21 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
                   aria-label="Select all rows"
                 />
               </th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">#</th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Part Number</th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Brand</th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Category</th>
-              <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Stock</th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Description</th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Status</th>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">Errors</th>
-              <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]" />
+              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">#</th>
+              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Part Number</th>
+              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Brand</th>
+              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Category</th>
+              <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Stock</th>
+              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Description</th>
+              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Status</th>
+              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Errors</th>
+              <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-white/40" />
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-3 py-8 text-center text-sm text-[#6B7280]">
+                <td colSpan={10} className="px-3 py-8 text-center text-sm text-white/50">
                   No rows found for this filter.
                 </td>
               </tr>
@@ -570,9 +568,9 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
                   <tr
                     key={row.id}
                     className={cn(
-                      'border-b border-[#F3F4F6] transition-colors',
-                      selectedRows.has(row.id) ? 'bg-[#E8F4FD]' : 'hover:bg-[#F9FAFB]',
-                      hasErrors && 'bg-red-50/50',
+                      'border-b border-white/[0.06] transition-colors',
+                      selectedRows.has(row.id) ? 'bg-orange-400/10' : 'hover:bg-white/[0.04]',
+                      hasErrors && 'bg-red-500/5',
                     )}
                   >
                     <td className="w-8 px-2 py-2">
@@ -584,22 +582,22 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
                         aria-label={`Select row ${row.row_number}`}
                       />
                     </td>
-                    <td className="px-3 py-2 font-mono text-xs text-[#6B7280]">{row.row_number}</td>
-                    <td className="px-3 py-2 font-mono font-semibold text-[#0072CE]">{row.part_number ?? '—'}</td>
-                    <td className="px-3 py-2 text-[#1A1A1A]">
+                    <td className="px-3 py-2 font-mono text-xs text-white/50">{row.row_number}</td>
+                    <td className="px-3 py-2 font-mono font-semibold text-orange-300">{row.part_number ?? '—'}</td>
+                    <td className="px-3 py-2 text-white">
                       {row.brand_raw ?? '—'}
                       {row.brand_raw && !row.brand_id && (
                         <AlertTriangle className="ml-1 inline h-3 w-3 text-amber-500" />
                       )}
                     </td>
-                    <td className="px-3 py-2 text-[#1A1A1A]">
+                    <td className="px-3 py-2 text-white">
                       {row.category_raw ?? '—'}
                       {row.category_raw && !row.category_id && (
                         <AlertTriangle className="ml-1 inline h-3 w-3 text-amber-500" />
                       )}
                     </td>
                     <td className="px-3 py-2 text-right font-mono">{row.stock_quantity}</td>
-                    <td className="max-w-[200px] truncate px-3 py-2 text-xs text-[#6B7280]">
+                    <td className="max-w-[200px] truncate px-3 py-2 text-xs text-white/50">
                       {row.description || <span className="italic text-amber-500">Missing</span>}
                     </td>
                     <td className="px-3 py-2">
@@ -609,13 +607,13 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
                       {hasErrors ? (
                         <div className="space-y-0.5">
                           {row.validation_errors.map((e, i) => (
-                            <p key={i} className="text-[11px] text-red-600">
+                            <p key={i} className="text-[11px] text-red-400">
                               {e.field}: {e.error}
                             </p>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-xs text-[#6B7280]">—</span>
+                        <span className="text-xs text-white/50">—</span>
                       )}
                     </td>
                     <td className="px-3 py-2">
@@ -623,7 +621,7 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
                         <button
                           type="button"
                           onClick={() => setEditingRow(row)}
-                          className="rounded-[2px] p-1 text-[#6B7280] transition-colors hover:bg-[#E5E7EB] hover:text-[#1A1A1A]"
+                          className="rounded-[2px] p-1 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
                           aria-label={`Edit row ${row.row_number}`}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -649,7 +647,7 @@ function JobDetailView({ jobId, onBack }: { jobId: number; onBack: () => void })
           >
             Previous
           </Button>
-          <span className="text-sm text-[#6B7280]">
+          <span className="text-sm text-white/50">
             Page {page} of {totalPages}
           </span>
           <Button
@@ -688,9 +686,9 @@ const SummaryCard = React.memo(function SummaryCard({
   color?: string
 }) {
   return (
-    <div className="rounded-[2px] border border-[#E5E7EB] bg-white p-3">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280]">{label}</p>
-      <p className={cn('mt-1 text-2xl font-bold', color ?? 'text-[#1A1A1A]')}>{value}</p>
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-white/50">{label}</p>
+      <p className={cn('mt-1 text-2xl font-bold', color ?? 'text-white')}>{value}</p>
     </div>
   )
 })
@@ -781,11 +779,11 @@ function FieldInput({
 }) {
   const id = React.useId()
   const inputCls =
-    'w-full rounded-[2px] border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:border-[#0072CE] focus:outline-none focus:ring-1 focus:ring-[#0072CE]/20'
+    'w-full rounded-[2px] border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/20'
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-xs font-medium text-[#6B7280]">
+      <label htmlFor={id} className="mb-1 block text-xs font-medium text-white/50">
         {label}
         {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>

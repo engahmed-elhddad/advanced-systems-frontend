@@ -102,18 +102,18 @@ export function RowInlineEdit({ row, isSaving, onSave, onCancel }: Props) {
 
   return (
     <div
-      className="border-t border-[#E5E7EB] bg-[#FAFBFC] px-4 py-3"
+      className="border-t border-white/10 bg-white/[0.04] px-4 py-3"
       onKeyDown={handleKeyDown}
     >
       {/* Validation errors summary (from backend, if any) */}
       {row.validation_errors.length > 0 && (
-        <div className="mb-3 rounded-[2px] border border-red-200 bg-red-50 px-3 py-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-red-700">
+        <div className="mb-3 rounded-[2px] border border-red-500/30 bg-red-500/10 px-3 py-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-red-300">
             Validation Errors
           </p>
           <ul className="mt-1 space-y-0.5">
             {row.validation_errors.map((err, i) => (
-              <li key={i} className="text-xs text-red-700">
+              <li key={i} className="text-xs text-red-300">
                 <span className="font-medium">{err.field}</span>: {err.error}
               </li>
             ))}
@@ -129,7 +129,7 @@ export function RowInlineEdit({ row, isSaving, onSave, onCancel }: Props) {
 
           return (
             <div key={field.key} className={field.type === 'textarea' ? 'sm:col-span-2 lg:col-span-3' : ''}>
-              <label className="mb-1 block text-[11px] font-medium text-[#6B7280]">
+              <label className="mb-1 block text-[11px] font-medium text-white/50">
                 {field.label}
               </label>
               {field.type === 'textarea' ? (
@@ -139,10 +139,10 @@ export function RowInlineEdit({ row, isSaving, onSave, onCancel }: Props) {
                   disabled={isSaving}
                   rows={2}
                   className={cn(
-                    'w-full resize-none rounded-[2px] border px-3 py-1.5 text-xs text-[#1A1A1A]',
-                    'focus:border-[#0072CE] focus:outline-none focus:ring-1 focus:ring-[#0072CE]/20',
-                    'disabled:cursor-not-allowed disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF]',
-                    hasError ? 'border-red-400' : 'border-[#E5E7EB]',
+                    'w-full resize-none rounded-[2px] border bg-white/[0.04] px-3 py-1.5 text-xs text-white',
+                    'focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/20',
+                    'disabled:cursor-not-allowed disabled:bg-white/[0.04] disabled:text-white/30',
+                    hasError ? 'border-red-400' : 'border-white/10',
                   )}
                 />
               ) : (
@@ -152,16 +152,16 @@ export function RowInlineEdit({ row, isSaving, onSave, onCancel }: Props) {
                   onChange={(e) => updateField(field.key, e.target.value)}
                   disabled={isSaving}
                   className={cn(
-                    'h-8 w-full rounded-[2px] border px-3 text-xs text-[#1A1A1A]',
-                    'focus:border-[#0072CE] focus:outline-none focus:ring-1 focus:ring-[#0072CE]/20',
-                    'disabled:cursor-not-allowed disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF]',
+                    'h-8 w-full rounded-[2px] border bg-white/[0.04] px-3 text-xs text-white',
+                    'focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/20',
+                    'disabled:cursor-not-allowed disabled:bg-white/[0.04] disabled:text-white/30',
                     field.key === 'part_number' && 'font-mono',
-                    hasError ? 'border-red-400' : 'border-[#E5E7EB]',
+                    hasError ? 'border-red-400' : 'border-white/10',
                   )}
                 />
               )}
               {hasError && (
-                <p className="mt-0.5 text-[11px] text-red-600">{fieldError}</p>
+                <p className="mt-0.5 text-[11px] text-red-400">{fieldError}</p>
               )}
             </div>
           )
@@ -170,7 +170,7 @@ export function RowInlineEdit({ row, isSaving, onSave, onCancel }: Props) {
 
       {/* Actions */}
       <div className="mt-3 flex items-center justify-between">
-        <p className="text-[11px] text-[#9CA3AF]">
+        <p className="text-[11px] text-white/30">
           Ctrl+Enter to save · Esc to cancel
         </p>
         <div className="flex items-center gap-2">
@@ -179,9 +179,9 @@ export function RowInlineEdit({ row, isSaving, onSave, onCancel }: Props) {
             onClick={onCancel}
             disabled={isSaving}
             className={cn(
-              'inline-flex items-center gap-1 rounded-[2px] px-3 py-1.5 text-xs font-medium text-[#6B7280]',
-              'transition-colors hover:bg-[#F3F4F6] hover:text-[#1A1A1A]',
-              'focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30',
+              'inline-flex items-center gap-1 rounded-[2px] px-3 py-1.5 text-xs font-medium text-white/50',
+              'transition-colors hover:bg-white/[0.06] hover:text-white',
+              'focus:outline-none focus:ring-2 focus:ring-white/20',
               'disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
@@ -193,9 +193,9 @@ export function RowInlineEdit({ row, isSaving, onSave, onCancel }: Props) {
             onClick={handleSave}
             disabled={isSaving}
             className={cn(
-              'inline-flex items-center gap-1 rounded-[2px] bg-[#0072CE] px-3 py-1.5 text-xs font-medium text-white',
-              'transition-colors hover:bg-[#005BA4]',
-              'focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30',
+              'inline-flex items-center gap-1 rounded-[2px] bg-orange-500 px-3 py-1.5 text-xs font-medium text-white',
+              'transition-colors hover:bg-orange-600',
+              'focus:outline-none focus:ring-2 focus:ring-orange-400/30',
               'disabled:cursor-not-allowed disabled:opacity-70',
             )}
           >

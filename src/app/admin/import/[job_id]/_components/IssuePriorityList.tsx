@@ -80,23 +80,23 @@ export function IssuePriorityList({ insights, totalRows, onViewRows }: Props) {
   const rows = buildIssueRows(insights, totalRows)
 
   return (
-    <section className="rounded-[2px] border border-[#E5E7EB] bg-white p-4">
+    <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
       <header className="mb-3 flex items-center gap-2">
-        <AlertCircle className="h-4 w-4 text-[#6B7280]" aria-hidden />
-        <h3 className="text-sm font-semibold text-[#1A1A1A]">Issue Priority</h3>
+        <AlertCircle className="h-4 w-4 text-white/50" aria-hidden />
+        <h3 className="text-sm font-semibold text-white">Issue Priority</h3>
       </header>
 
-      <div className="divide-y divide-[#F3F4F6]">
+      <div className="divide-y divide-white/[0.06]">
         {rows.map((row) => (
           <div
             key={row.field}
             className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 py-2.5"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-[#1A1A1A]">{row.displayName}</p>
+              <p className="truncate text-sm font-medium text-white">{row.displayName}</p>
             </div>
 
-            <p className="font-mono text-sm text-[#1A1A1A]">{row.count.toLocaleString()}</p>
+            <p className="font-mono text-sm text-white">{row.count.toLocaleString()}</p>
 
             <span
               className={cn(
@@ -112,7 +112,7 @@ export function IssuePriorityList({ insights, totalRows, onViewRows }: Props) {
             <button
               type="button"
               onClick={() => onViewRows(row.field)}
-              className="inline-flex items-center gap-1 rounded-[2px] px-2 py-1 text-xs font-medium text-[#0072CE] transition-colors duration-150 hover:bg-[#E8F4FD] focus:outline-none focus:ring-2 focus:ring-[#0072CE]/30"
+              className="inline-flex items-center gap-1 rounded-[2px] px-2 py-1 text-xs font-medium text-orange-400 transition-colors duration-150 hover:bg-orange-400/10 focus:outline-none focus:ring-2 focus:ring-white/20"
             >
               View rows
               <ArrowRight className="h-3 w-3" aria-hidden />
