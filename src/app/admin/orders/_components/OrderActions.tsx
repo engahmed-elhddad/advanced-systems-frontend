@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui'
 import type { OrderAction } from '../_hooks/useOrdersPage'
 import type { OrderDetail } from '@/features/admin/services/adminService'
 
@@ -20,11 +20,12 @@ export function OrderActions({ order, pending, onAction }: OrderActionsProps) {
   const canDeliver = status === 'confirmed'
 
   return (
-    <div className="rounded-[4px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <h3 className="mb-3 text-sm font-semibold text-[#1A1A1A]">Actions</h3>
-      <p className="mb-3 text-xs text-[#6B7280]">
-        Flow: <span className="font-medium">Pending</span> → confirm →{' '}
-        <span className="font-medium">Confirmed</span> → deliver → <span className="font-medium">Delivered</span>.
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <h3 className="mb-3 text-sm font-semibold text-white">Actions</h3>
+      <p className="mb-3 text-xs text-white/50">
+        Flow: <span className="font-medium text-white/80">Pending</span> → confirm →{' '}
+        <span className="font-medium text-white/80">Confirmed</span> → deliver →{' '}
+        <span className="font-medium text-white/80">Delivered</span>.
         Cancel is only allowed while pending.
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">

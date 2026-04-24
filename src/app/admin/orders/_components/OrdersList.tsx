@@ -1,6 +1,8 @@
 'use client'
 
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTableLegacy'
+import { useMemo } from 'react'
+import { type ColumnDef } from '@tanstack/react-table'
+import { DataTable, type DataTableColumnMeta, Badge } from '@/components/ui'
 import type { OrdersListItem } from '@/features/admin/services/adminService'
 import { cn } from '@/lib/utils'
 
@@ -23,13 +25,11 @@ const FILTERS: Array<{ value: FilterValue; label: string }> = [
   { value: 'cancelled', label: 'Cancelled' },
 ]
 
-function statusClass(status: string): string {
-  const value = status.toLowerCase()
-  if (value === 'pending') return 'bg-amber-100 text-amber-800'
-  if (value === 'confirmed') return 'bg-[#E8F4FD] text-[#005BA4]'
-  if (value === 'delivered') return 'bg-emerald-100 text-emerald-700'
-  if (value === 'cancelled') return 'bg-red-100 text-red-700'
-  return 'bg-[#F3F4F6] text-[#6B7280]'
+const ORDER_STATUS_BADGE: Record<string, 'pending' | 'info' | 'success' | 'error' | 'default'> = {
+  pending: 'pending',
+  confirmed: 'info',
+  delivered: 'success',
+  cancelled: 'error',
 }
 
 function formatCurrency(total: number): string {
@@ -48,58 +48,61 @@ export function OrdersList({
   onFilterChange,
   onSelectOrder,
 }: OrdersListProps) {
-  const columns: DataTableColumn<OrdersListItem & Record<string, unknown>>[] = [
-    {
-      key: 'id',
-      header: 'Order ID',
-      render: (row) => (
-        <span className="font-mono text-xs font-semibold text-[#0072CE]">
-          ORD-{String(row.id).padStart(5, '0')}
-        </span>
-      ),
-    },
-    {
-      key: 'customer_name',
-      header: 'Customer',
-      render: (row) => (
-        <div>
-          <p className="text-sm font-medium text-[#1A1A1A]">{row.customer_name}</p>
-          {row.customer_email ? (
-            <p className="text-xs text-[#6B7280]">{row.customer_email}</p>
-          ) : null}
-        </div>
-      ),
-    },
-    {
-      key: 'total_amount',
-      header: 'Total',
-      render: (row) => (
-        <span className="text-sm font-semibold text-[#1A1A1A]">{formatCurrency(row.total_amount)}</span>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (row) => (
-        <span
-          className={cn(
-            'inline-flex rounded-[2px] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider',
-            statusClass(String(row.status)),
-          )}
-        >
-          {String(row.status)}
-        </span>
-      ),
-    },
-    {
-      key: 'created_at',
-      header: 'Created',
-      render: (row) => <span className="text-xs text-[#6B7280]">{formatDate(row.created_at)}</span>,
-    },
-  ]
+  const columns: ColumnDef<OrdersListItem & Record<string, unknown>, unknown>[] = useMemo(
+    () => [
+      {
+        id: 'id',
+        header: 'Order ID',
+        cell: ({ row }) => (
+          <span className="font-mono text-xs font-semibold text-orange-300">
+            ORD-{String(row.original.id).padStart(5, '0')}
+          </span>
+        ),
+      },
+      {
+        id: 'customer_name',
+        header: 'Customer',
+        cell: ({ row }) => {
+          const r = row.original
+          return (
+            <div>
+              <p className="text-sm font-medium text-white">{r.customer_name}</p>
+              {r.customer_email ? (
+                <p className="text-xs text-white/50">{r.customer_email}</p>
+              ) : null}
+            </div>
+          )
+        },
+      },
+      {
+        id: 'total_amount',
+        header: 'Total',
+        cell: ({ row }) => (
+          <span className="text-sm font-semibold text-white">{formatCurrency(row.original.total_amount)}</span>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        cell: ({ row }) => (
+          <Badge variant={ORDER_STATUS_BADGE[String(row.original.status).toLowerCase()] ?? 'default'} size="sm">
+            {String(row.original.status)}
+          </Badge>
+        ),
+      },
+      {
+        id: 'created_at',
+        header: 'Created',
+        cell: ({ row }) => (
+          <span className="text-xs text-white/50">{formatDate(row.original.created_at)}</span>
+        ),
+      },
+    ],
+    [],
+  )
 
   return (
-    <div className="rounded-[4px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
       <div className="mb-3 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button
@@ -107,10 +110,10 @@ export function OrdersList({
             type="button"
             onClick={() => onFilterChange(f.value)}
             className={cn(
-              'rounded-[2px] border px-3 py-1.5 text-xs font-medium transition-colors',
+              'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
               filter === f.value
-                ? 'border-[#0072CE] bg-[#E8F4FD] text-[#005BA4]'
-                : 'border-[#E5E7EB] bg-white text-[#6B7280] hover:bg-[#F9FAFB]',
+                ? 'border-orange-400/50 bg-orange-500/10 text-orange-200'
+                : 'border-white/10 bg-transparent text-white/50 hover:bg-white/[0.05] hover:text-white',
             )}
           >
             {f.label}
@@ -119,22 +122,21 @@ export function OrdersList({
       </div>
 
       <DataTable
-        allowLegacyTable
+        tableId="admin-orders"
         columns={columns}
         data={orders as (OrdersListItem & Record<string, unknown>)[]}
-        loading={loading}
-        emptyMessage="No orders found"
+        isLoading={loading}
+        emptyState={<p className="py-10 text-center text-sm text-white/50">No orders found</p>}
+        getRowId={(row) => String(row.id)}
         stickyHeader
-        rowKey={(row) => row.id}
         onRowClick={(row) => onSelectOrder(row.id)}
       />
 
       {selectedOrderId ? (
-        <p className="mt-2 text-xs text-[#6B7280]">
-          Selected: <span className="font-mono text-[#1A1A1A]">ORD-{String(selectedOrderId).padStart(5, '0')}</span>
+        <p className="mt-2 text-xs text-white/50">
+          Selected: <span className="font-mono text-white/80">ORD-{String(selectedOrderId).padStart(5, '0')}</span>
         </p>
       ) : null}
     </div>
   )
 }
-

@@ -5,9 +5,9 @@
  */
 export function OrderTimeline() {
   return (
-    <div className="rounded-[4px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <h3 className="mb-2 text-sm font-semibold text-[#1A1A1A]">Timeline</h3>
-      <p className="text-xs text-[#6B7280]">
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <h3 className="mb-2 text-sm font-semibold text-white">Timeline</h3>
+      <p className="text-xs text-white/50">
         The API does not expose order timeline events. Use the status badge and timestamps (created /
         updated) on the order.
       </p>
