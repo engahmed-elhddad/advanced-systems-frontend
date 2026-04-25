@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { HeroSection } from '@/components/home/HeroSection'
 import { BrandCarousel } from '@/components/home/BrandCarousel'
 import { HowItWorks } from '@/components/home/HowItWorks'
+import { IndustryStrip } from '@/components/home/IndustryStrip'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function HomePage() {
         <BrandCarousel />
       </Suspense>
       <HowItWorks />
+      <IndustryStrip />
     </>
   )
 }
