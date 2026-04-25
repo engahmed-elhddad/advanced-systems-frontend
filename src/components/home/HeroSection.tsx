@@ -1,27 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import {
-  Cpu, Gauge, Radio, Monitor, Zap, Shield, ToggleRight, Package,
-} from 'lucide-react'
-import { useCategories } from '@/features/products/hooks/useCategories'
-import type { LucideIcon } from 'lucide-react'
+import { Shield } from 'lucide-react'
 
-function iconForCategory(name: string): LucideIcon {
-  const n = name.toLowerCase()
-  if (n.includes('plc')) return Cpu
-  if (n.includes('drive')) return Gauge
-  if (n.includes('sensor')) return Radio
-  if (n.includes('hmi')) return Monitor
-  if (n.includes('power')) return Zap
-  if (n.includes('safety')) return Shield
-  if (n.includes('soft') || n.includes('starter')) return ToggleRight
-  return Package
-}
+const CDN = 'https://cdn.advancedsystems-int.com/cdn/categories/'
+
+const CATEGORY_GRID = [
+  { label: 'PLC',           href: '/categories/plc',           image: 'plc.webp' },
+  { label: 'Drive',         href: '/categories/drive',         image: 'drive.webp' },
+  { label: 'Sensors',       href: '/categories/sensors',       image: 'Sensors.webp' },
+  { label: 'HMI',           href: '/categories/hmi',           image: 'hmi.png' },
+  { label: 'Power Supply',  href: '/categories/power-supply',  image: 'power-supply.jpg' },
+  { label: 'Soft Starter',  href: '/categories/soft-starter',  image: 'soft-starter.jpg' },
+  { label: 'Safety Relay',  href: '/categories/safety-relay',  image: null },
+]
 
 export function HeroSection() {
-  const { data: categories = [] } = useCategories()
-
   return (
     <section
       className="relative flex min-h-[82vh] w-full flex-col justify-center pb-8"
@@ -60,25 +54,29 @@ export function HeroSection() {
             </Link>
           </div>
 
-          {/* Category grid — real categories from API */}
-          {categories.length > 0 && (
-            <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
-              {categories.slice(0, 8).map((cat) => {
-                const Icon = iconForCategory(cat.name)
-                const href = cat.slug ? `/categories/${cat.slug}` : '/categories'
-                return (
-                  <Link
-                    key={cat.id}
-                    href={href}
-                    className="flex flex-col items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 transition-colors hover:border-[--accent] hover:bg-white/10"
-                  >
-                    <Icon className="h-6 w-6 text-[--accent]" />
-                    <span className="text-xs font-medium text-white/60 text-center leading-tight">{cat.name}</span>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
+          {/* Category grid */}
+          <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
+            {CATEGORY_GRID.map(({ label, href, image }) => (
+              <Link
+                key={label}
+                href={href}
+                className="flex flex-col items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 transition-colors hover:border-[--accent] hover:bg-white/10"
+              >
+                {image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`${CDN}${image}`}
+                    alt={label}
+                    className="h-12 w-12 object-contain"
+                    loading="lazy"
+                  />
+                ) : (
+                  <Shield className="h-12 w-12 text-[--accent]" />
+                )}
+                <span className="text-center text-xs font-medium text-white leading-tight">{label}</span>
+              </Link>
+            ))}
+          </div>
 
         </div>
       </div>
