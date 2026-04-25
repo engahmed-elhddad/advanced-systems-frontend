@@ -52,7 +52,7 @@ export function Navbar() {
           <span className="text-[--text-secondary]">Industrial Automation Parts &amp; Components</span>
           <div className="flex items-center gap-4">
             <Link
-              href="/orders/track"
+              href="/rfq/dashboard"
               className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
             >
               Track Order
@@ -66,7 +66,7 @@ export function Navbar() {
               +20 100 062 9229
             </a>
             <Link
-              href="/auth/login"
+              href="/admin/login"
               className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
             >
               Login
@@ -204,7 +204,7 @@ export function Navbar() {
                 +20 100 062 9229
               </a>
               <Link
-                href="/auth/login"
+                href="/admin/login"
                 className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
                 onClick={() => setMobileOpen(false)}
               >
