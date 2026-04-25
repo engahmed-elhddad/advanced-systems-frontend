@@ -109,3 +109,4 @@ export { formatDataTableSentryEvent, type SentryLikeTablePayload } from '@/lib/d
 export { Skeleton, SkeletonLine } from './Skeleton'
 export type { SkeletonProps } from './Skeleton'
 export { ToastViewport, ToastViewport as Toast } from './Toast'
+export { ThemeProvider, useTheme } from './ThemeProvider'

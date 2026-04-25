@@ -1,0 +1,95 @@
+/* ── Raw palette — all named values available globally ──────────────────── */
+:root {
+  --bg-base-light: #FFFFFF;
+  --bg-base-dark: #0E1116;
+  --bg-surface-light: #F7F8FA;
+  --bg-surface-dark: #161A21;
+  --bg-elevated-light: #FFFFFF;
+  --bg-elevated-dark: #1E232C;
+
+  --text-primary-light: #111418;
+  --text-primary-dark: #F2F4F7;
+  --text-secondary-light: #5B6470;
+  --text-secondary-dark: #9AA3B2;
+
+  --border-light: #E4E7EC;
+  --border-dark: #262C36;
+
+  --accent-light: #FF6A00;
+  --accent-dark: #FF8A33;
+  --accent-hover-light: #E55D00;
+  --accent-hover-dark: #FFA15A;
+
+  --status-ok-light: #0E8A4F;
+  --status-ok-dark: #34C77B;
+  --status-warn-light: #B26A00;
+  --status-warn-dark: #FFB341;
+  --status-danger-light: #C8102E;
+  --status-danger-dark: #FF6B7A;
+
+  /* Header is always dark regardless of theme */
+  --bg-header: #0E1116;
+
+  --font-latin: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Border radius */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Light theme — semantic aliases ─────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-base: var(--bg-base-light);
+  --bg-surface: var(--bg-surface-light);
+  --bg-elevated: var(--bg-elevated-light);
+  --text-primary: var(--text-primary-light);
+  --text-secondary: var(--text-secondary-light);
+  --border: var(--border-light);
+  --accent: var(--accent-light);
+  --accent-hover: var(--accent-hover-light);
+  --status-ok: var(--status-ok-light);
+  --status-warn: var(--status-warn-light);
+  --status-danger: var(--status-danger-light);
+}
+
+/* ── Dark theme — semantic aliases ──────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg-base: var(--bg-base-dark);
+  --bg-surface: var(--bg-surface-dark);
+  --bg-elevated: var(--bg-elevated-dark);
+  --text-primary: var(--text-primary-dark);
+  --text-secondary: var(--text-secondary-dark);
+  --border: var(--border-dark);
+  --accent: var(--accent-dark);
+  --accent-hover: var(--accent-hover-dark);
+  --status-ok: var(--status-ok-dark);
+  --status-warn: var(--status-warn-dark);
+  --status-danger: var(--status-danger-dark);
+}

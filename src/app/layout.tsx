@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { CurrencyProvider } from '@/lib/providers/CurrencyProvider'
 import { QueryProvider } from '@/components/providers/QueryProvider'
@@ -10,6 +10,7 @@ import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { RootSiteChrome } from './RootSiteChrome'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono', display: 'swap' })
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://advancedsystems-int.com'
 
@@ -57,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <SiteJsonLd />
       </head>
-      <body className={`${inter.variable} ${inter.className} font-sans antialiased text-white`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} ${inter.className} font-sans antialiased text-white`}>
         <AnalyticsClient />
         <QueryProvider>
           <ShopAuthProvider>
