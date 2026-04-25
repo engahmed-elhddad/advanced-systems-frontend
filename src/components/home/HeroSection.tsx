@@ -95,7 +95,7 @@ export function HeroSection() {
             <div className="mb-10 flex flex-wrap justify-center gap-4 lg:justify-start">
               <Link
                 href="/products"
-                className="inline-flex items-center justify-center rounded-xl bg-[--accent] px-8 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover]"
+                className="bg-[--accent] hover:bg-[--accent-hover] text-white px-6 py-3 rounded-lg font-semibold"
               >
                 Browse products
               </Link>

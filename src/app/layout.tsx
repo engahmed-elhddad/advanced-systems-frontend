@@ -8,6 +8,7 @@ import { AppToaster } from '@/components/providers/AppToaster'
 import { AnalyticsClient } from '@/components/analytics/AnalyticsClient'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { RootSiteChrome } from './RootSiteChrome'
+import { ThemeProvider } from '@/components/ui/ThemeProvider'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono', display: 'swap' })
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${rajdhani.variable} ${inter.className} font-sans antialiased text-white`}>
         <AnalyticsClient />
+        <ThemeProvider>
         <QueryProvider>
           <ShopAuthProvider>
             <CurrencyProvider>
@@ -81,6 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </CurrencyProvider>
           </ShopAuthProvider>
         </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
