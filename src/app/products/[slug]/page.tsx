@@ -522,6 +522,7 @@ export default async function ProductSlugPage({ params }: Props) {
           availability={availability}
           stockQuantity={stockQty}
           variants={variants}
+          lifecycleStatus={String(product.lifecycle_status ?? 'active')}
         />
 
         <RecommendationSections

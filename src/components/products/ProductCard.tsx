@@ -78,6 +78,7 @@ export interface ProductCardProps {
   productBasePath?: string
   /** When set (e.g. catalog search), matching tokens are emphasized in title lines. */
   highlightQuery?: string
+  lifecycle_status?: string
 }
 
 const shellClass =
@@ -101,6 +102,7 @@ function ProductCardInner({
   variant = 'default',
   productBasePath = '/products',
   highlightQuery,
+  lifecycle_status,
 }: ProductCardProps) {
   const { format } = useCurrency()
   const { showExactPricing, openLoginModal } = usePricingGate()
@@ -152,7 +154,7 @@ function ProductCardInner({
             className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </div>
-        <div className="absolute right-2 top-2">
+        <div className="absolute right-2 top-2 flex flex-col items-end gap-1">
           {inStock ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
               In stock
@@ -160,6 +162,16 @@ function ProductCardInner({
           ) : (
             <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/35 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-100">
               On request
+            </span>
+          )}
+          {lifecycle_status === 'nrnd' && (
+            <span className="inline-flex items-center rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-100">
+              NRND
+            </span>
+          )}
+          {lifecycle_status === 'obsolete' && (
+            <span className="inline-flex items-center rounded-full border border-red-400/40 bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-100">
+              Obsolete
             </span>
           )}
         </div>

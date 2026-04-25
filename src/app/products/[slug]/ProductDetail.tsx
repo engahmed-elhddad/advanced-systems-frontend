@@ -62,6 +62,7 @@ interface Props {
   /** Catalog stock (used with variants for “only X left” urgency). */
   stockQuantity?: number
   variants: ProductVariantOption[]
+  lifecycleStatus?: string
 }
 
 function specCardValue(specs: Record<string, string>, series: string, keys: string[]): string {
@@ -88,6 +89,7 @@ export function ProductDetail({
   availability,
   stockQuantity = 0,
   variants,
+  lifecycleStatus,
 }: Props) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState('1')
@@ -423,6 +425,12 @@ export function ProductDetail({
               <Badge variant={isAvailable ? 'success' : 'pending'} size="sm">
                 {isAvailable ? 'Available' : 'On request'}
               </Badge>
+              {lifecycleStatus === 'nrnd' && (
+                <Badge variant="warning" size="sm">NRND</Badge>
+              )}
+              {lifecycleStatus === 'obsolete' && (
+                <Badge variant="error" size="sm">Obsolete</Badge>
+              )}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <span

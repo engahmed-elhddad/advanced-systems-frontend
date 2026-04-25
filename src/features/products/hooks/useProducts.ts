@@ -66,6 +66,7 @@ export type AdminProductFormInput = {
   status: AdminProductStatus
   /** Pending local file; uploaded via multipart after product save. */
   imageFile?: File | null
+  lifecycleStatus?: string
 }
 
 type BrandRow = { id: number; name: string }
@@ -163,6 +164,7 @@ function normalizeProduct(row: any): AdminProduct {
     imageUrl: String(row?.image_url ?? '').trim(),
     datasheetUrl: String(row?.datasheet_url || ''),
     status: fromApiStatus(row),
+    lifecycleStatus: String(row?.lifecycle_status ?? 'active'),
     is_enriched: Boolean(row?.is_enriched),
     _etag: typeof row?._etag === 'string' && row._etag.trim() ? row._etag : undefined,
   }
@@ -288,6 +290,7 @@ async function createAdminProduct(input: AdminProductFormInput) {
     datasheet_url: input.datasheetUrl?.trim() || null,
     stock_quantity: 1,
     specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
+    lifecycle_status: input.lifecycleStatus ?? 'active',
     ...initialStatus,
   }
   const res = await api.post<unknown>('/api/v1/admin/products', payload)
@@ -383,6 +386,7 @@ async function updateAdminProduct(id: number, input: AdminProductFormInput) {
     description: input.description || null,
     datasheet_url: input.datasheetUrl?.trim() || null,
     specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
+    lifecycle_status: input.lifecycleStatus ?? 'active',
     ...statusPayload,
     ...(imageUrlForPut !== undefined ? { image_url: imageUrlForPut } : {}),
   }

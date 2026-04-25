@@ -33,6 +33,12 @@ const STATUS_OPTIONS = [
   { value: 'Active', label: 'Active' },
   { value: 'Draft', label: 'Draft' },
 ]
+
+const LIFECYCLE_OPTIONS = [
+  { value: 'active', label: 'Active' },
+  { value: 'nrnd', label: 'NRND — Not Recommended for New Designs' },
+  { value: 'obsolete', label: 'Obsolete' },
+]
 const FALLBACK_IMAGE = 'https://placehold.co/120x120/111827/9CA3AF?text=No+Img'
 /** Align with backend ``MAX_FILE_SIZE`` default (10 MB) for admin image pipeline. */
 const MAX_PRODUCT_IMAGE_BYTES = 10 * 1024 * 1024
@@ -311,6 +317,13 @@ export function ProductForm({
             value={form.status}
             onChange={(value) => patch({ status: value as AdminProductStatus })}
             options={STATUS_OPTIONS}
+          />
+
+          <Select
+            label="Lifecycle"
+            value={form.lifecycleStatus ?? 'active'}
+            onChange={(value) => patch({ lifecycleStatus: value })}
+            options={LIFECYCLE_OPTIONS}
           />
         </div>
 
