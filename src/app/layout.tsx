@@ -9,6 +9,7 @@ import { AnalyticsClient } from '@/components/analytics/AnalyticsClient'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { RootSiteChrome } from './RootSiteChrome'
 import { ThemeProvider } from '@/components/ui/ThemeProvider'
+import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono', display: 'swap' })
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </ShopAuthProvider>
         </QueryProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
