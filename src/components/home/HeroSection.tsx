@@ -12,7 +12,7 @@ const CATEGORY_GRID = [
   { label: 'HMI',           href: '/categories/hmi',           image: 'hmi.png' },
   { label: 'Power Supply',  href: '/categories/power-supply',  image: 'power-supply.jpg' },
   { label: 'Soft Starter',  href: '/categories/soft-starter',  image: 'soft-starter.jpg' },
-  { label: 'Safety Relay',  href: '/categories/safety-relay',  image: null },
+  { label: 'Safety Relay',  href: '/categories/safety-relay',  image: 'safety-relay.png' },
 ]
 
 export function HeroSection() {
