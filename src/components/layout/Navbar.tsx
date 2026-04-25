@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Menu, X, Zap, Phone, Sun, Moon, Monitor } from 'lucide-react'
 import { SearchBar } from '@/components/search/SearchBar'
 import { useTheme } from '@/components/ui/ThemeProvider'
+import { CartDrawer } from '@/components/cart/CartDrawer'
 import { CartIcon } from '@/components/cart/CartIcon'
 import { cn } from '@/lib/utils'
 
@@ -39,6 +40,7 @@ function ThemeToggle() {
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
   const pathname = usePathname()
   const hideInlineSearch = pathname === '/search'
 
@@ -128,7 +130,7 @@ export function Navbar() {
               <Phone className="h-4 w-4" />
             </a>
             <ThemeToggle />
-            <CartIcon />
+            <CartIcon open={cartOpen} onOpenChange={setCartOpen} />
             <Link
               href="/rfq"
               className="ml-1 inline-flex items-center rounded-md bg-[--accent] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover]"
@@ -140,7 +142,7 @@ export function Navbar() {
           {/* Mobile: theme toggle + hamburger */}
           <div className="ml-auto flex items-center gap-1 md:hidden">
             <ThemeToggle />
-            <CartIcon />
+            <CartIcon open={cartOpen} onOpenChange={setCartOpen} />
             <button
               type="button"
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -240,6 +242,8 @@ export function Navbar() {
           </div>
         </div>
       )}
+
+      <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
     </header>
   )
 }
