@@ -67,7 +67,7 @@ export function BrandCarousel() {
             <Link
               key={brand.slug}
               href={`/brands/${encodeURIComponent(brand.slug)}`}
-              className="flex h-20 items-center justify-center transition-opacity hover:opacity-80"
+              className="flex h-16 w-32 items-center justify-center transition-opacity hover:opacity-80"
               aria-label={brand.name}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,7 +75,7 @@ export function BrandCarousel() {
                 src={src}
                 alt={brand.name}
                 loading="lazy"
-                className="max-h-14 w-auto object-contain"
+                className="max-h-10 max-w-[100px] object-contain"
               />
             </Link>
           )

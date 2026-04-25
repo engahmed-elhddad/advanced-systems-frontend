@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { HeroSection } from '@/components/home/HeroSection'
 import { BrandCarousel } from '@/components/home/BrandCarousel'
-import { CategoryHeroGrid } from '@/components/home/CategoryHeroGrid'
 import { FeaturedProductsCarousel } from '@/components/home/FeaturedProductsCarousel'
 import { TrendingParts } from '@/components/home/TrendingParts'
 import { RFQBanner } from '@/components/home/RFQBanner'
@@ -18,9 +17,6 @@ export default function HomePage() {
       <HeroSection />
       <Suspense fallback={null}>
         <BrandCarousel />
-      </Suspense>
-      <Suspense fallback={<SectionSkeleton className="h-48" />}>
-        <CategoryHeroGrid />
       </Suspense>
       <Suspense fallback={<SectionSkeleton className="h-64" />}>
         <FeaturedProductsCarousel />
