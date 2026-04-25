@@ -58,12 +58,12 @@ export function CategoryHeroGrid() {
 
   if (loading) {
     return (
-      <section className="py-20">
+      <section className="bg-[--bg-surface] py-20">
         <div className="mx-auto max-w-7xl px-6">
-          <h2 className="mb-10 text-3xl font-bold tracking-tight text-white sm:text-4xl">Shop by category</h2>
+          <h2 className="mb-10 text-3xl font-bold tracking-tight text-[--text-primary] sm:text-4xl">Shop by category</h2>
           <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-36 animate-pulse rounded-xl border border-white/10 bg-white/5" />
+              <div key={i} className="h-36 animate-pulse rounded-xl border border-[--border] bg-[--bg-elevated]" />
             ))}
           </div>
         </div>
@@ -74,9 +74,9 @@ export function CategoryHeroGrid() {
   if (!categories.length) return null
 
   return (
-    <section className="py-20">
+    <section className="bg-[--bg-surface] py-20">
       <div className="mx-auto max-w-7xl px-6">
-        <h2 className="mb-10 text-3xl font-bold tracking-tight text-white sm:text-4xl">Shop by category</h2>
+        <h2 className="mb-10 text-3xl font-bold tracking-tight text-[--text-primary] sm:text-4xl">Shop by category</h2>
         <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
           {categories.map((cat) => {
             const Icon = getCategoryIcon(cat.name)
@@ -86,13 +86,13 @@ export function CategoryHeroGrid() {
               <Link
                 key={cat.slug}
                 href={href}
-                className="flex flex-col items-center rounded-xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-xl transition-all duration-300 hover:scale-[1.03] hover:border-orange-400/25 hover:bg-white/[0.08] hover:shadow-[0_0_32px_rgba(139,92,246,0.12)]"
+                className="flex flex-col items-center rounded-xl border border-[--border] bg-[--bg-elevated] p-6 text-center transition-colors hover:border-[--accent]"
               >
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-orange-300/90">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-[--border] bg-[--bg-surface] text-[--accent]">
                   <Icon className="h-7 w-7" aria-hidden />
                 </div>
-                <span className="font-semibold text-white">{cat.name}</span>
-                {count > 0 && <span className="mt-2 text-xs text-white/45">{count} products</span>}
+                <span className="font-semibold text-[--text-primary]">{cat.name}</span>
+                {count > 0 && <span className="mt-2 text-xs text-[--text-secondary]">{count} products</span>}
               </Link>
             )
           })}

@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
 import { HeroSection } from '@/components/home/HeroSection'
-import { TrendingProducts } from '@/components/home/TrendingProducts'
 import { BrandCarousel } from '@/components/home/BrandCarousel'
 import { CategoryHeroGrid } from '@/components/home/CategoryHeroGrid'
 import { FeaturedProductsCarousel } from '@/components/home/FeaturedProductsCarousel'
@@ -17,9 +16,6 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <Suspense fallback={<SectionSkeleton className="h-72" />}>
-        <TrendingProducts />
-      </Suspense>
       <Suspense fallback={null}>
         <BrandCarousel />
       </Suspense>

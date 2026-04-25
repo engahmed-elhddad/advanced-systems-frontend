@@ -49,7 +49,7 @@ export function BrandCarousel() {
     return (
       <section className="w-full overflow-hidden py-12">
         <div className="flex h-12 items-center justify-center">
-          <div className="h-8 w-48 animate-pulse rounded-full border border-white/10 bg-white/5" />
+          <div className="h-8 w-48 animate-pulse rounded-full border border-[--border] bg-[--bg-elevated]" />
         </div>
       </section>
     )
@@ -59,7 +59,7 @@ export function BrandCarousel() {
 
   return (
     <section
-      className="group relative w-full overflow-hidden py-12 before:pointer-events-none before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-28 before:bg-gradient-to-r before:from-[#0B1F3A] before:to-transparent before:content-[''] after:pointer-events-none after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-28 after:bg-gradient-to-l after:from-[#0B1F3A] after:to-transparent after:content-['']"
+      className="group relative w-full overflow-hidden py-12 before:pointer-events-none before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-28 before:bg-gradient-to-r before:from-[--bg-base] before:to-transparent before:content-[''] after:pointer-events-none after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-28 after:bg-gradient-to-l after:from-[--bg-base] after:to-transparent after:content-['']"
       aria-label="Brand logos"
     >
       <div className="flex w-max animate-scroll gap-14 group-hover:[animation-play-state:paused]">
@@ -67,7 +67,7 @@ export function BrandCarousel() {
           <Link
             key={`${brand.slug}-${index}`}
             href={`/brands/${encodeURIComponent(brand.slug)}`}
-            className="flex w-[150px] flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-md transition-all duration-300 hover:scale-[1.05] hover:border-orange-400/30 hover:shadow-[0_0_24px_rgba(255,122,0,0.12)]"
+            className="flex w-[150px] flex-shrink-0 items-center justify-center rounded-xl border border-[--border] bg-[--bg-elevated] px-4 py-3 transition-colors hover:border-[--accent]"
             aria-label={brand.name}
           >
             <BrandLogo
