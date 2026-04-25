@@ -3,11 +3,21 @@
 import { apiFetch } from '@/lib/api'
 
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { HeroSearch } from '@/components/home/HeroSearch'
+import { Cpu, Zap, Radio, Gauge, Boxes, Wrench, Wifi, Activity } from 'lucide-react'
 import { getBrandHref } from '@/lib/brandUtils'
 import { API_BASE_URL } from '@/lib/constants'
+
+const CATEGORY_GRID = [
+  { icon: Cpu,      label: 'PLCs' },
+  { icon: Zap,      label: 'Power' },
+  { icon: Radio,    label: 'Sensors' },
+  { icon: Gauge,    label: 'Drives' },
+  { icon: Boxes,    label: 'Inventory' },
+  { icon: Wrench,   label: 'Maintenance' },
+  { icon: Wifi,     label: 'IoT' },
+  { icon: Activity, label: 'Analytics' },
+]
 
 function slugFromName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
@@ -60,19 +70,6 @@ function useQuickBrands(limit: number) {
   return brands
 }
 
-const HeroVisualLazy = dynamic(
-  () => import('./HeroVisual').then((m) => ({ default: m.HeroVisual })),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        className="aspect-[4/3] w-full max-w-[340px] animate-pulse rounded-2xl border border-[--border] bg-[--bg-elevated] sm:max-w-[400px] lg:max-w-[460px]"
-        aria-hidden
-      />
-    ),
-  }
-)
-
 export function HeroSection() {
   const quickBrands = useQuickBrands(8)
   return (
@@ -82,6 +79,8 @@ export function HeroSection() {
     >
       <div className="relative w-full py-16 sm:py-24 lg:py-28 page-container">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-24">
+
+          {/* Left — headline + CTAs + brands */}
           <div className="flex flex-col text-center lg:text-left">
             <p className="text-label-caps mb-5 text-[--text-secondary]">Industrial automation marketplace</p>
             <h1 className="text-display-tight mb-7 text-4xl font-semibold text-[--text-primary] sm:text-5xl md:text-[3.25rem] lg:text-[3.5rem]">
@@ -92,10 +91,6 @@ export function HeroSection() {
               Search millions of components by part number, brand, or category — engineered for procurement teams who
               need speed and certainty.
             </p>
-
-            <div className="mx-auto mb-12 w-full lg:mx-0">
-              <HeroSearch variant="hero" />
-            </div>
 
             <div className="mb-10 flex flex-wrap justify-center gap-4 lg:justify-start">
               <Link
@@ -124,9 +119,21 @@ export function HeroSection() {
             </div>
           </div>
 
+          {/* Right — category icon grid */}
           <div className="flex justify-center lg:justify-end">
-            <HeroVisualLazy />
+            <div className="grid w-full max-w-sm grid-cols-4 gap-3">
+              {CATEGORY_GRID.map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="flex flex-col items-center gap-2 rounded-lg border border-[--border] bg-[--bg-elevated] p-4"
+                >
+                  <Icon className="h-6 w-6 text-[--accent]" />
+                  <span className="text-xs font-medium text-[--text-secondary]">{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
+
         </div>
       </div>
     </section>

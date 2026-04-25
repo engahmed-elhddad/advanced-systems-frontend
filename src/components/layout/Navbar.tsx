@@ -84,9 +84,12 @@ export function Navbar() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--accent] shadow-[0_4px_12px_-2px_rgba(255,106,0,0.4)] transition-colors hover:bg-[--accent-hover]">
               <Zap className="h-4 w-4 text-white" />
             </div>
-            <span className="hidden text-[0.9375rem] font-semibold tracking-[-0.02em] text-[--text-primary] sm:block">
-              Advanced
-              <span className="font-mono text-[--accent]">Systems</span>
+            <span
+              className="hidden items-baseline gap-[0.15em] sm:inline-flex"
+              style={{ fontFamily: 'var(--font-rajdhani)' }}
+            >
+              <span className="text-[1.05rem] font-semibold tracking-wide text-[--text-primary]">Advanced</span>
+              <span className="text-[1.05rem] font-bold uppercase tracking-wider text-[--accent]">Systems</span>
             </span>
           </Link>
 
