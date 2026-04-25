@@ -25,7 +25,8 @@ export function RootSiteChrome({ children }: { children: React.ReactNode }) {
         <Suspense
           fallback={
             <header
-              className="sticky top-0 z-50 h-[4.75rem] border-b border-white/[0.08] bg-[rgba(11,31,58,0.72)] backdrop-blur-2xl"
+              className="sticky top-0 z-50 h-[9.5rem] border-b border-[--border-dark]"
+              style={{ backgroundColor: 'var(--bg-header)' }}
               aria-hidden
             />
           }

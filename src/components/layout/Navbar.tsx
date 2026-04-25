@@ -3,14 +3,38 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Zap, Phone } from 'lucide-react'
+import { Menu, X, Zap, Phone, Sun, Moon, Monitor } from 'lucide-react'
 import { SearchBar } from '@/components/search/SearchBar'
+import { useTheme } from '@/components/ui/ThemeProvider'
 import { cn } from '@/lib/utils'
 
-const navItems = [
+const NAV_ITEMS = [
   { label: 'Brands', href: '/brands' },
   { label: 'Categories', href: '/categories' },
+  { label: 'Industries', href: '/industries' },
+  { label: 'RFQ Tool', href: '/rfq' },
 ]
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')}
+      className="flex h-8 w-8 items-center justify-center rounded-md text-[--text-secondary] transition-colors hover:bg-white/[0.08] hover:text-[--text-primary]"
+      aria-label="Toggle theme"
+      title={`Theme: ${theme}`}
+    >
+      {theme === 'light' ? (
+        <Sun className="h-4 w-4" />
+      ) : theme === 'dark' ? (
+        <Moon className="h-4 w-4" />
+      ) : (
+        <Monitor className="h-4 w-4" />
+      )}
+    </button>
+  )
+}
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -18,20 +42,57 @@ export function Navbar() {
   const hideInlineSearch = pathname === '/search'
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/[0.08] bg-[rgba(11,31,58,0.72)] shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_12px_48px_-12px_rgba(0,0,0,0.4)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+    <header
+      className="sticky top-0 z-50 border-b border-[--border-dark]"
+      style={{ backgroundColor: 'var(--bg-header)' }}
+    >
+      {/* ── Row 1: Utility bar ─────────────────────────────────────────── */}
+      <div className="hidden border-b border-white/[0.06] md:block">
+        <div className="page-container flex h-8 items-center justify-between text-xs">
+          <span className="text-[--text-secondary]">Industrial Automation Parts &amp; Components</span>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/orders/track"
+              className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+            >
+              Track Order
+            </Link>
+            <a
+              href="tel:+201000629229"
+              className="flex items-center gap-1.5 text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+              aria-label="Call +20 100 062 9229"
+            >
+              <Phone className="h-3 w-3" />
+              +20 100 062 9229
+            </a>
+            <Link
+              href="/auth/login"
+              className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+            >
+              Login
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 2: Main header ─────────────────────────────────────────── */}
       <div className="page-container">
-        <div className="flex min-h-[4.75rem] items-center gap-3 py-2.5 sm:gap-5">
+        <div className="flex h-16 items-center gap-4">
+
+          {/* Logo */}
           <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-b from-[#FF8A1A] to-[#E85D00] shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_8px_20px_-4px_rgba(255,106,0,0.45)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04] group-hover:shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_28px_-4px_rgba(255,106,0,0.55)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[--accent] shadow-[0_4px_12px_-2px_rgba(255,106,0,0.4)] transition-colors hover:bg-[--accent-hover]">
               <Zap className="h-4 w-4 text-white" />
             </div>
-            <span className="hidden text-[0.9375rem] font-semibold tracking-[-0.02em] text-white sm:block">
-              Advanced<span className="bg-gradient-to-r from-orange-200 via-orange-300 to-orange-400 bg-clip-text text-transparent">Systems</span>
+            <span className="hidden text-[0.9375rem] font-semibold tracking-[-0.02em] text-[--text-primary] sm:block">
+              Advanced
+              <span className="font-mono text-[--accent]">Systems</span>
             </span>
           </Link>
 
+          {/* Search — center, ~50% width */}
           {!hideInlineSearch ? (
-            <div className="mx-auto min-w-0 max-w-xl flex-1">
+            <div className="mx-auto w-full max-w-[52%] min-w-0">
               <SearchBar
                 variant="header"
                 placeholder="Search by part number, brand, or category"
@@ -44,69 +105,122 @@ export function Navbar() {
               />
             </div>
           ) : (
-            <div className="mx-auto min-w-0 max-w-2xl flex-1 lg:max-w-3xl" aria-hidden />
+            <div className="flex-1" aria-hidden />
           )}
 
-          <div className="hidden shrink-0 items-center gap-1 md:flex">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-xl px-3 py-2 text-[0.8125rem] font-medium tracking-[-0.01em] text-white/70 transition-all duration-300 hover:bg-white/[0.08] hover:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
+          {/* Right actions */}
+          <div className="ml-auto hidden shrink-0 items-center gap-2 md:flex">
             <a
               href="tel:+201000629229"
-              className="hidden items-center gap-1.5 px-3 py-2 text-sm font-medium text-white/55 transition-colors hover:text-orange-200 lg:inline-flex"
+              className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
               aria-label="Call +20 100 062 9229"
             >
-              <Phone className="h-3.5 w-3.5" />
-              <span className="text-xs">+20 100 062 9229</span>
+              <Phone className="h-4 w-4" />
             </a>
+            <ThemeToggle />
             <Link
               href="/rfq"
-              className="ml-1 inline-flex items-center rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition-all duration-300 hover:scale-[1.03] hover:brightness-110 hover:shadow-xl hover:shadow-orange-500/40"
+              className="ml-1 inline-flex items-center rounded-md bg-[--accent] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover]"
             >
               Get Price
             </Link>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="rounded-xl p-2 text-white/80 transition-all duration-300 hover:bg-white/10 hover:text-white md:hidden"
-            aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          {/* Mobile: theme toggle + hamburger */}
+          <div className="ml-auto flex items-center gap-1 md:hidden">
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="rounded-md p-2 text-[--text-secondary] transition-colors hover:bg-white/[0.08] hover:text-[--text-primary]"
+              aria-expanded={mobileOpen}
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+      </div>
 
-        {mobileOpen && (
-          <div className="space-y-1 border-t border-white/10 py-4 md:hidden">
-            {navItems.map((item) => (
+      {/* ── Row 3: Nav bar ─────────────────────────────────────────────── */}
+      <div
+        className="hidden border-t border-white/[0.06] md:block"
+        style={{ backgroundColor: 'var(--bg-header)' }}
+      >
+        <div className="page-container flex h-10 items-center gap-1">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-[0.8125rem] font-medium transition-colors',
+                pathname === item.href || pathname.startsWith(item.href + '/')
+                  ? 'bg-white/[0.08] text-[--text-primary]'
+                  : 'text-[--text-secondary] hover:bg-white/[0.06] hover:text-[--text-primary]'
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Mobile drawer ──────────────────────────────────────────────── */}
+      {mobileOpen && (
+        <div
+          className="border-t border-[--border-dark] md:hidden"
+          style={{ backgroundColor: 'var(--bg-header)' }}
+        >
+          <div className="page-container space-y-1 py-3">
+            {/* Mobile search */}
+            <div className="pb-2">
+              <SearchBar
+                variant="header"
+                placeholder="Search parts, brands…"
+                showSuggestions
+                debounceMs={300}
+                searchPath="/search"
+                productPath="/products"
+                brandPath="/brands"
+                categoryPath="/categories"
+              />
+            </div>
+            {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className="block rounded-xl px-4 py-3 text-sm font-semibold text-white/85 transition-colors hover:bg-white/10"
+                className="block rounded-md px-4 py-2.5 text-sm font-medium text-[--text-secondary] transition-colors hover:bg-white/[0.08] hover:text-[--text-primary]"
               >
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="/rfq"
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                'mt-2 block rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-4 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-orange-500/25'
-              )}
-            >
-              Get Price
-            </Link>
+            <div className="border-t border-white/[0.06] pt-2">
+              <a
+                href="tel:+201000629229"
+                className="flex items-center gap-2 px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+              >
+                <Phone className="h-4 w-4" />
+                +20 100 062 9229
+              </a>
+              <Link
+                href="/auth/login"
+                className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+                onClick={() => setMobileOpen(false)}
+              >
+                Login
+              </Link>
+              <Link
+                href="/rfq"
+                onClick={() => setMobileOpen(false)}
+                className="mt-2 block rounded-md bg-[--accent] px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover]"
+              >
+                Get Price
+              </Link>
+            </div>
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+      )}
+    </header>
   )
 }
