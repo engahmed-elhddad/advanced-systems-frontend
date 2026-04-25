@@ -6,6 +6,7 @@ import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ShopAuthProvider } from '@/components/providers/ShopAuthProvider'
 import { AppToaster } from '@/components/providers/AppToaster'
 import { AnalyticsClient } from '@/components/analytics/AnalyticsClient'
+import { Analytics } from '@vercel/analytics/react'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { RootSiteChrome } from './RootSiteChrome'
 import { ThemeProvider } from '@/components/ui/ThemeProvider'
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${rajdhani.variable} ${inter.className} font-sans antialiased text-white`}>
         <AnalyticsClient />
+        <Analytics />
         <ThemeProvider>
         <QueryProvider>
           <ShopAuthProvider>
