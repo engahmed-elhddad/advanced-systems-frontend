@@ -15,7 +15,6 @@ const POPULAR_SEARCHES = [
   'S8VK-G24024',
 ]
 
-/** Hero search — large glass surface + gradient submit (header uses compact pill). */
 export function HeroSearch({ variant = 'default' }: { variant?: 'default' | 'hero' }) {
   const isHero = variant === 'hero'
   return (
@@ -33,27 +32,22 @@ export function HeroSearch({ variant = 'default' }: { variant?: 'default' | 'her
         categoryPath="/categories"
         className="w-full"
       />
-      <p
-        className={cn(
-          'mt-4 text-center text-[0.8125rem] leading-relaxed',
-          isHero ? 'text-white/50' : 'text-white/40',
-        )}
-      >
-        <span className="font-medium text-white/55">Examples</span>
-        <span className="mx-1.5 text-white/30">·</span>
-        <span className={cn('font-mono text-[0.78rem] tracking-tight', isHero ? 'text-white/75' : 'text-white/65')}>
+      <p className="mt-4 text-center text-[0.8125rem] leading-relaxed text-[--text-secondary]">
+        <span className="font-medium">Examples</span>
+        <span className="mx-1.5 opacity-40">·</span>
+        <span className="font-mono text-[0.78rem] tracking-tight text-[--text-primary]">
           {EXAMPLES.join(', ')}
         </span>
       </p>
       {isHero && (
         <div className="mt-8">
-          <p className="mb-3.5 text-center text-label-caps text-white/38">Popular searches</p>
+          <p className="mb-3.5 text-center text-label-caps text-[--text-secondary]">Popular searches</p>
           <div className="flex flex-wrap justify-center gap-2.5">
             {POPULAR_SEARCHES.map((part) => (
               <Link
                 key={part}
                 href={`/search?q=${encodeURIComponent(part)}`}
-                className="rounded-full border border-white/[0.09] bg-white/[0.05] px-4 py-2 font-mono text-[0.72rem] text-white/82 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-300/25 hover:bg-white/[0.09] hover:text-white hover:shadow-[0_8px_24px_-6px_rgba(255,122,0,0.2)]"
+                className="rounded-full border border-[--border] bg-[--bg-elevated] px-4 py-2 font-mono text-[0.72rem] text-[--text-secondary] transition-colors hover:border-[--accent] hover:text-[--text-primary]"
               >
                 {part}
               </Link>

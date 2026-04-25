@@ -27,11 +27,6 @@ export function HeroVisual() {
         />
       </div>
 
-      {/* Overlay for depth */}
-      <div
-        className="absolute inset-0 bg-gradient-to-t from-slate-900/30 via-transparent to-transparent"
-        aria-hidden
-      />
     </div>
   )
 }
