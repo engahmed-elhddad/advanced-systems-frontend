@@ -230,6 +230,7 @@ export interface StagedRow {
   part_number: string | null
   brand_raw: string | null
   brand_id: number | null
+  brand_confidence?: number | null
   category_raw: string | null
   category_id: number | null
   stock_quantity: number
@@ -246,6 +247,7 @@ export interface UploadResponse {
   total_rows: number
   valid_rows: number
   invalid_rows: number
+  quality_score: number | null
   status: string
 }
 

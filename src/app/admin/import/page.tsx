@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { ColumnDef } from '@tanstack/react-table'
 import {
   Upload,
   FileSpreadsheet,
@@ -21,7 +22,7 @@ import {
   Copy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button, Badge, Modal } from '@/components/ui'
+import { Button, Badge, Modal, DataTable } from '@/components/ui'
 import {
   getIngestionJobs,
   uploadIngestionFile,
@@ -31,10 +32,12 @@ import {
   publishIngestionJob,
   type IngestionJob,
   type StagedRow,
+  type UploadResponse,
 } from '@/features/admin/services/adminService'
 import toast from 'react-hot-toast'
 
-const MAX_CSV_BYTES = 20 * 1024 * 1024
+const MAX_FILE_BYTES = 20 * 1024 * 1024
+const ACCEPTED_EXTS = ['.csv', '.xlsx', '.xls', '.ods']
 
 // ── Status config ────────────────────────────────────────────────────────────
 
@@ -77,6 +80,7 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null)
 
   const { data: jobsData, isLoading: jobsLoading } = useQuery({
     queryKey: ['ingestion-jobs'],
@@ -88,17 +92,22 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
     mutationFn: uploadIngestionFile,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['ingestion-jobs'] })
-      onSelectJob(data.job_id)
+      setUploadResult(data)
     },
   })
 
   const handleFile = useCallback(
     (file: File) => {
-      if (!file.name.endsWith('.csv')) return
-      if (file.size > MAX_CSV_BYTES) {
+      const ext = '.' + (file.name.split('.').pop() ?? '').toLowerCase()
+      if (!ACCEPTED_EXTS.includes(ext)) {
+        toast.error('Unsupported file type. Use CSV, XLSX, XLS, or ODS.')
+        return
+      }
+      if (file.size > MAX_FILE_BYTES) {
         toast.error('File too large. Maximum upload size is 20 MB.')
         return
       }
+      setUploadResult(null)
       uploadMutation.mutate(file)
     },
     [uploadMutation],
@@ -115,6 +124,90 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
   )
 
   const jobs = jobsData?.items ?? []
+
+  const totalJobs = jobsData?.total ?? 0
+  const pendingReview = jobs.filter((j) =>
+    ['validated', 'reviewing', 'partially_approved'].includes(j.status),
+  ).length
+  const completedJobs = jobs.filter((j) => j.status === 'completed').length
+
+  const jobColumns = useMemo<ColumnDef<IngestionJob & Record<string, unknown>, unknown>[]>(
+    () => [
+      {
+        id: 'id',
+        header: 'ID',
+        cell: ({ row }) => (
+          <span className="font-mono text-xs text-white/50">#{row.original.id}</span>
+        ),
+      },
+      {
+        id: 'filename',
+        header: 'File',
+        cell: ({ row }) => (
+          <span className="font-medium text-white">{row.original.filename}</span>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        cell: ({ row }) => {
+          const st =
+            JOB_STATUS_MAP[row.original.status] ?? {
+              label: row.original.status,
+              variant: 'default' as const,
+            }
+          return (
+            <Badge variant={st.variant} size="sm">
+              {st.label}
+            </Badge>
+          )
+        },
+      },
+      {
+        id: 'total_rows',
+        header: 'Total',
+        cell: ({ row }) => <span className="font-mono">{row.original.total_rows}</span>,
+      },
+      {
+        id: 'valid_rows',
+        header: 'Valid',
+        cell: ({ row }) => (
+          <span className="font-mono text-emerald-400">{row.original.valid_rows}</span>
+        ),
+      },
+      {
+        id: 'invalid_rows',
+        header: 'Invalid',
+        cell: ({ row }) => (
+          <span className="font-mono text-red-400">{row.original.invalid_rows}</span>
+        ),
+      },
+      {
+        id: 'quality_score',
+        header: 'Quality',
+        cell: ({ row }) =>
+          row.original.quality_score != null ? (
+            <span className="font-mono text-orange-300">
+              {Math.round((row.original.quality_score as number) * 100)}%
+            </span>
+          ) : (
+            <span className="text-white/30">—</span>
+          ),
+      },
+      {
+        id: 'created_at',
+        header: 'Date',
+        cell: ({ row }) => (
+          <span className="text-xs text-white/50">
+            {row.original.created_at
+              ? new Date(row.original.created_at as string).toLocaleDateString()
+              : '—'}
+          </span>
+        ),
+      },
+    ],
+    [],
+  )
 
   return (
     <div className="space-y-6">
@@ -141,10 +234,12 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
       >
         <Upload className="mb-3 h-8 w-8 text-white/50" />
         <p className="text-sm font-medium text-white">
-          {uploadMutation.isPending ? 'Uploading & validating...' : 'Drop CSV file here or click to browse'}
+          {uploadMutation.isPending
+            ? 'Uploading & validating...'
+            : 'Drop CSV, XLSX, or ODS file here or click to browse'}
         </p>
         <p className="mt-1 text-xs text-white/50">
-          Required column: part_number. Optional: brand, category, stock_quantity, description, image_url, price
+          Accepted: .csv, .xlsx, .xls, .ods · Max 20 MB · Required column: part_number
         </p>
         <Button
           variant="secondary"
@@ -154,12 +249,12 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
           onClick={() => fileInputRef.current?.click()}
         >
           <FileSpreadsheet className="h-4 w-4" />
-          Select CSV File
+          Select File
         </Button>
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv"
+          accept=".csv,.xlsx,.xls,.ods"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0]
@@ -175,62 +270,62 @@ function JobListView({ onSelectJob }: { onSelectJob: (id: number) => void }) {
         </div>
       )}
 
+      {/* Upload result card */}
+      {uploadResult && (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-emerald-300">
+                ✓ {uploadResult.filename} uploaded
+              </p>
+              <p className="mt-1 text-xs text-white/50">
+                {uploadResult.total_rows} rows &middot; {uploadResult.valid_rows} valid &middot;{' '}
+                {uploadResult.invalid_rows} invalid
+                {uploadResult.quality_score != null &&
+                  ` · Quality ${Math.round((uploadResult.quality_score as number) * 100)}%`}
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => onSelectJob(uploadResult.job_id)}
+              >
+                View Details
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setUploadResult(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick stats bar */}
+      <div className="grid grid-cols-3 gap-3">
+        <SummaryCard label="Total Imports" value={totalJobs} />
+        <SummaryCard label="Pending Review" value={pendingReview} color="text-amber-400" />
+        <SummaryCard label="Completed" value={completedJobs} color="text-emerald-400" />
+      </div>
+
       {/* Jobs Table */}
       <div>
         <h2 className="mb-3 text-sm font-semibold text-white">Import History</h2>
-        {jobsLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-12 animate-pulse rounded-[2px] bg-white/10" />
-            ))}
-          </div>
-        ) : jobs.length === 0 ? (
-          <p className="py-8 text-center text-sm text-white/50">No import jobs yet. Upload a CSV to get started.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10 bg-white/[0.04]">
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">ID</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">File</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Status</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Total</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Valid</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-white/40">Invalid</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-white/40">Date</th>
-                  <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-white/40" />
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((job) => {
-                  const st = JOB_STATUS_MAP[job.status] ?? { label: job.status, variant: 'default' as const }
-                  return (
-                    <tr
-                      key={job.id}
-                      className="cursor-pointer border-b border-white/[0.06] transition-colors hover:bg-white/[0.04]"
-                      onClick={() => onSelectJob(job.id)}
-                    >
-                      <td className="px-3 py-2.5 font-mono text-xs text-white/50">#{job.id}</td>
-                      <td className="px-3 py-2.5 font-medium text-white">{job.filename}</td>
-                      <td className="px-3 py-2.5">
-                        <Badge variant={st.variant} size="sm">{st.label}</Badge>
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono">{job.total_rows}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-emerald-400">{job.valid_rows}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-red-400">{job.invalid_rows}</td>
-                      <td className="px-3 py-2.5 text-xs text-white/50">
-                        {job.created_at ? new Date(job.created_at).toLocaleDateString() : '—'}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <ChevronRight className="h-4 w-4 text-white/50" />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <DataTable
+          tableId="admin-import-jobs"
+          columns={jobColumns}
+          data={jobs as (IngestionJob & Record<string, unknown>)[]}
+          isLoading={jobsLoading}
+          getRowId={(row) => String(row.id)}
+          stickyHeader
+          onRowClick={(row) => onSelectJob(row.id)}
+          emptyState={
+            <p className="py-8 text-center text-sm text-white/50">
+              No import jobs yet. Upload a file to get started.
+            </p>
+          }
+        />
       </div>
     </div>
   )
