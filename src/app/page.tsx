@@ -1,3 +1,5 @@
+export const revalidate = 0
+
 import { Suspense } from 'react'
 import { HeroSection } from '@/components/home/HeroSection'
 import { BrandCarousel } from '@/components/home/BrandCarousel'
