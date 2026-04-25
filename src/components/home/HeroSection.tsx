@@ -1,12 +1,8 @@
 'use client'
 
-import { apiFetch } from '@/lib/api'
-
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Cpu, Zap, Radio, Gauge, Boxes, Wrench, Wifi, Activity } from 'lucide-react'
-import { getBrandHref } from '@/lib/brandUtils'
-import { API_BASE_URL } from '@/lib/constants'
 
 const CATEGORY_GRID = [
   { icon: Cpu,      label: 'PLCs' },
@@ -19,59 +15,7 @@ const CATEGORY_GRID = [
   { icon: Activity, label: 'Analytics' },
 ]
 
-function slugFromName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-}
-
-function QuickBrandCard({ name, slug }: { name: string; slug: string }) {
-  const [logoError, setLogoError] = useState(false)
-  return (
-    <Link
-      href={getBrandHref({ name, slug })}
-      className="flex w-20 flex-col items-center justify-center rounded-lg border border-white/20 bg-white/5 p-3 transition-colors hover:border-[--accent]"
-    >
-      {!logoError ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
-          src={`/brands/${slug}.png`}
-          alt=""
-          className="mb-1.5 h-8 min-h-[2rem] w-full object-contain"
-          onError={() => setLogoError(true)}
-        />
-      ) : null}
-      <span className="text-center text-xs font-semibold leading-tight text-white/70">{name}</span>
-    </Link>
-  )
-}
-
-function useQuickBrands(limit: number) {
-  const [brands, setBrands] = useState<{ name: string; slug: string }[]>([])
-  useEffect(() => {
-    let cancelled = false
-    apiFetch(`${API_BASE_URL}/api/v1/brands/`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (cancelled) return
-        const list = Array.isArray(data) ? data : (data as { brands?: unknown[] })?.brands
-        const arr = Array.isArray(list) ? list : []
-        const out = arr.slice(0, limit).map((b: unknown) => {
-          if (typeof b === 'string') return { name: b, slug: slugFromName(b) }
-          const o = b as { name?: string; slug?: string }
-          const name = String(o?.name ?? '')
-          return { name, slug: o?.slug ?? slugFromName(name) }
-        })
-        setBrands(out)
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [limit])
-  return brands
-}
-
 export function HeroSection() {
-  const quickBrands = useQuickBrands(8)
   return (
     <section
       className="relative flex min-h-[82vh] w-full flex-col justify-center"
@@ -108,20 +52,6 @@ export function HeroSection() {
             >
               Request quote
             </Link>
-          </div>
-
-          {/* Trusted brands */}
-          <div className="mb-12">
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-white/40">
-              Trusted brands
-            </p>
-            <ul className="flex flex-wrap justify-center gap-3">
-              {quickBrands.map((brand) => (
-                <li key={brand.slug}>
-                  <QuickBrandCard name={brand.name} slug={brand.slug} />
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Category icon grid */}

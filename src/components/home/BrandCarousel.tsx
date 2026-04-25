@@ -47,9 +47,11 @@ export function BrandCarousel() {
 
   if (loading) {
     return (
-      <section className="w-full overflow-hidden py-12">
-        <div className="flex h-12 items-center justify-center">
-          <div className="h-8 w-48 animate-pulse rounded-full border border-[--border] bg-[--bg-elevated]" />
+      <section className="w-full px-6 py-8">
+        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-20 animate-pulse rounded-xl border border-gray-200 bg-gray-100" />
+          ))}
         </div>
       </section>
     )
@@ -58,23 +60,13 @@ export function BrandCarousel() {
   if (!brands.length) return null
 
   return (
-    <section className="group relative w-full overflow-hidden py-12" aria-label="Brand logos">
-      <div
-        className="pointer-events-none absolute left-0 top-0 z-10 h-full w-28"
-        style={{ background: 'linear-gradient(to right, #0E1116, transparent)' }}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute right-0 top-0 z-10 h-full w-28"
-        style={{ background: 'linear-gradient(to left, #0E1116, transparent)' }}
-        aria-hidden
-      />
-      <div className="flex w-max animate-scroll gap-14 group-hover:[animation-play-state:paused]">
-        {[...brands, ...brands].map((brand, index) => (
+    <section className="w-full px-6 py-8" aria-label="Brand logos">
+      <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+        {brands.map((brand) => (
           <Link
-            key={`${brand.slug}-${index}`}
+            key={brand.slug}
             href={`/brands/${encodeURIComponent(brand.slug)}`}
-            className="flex w-[150px] flex-shrink-0 items-center justify-center rounded-xl border border-[--border] bg-[--bg-elevated] px-4 py-3 transition-colors hover:border-[--accent]"
+            className="flex h-20 items-center justify-center rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-[--accent]"
             aria-label={brand.name}
           >
             <BrandLogo
