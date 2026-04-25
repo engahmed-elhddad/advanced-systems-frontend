@@ -7,7 +7,6 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { SkipLink } from '@/components/shared/SkipLink'
 import { RFQModalGlobal } from './RFQModalGlobal'
-import { RFQFloatingBar } from '@/components/rfq/RFQFloatingBar'
 
 const IndustrialAssistant = dynamic(
   () => import('@/components/assistant/IndustrialAssistant').then((m) => ({ default: m.IndustrialAssistant })),
@@ -39,7 +38,6 @@ export function RootSiteChrome({ children }: { children: React.ReactNode }) {
         <>
           <Footer />
           <RFQModalGlobal />
-          <RFQFloatingBar />
           <IndustrialAssistant />
         </>
       ) : null}

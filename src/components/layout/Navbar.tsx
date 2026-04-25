@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils'
 const NAV_ITEMS = [
   { label: 'Brands', href: '/brands' },
   { label: 'Categories', href: '/categories' },
-  { label: 'Industries', href: '/industries' },
   { label: 'RFQ Tool', href: '/rfq' },
 ]
 
