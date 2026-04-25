@@ -1,21 +1,27 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { Cpu, Zap, Radio, Gauge, Boxes, Wrench, Wifi, Activity } from 'lucide-react'
+import {
+  Cpu, Gauge, Radio, Monitor, Zap, Shield, ToggleRight, Package,
+} from 'lucide-react'
+import { useCategories } from '@/features/products/hooks/useCategories'
+import type { LucideIcon } from 'lucide-react'
 
-const CATEGORY_GRID = [
-  { icon: Cpu,      label: 'PLCs',        href: '/categories/plc' },
-  { icon: Zap,      label: 'Power',       href: '/categories/power-supply' },
-  { icon: Radio,    label: 'Sensors',     href: '/categories/sensors' },
-  { icon: Gauge,    label: 'Drives',      href: '/categories/drive' },
-  { icon: Boxes,    label: 'Inventory',   href: '/products' },
-  { icon: Wrench,   label: 'Maintenance', href: '/products' },
-  { icon: Wifi,     label: 'IoT',         href: '/categories/iot' },
-  { icon: Activity, label: 'Analytics',   href: '/products' },
-]
+function iconForCategory(name: string): LucideIcon {
+  const n = name.toLowerCase()
+  if (n.includes('plc')) return Cpu
+  if (n.includes('drive')) return Gauge
+  if (n.includes('sensor')) return Radio
+  if (n.includes('hmi')) return Monitor
+  if (n.includes('power')) return Zap
+  if (n.includes('safety')) return Shield
+  if (n.includes('soft') || n.includes('starter')) return ToggleRight
+  return Package
+}
 
 export function HeroSection() {
+  const { data: categories = [] } = useCategories()
+
   return (
     <section
       className="relative flex min-h-[82vh] w-full flex-col justify-center pb-8"
@@ -54,19 +60,25 @@ export function HeroSection() {
             </Link>
           </div>
 
-          {/* Category icon grid */}
-          <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
-            {CATEGORY_GRID.map(({ icon: Icon, label, href }) => (
-              <Link
-                key={label}
-                href={href}
-                className="flex flex-col items-center gap-2 rounded-lg border border-white/15 bg-white/5 p-4 transition-colors hover:border-[--accent] hover:bg-white/10"
-              >
-                <Icon className="h-6 w-6 text-[--accent]" />
-                <span className="text-xs font-medium text-white/60">{label}</span>
-              </Link>
-            ))}
-          </div>
+          {/* Category grid — real categories from API */}
+          {categories.length > 0 && (
+            <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+              {categories.slice(0, 8).map((cat) => {
+                const Icon = iconForCategory(cat.name)
+                const href = cat.slug ? `/categories/${cat.slug}` : '/categories'
+                return (
+                  <Link
+                    key={cat.id}
+                    href={href}
+                    className="flex flex-col items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 transition-colors hover:border-[--accent] hover:bg-white/10"
+                  >
+                    <Icon className="h-6 w-6 text-[--accent]" />
+                    <span className="text-xs font-medium text-white/60 text-center leading-tight">{cat.name}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
 
         </div>
       </div>
