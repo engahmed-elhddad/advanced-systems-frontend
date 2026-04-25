@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Copy } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
+import { ArrowLeft, Copy, Loader2 } from 'lucide-react'
 import { Button, Card, Skeleton } from '@/components/ui'
 import { useBrands } from '@/features/products/hooks/useBrands'
 import { useCategories } from '@/features/products/hooks/useCategories'
-import { getApiErrorMessage } from '@/lib/api'
+import { api, getApiErrorMessage } from '@/lib/api'
 import { useAdminProduct, useUpdateAdminProduct } from '@/features/products/hooks/useProducts'
 import { ProductForm } from '../_components/ProductForm'
 import { ProductInventorySection } from '../_components/ProductInventorySection'
@@ -42,16 +43,38 @@ export default function AdminEditProductPage() {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Edit Product</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold text-white">Edit Product</h1>
+              {product?.is_enriched ? (
+                <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-200">
+                  ✓ Enriched
+                </span>
+              ) : null}
+            </div>
             <p className="mt-1 text-sm text-gray-300">Update product details, specs, image, and datasheet.</p>
           </div>
           {product ? (
-            <Button asChild type="button" variant="secondary" surface="dark" className="shrink-0">
-              <Link href={`/admin/products/new?duplicate=${product.id}`}>
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate as new
-              </Link>
-            </Button>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                surface="dark"
+                className="shrink-0"
+                disabled={loading || enrichMutation.isPending}
+                onClick={() => enrichMutation.mutate(product.id)}
+              >
+                {enrichMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                ) : null}
+                ✨ Enrich
+              </Button>
+              <Button asChild type="button" variant="secondary" surface="dark" className="shrink-0">
+                <Link href={`/admin/products/new?duplicate=${product.id}`}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Duplicate as new
+                </Link>
+              </Button>
+            </div>
           ) : null}
         </div>
 

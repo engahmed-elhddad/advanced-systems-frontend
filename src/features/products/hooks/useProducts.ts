@@ -46,6 +46,8 @@ export type AdminProduct = {
   imageUrl: string
   datasheetUrl: string
   status: AdminProductStatus
+  /** AI / pipeline enrichment flag from API */
+  is_enriched?: boolean
   /** Weak ETag from admin list/detail for If-Match deletes */
   _etag?: string
 }
@@ -161,6 +163,7 @@ function normalizeProduct(row: any): AdminProduct {
     imageUrl: String(row?.image_url ?? '').trim(),
     datasheetUrl: String(row?.datasheet_url || ''),
     status: fromApiStatus(row),
+    is_enriched: Boolean(row?.is_enriched),
     _etag: typeof row?._etag === 'string' && row._etag.trim() ? row._etag : undefined,
   }
 }
