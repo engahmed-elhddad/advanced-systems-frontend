@@ -4,7 +4,6 @@ import { apiFetch } from '@/lib/api'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { BrandLogo } from '@/components/ui/BrandLogo'
 import { API_BASE_URL } from '@/lib/constants'
 
 interface BrandItem {
@@ -60,22 +59,28 @@ export function BrandCarousel() {
   if (!brands.length) return null
 
   return (
-    <section className="w-full px-6 py-8" aria-label="Brand logos">
+    <section className="w-full bg-[#0E1116] px-6 py-8" aria-label="Brand logos">
       <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-        {brands.map((brand) => (
-          <Link
-            key={brand.slug}
-            href={`/brands/${encodeURIComponent(brand.slug)}`}
-            className="flex h-20 items-center justify-center rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-[--accent]"
-            aria-label={brand.name}
-          >
-            <BrandLogo
-              brand={brand.name}
-              variant="default"
-              logoSrc={brand.logo_url || `https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`}
-            />
-          </Link>
-        ))}
+        {brands.map((brand) => {
+          const src = brand.logo_url || `https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`
+          return (
+            <Link
+              key={brand.slug}
+              href={`/brands/${encodeURIComponent(brand.slug)}`}
+              className="flex h-20 items-center justify-center transition-opacity hover:opacity-80"
+              aria-label={brand.name}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt={brand.name}
+                loading="lazy"
+                className="max-h-14 w-auto object-contain"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            </Link>
+          )
+        })}
       </div>
     </section>
   )

@@ -5,14 +5,14 @@ import Link from 'next/link'
 import { Cpu, Zap, Radio, Gauge, Boxes, Wrench, Wifi, Activity } from 'lucide-react'
 
 const CATEGORY_GRID = [
-  { icon: Cpu,      label: 'PLCs' },
-  { icon: Zap,      label: 'Power' },
-  { icon: Radio,    label: 'Sensors' },
-  { icon: Gauge,    label: 'Drives' },
-  { icon: Boxes,    label: 'Inventory' },
-  { icon: Wrench,   label: 'Maintenance' },
-  { icon: Wifi,     label: 'IoT' },
-  { icon: Activity, label: 'Analytics' },
+  { icon: Cpu,      label: 'PLCs',        href: '/categories/plc' },
+  { icon: Zap,      label: 'Power',       href: '/categories/power-supply' },
+  { icon: Radio,    label: 'Sensors',     href: '/categories/sensors' },
+  { icon: Gauge,    label: 'Drives',      href: '/categories/drive' },
+  { icon: Boxes,    label: 'Inventory',   href: '/products' },
+  { icon: Wrench,   label: 'Maintenance', href: '/products' },
+  { icon: Wifi,     label: 'IoT',         href: '/categories/iot' },
+  { icon: Activity, label: 'Analytics',   href: '/products' },
 ]
 
 export function HeroSection() {
@@ -56,14 +56,15 @@ export function HeroSection() {
 
           {/* Category icon grid */}
           <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
-            {CATEGORY_GRID.map(({ icon: Icon, label }) => (
-              <div
+            {CATEGORY_GRID.map(({ icon: Icon, label, href }) => (
+              <Link
                 key={label}
-                className="flex flex-col items-center gap-2 rounded-lg border border-white/15 bg-white/5 p-4"
+                href={href}
+                className="flex flex-col items-center gap-2 rounded-lg border border-white/15 bg-white/5 p-4 transition-colors hover:border-[--accent] hover:bg-white/10"
               >
                 <Icon className="h-6 w-6 text-[--accent]" />
                 <span className="text-xs font-medium text-white/60">{label}</span>
-              </div>
+              </Link>
             ))}
           </div>
 
