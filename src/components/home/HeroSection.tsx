@@ -60,20 +60,20 @@ export function HeroSection() {
               <Link
                 key={label}
                 href={href}
-                className="flex flex-col items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 transition-colors hover:border-[--accent] hover:bg-white/10"
+                className="flex flex-col items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-4 transition-colors hover:border-[--accent] hover:bg-white/10"
               >
                 {image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={`${CDN}${image}`}
                     alt={label}
-                    className="h-12 w-12 object-contain"
+                    className="h-16 w-16 object-contain"
                     loading="lazy"
                   />
                 ) : (
-                  <Shield className="h-12 w-12 text-[--accent]" />
+                  <Shield className="h-16 w-16 text-[--accent]" />
                 )}
-                <span className="text-center text-xs font-medium text-white leading-tight">{label}</span>
+                <span className="text-center text-sm font-medium text-white leading-tight">{label}</span>
               </Link>
             ))}
           </div>

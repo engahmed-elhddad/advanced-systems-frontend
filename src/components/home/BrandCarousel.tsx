@@ -67,7 +67,7 @@ export function BrandCarousel() {
             <Link
               key={brand.slug}
               href={`/brands/${encodeURIComponent(brand.slug)}`}
-              className="flex flex-col items-center gap-1 rounded-xl border border-white/20 bg-white/5 px-4 py-3 transition-all hover:border-[--accent] hover:bg-white/10"
+              className="flex flex-col items-center gap-1 rounded-xl border border-white/20 bg-white/5 px-5 py-4 transition-all hover:border-[--accent] hover:bg-white/10"
               aria-label={brand.name}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,7 +75,7 @@ export function BrandCarousel() {
                 src={src}
                 alt={brand.name}
                 loading="lazy"
-                className="max-h-10 max-w-[80px] object-contain"
+                className="max-h-12 max-w-[80px] object-contain"
               />
               <span className="text-center text-xs font-medium text-white">{brand.name}</span>
             </Link>
