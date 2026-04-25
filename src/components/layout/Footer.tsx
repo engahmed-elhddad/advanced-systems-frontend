@@ -16,7 +16,7 @@ export function Footer() {
   const phoneLabel = supportPhoneDisplay() || 'Contact us'
 
   return (
-    <footer className="mt-auto border-t border-white/10 bg-white/[0.04] backdrop-blur-xl">
+    <footer className="mt-auto border-t border-white/10" style={{ backgroundColor: '#0E1116' }}>
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12">
           <div className="md:col-span-1">
