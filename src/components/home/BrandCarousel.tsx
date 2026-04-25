@@ -46,10 +46,10 @@ export function BrandCarousel() {
 
   if (loading) {
     return (
-      <section className="w-full px-6 py-6">
+      <section className="w-full bg-[#0E1116] px-6 py-6">
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl border border-white/20 bg-white/5" />
+            <div key={i} className="h-20 animate-pulse rounded-xl border border-white/25 bg-white/[0.08]" />
           ))}
         </div>
       </section>
