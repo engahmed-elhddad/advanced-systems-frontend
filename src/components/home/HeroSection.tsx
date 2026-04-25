@@ -18,10 +18,10 @@ const CATEGORY_GRID = [
 export function HeroSection() {
   return (
     <section
-      className="relative flex min-h-[82vh] w-full flex-col justify-center pb-8"
+      className="relative w-full"
       style={{ backgroundColor: 'var(--bg-header)' }}
     >
-      <div className="w-full py-16 sm:py-24 lg:py-28 page-container">
+      <div className="w-full py-12 page-container">
         <div className="mx-auto max-w-3xl text-center">
 
           <p className="mb-5 text-xs font-bold uppercase tracking-[0.18em] text-white/50">
