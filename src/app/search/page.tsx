@@ -34,14 +34,16 @@ export default async function SearchPage() {
   }
 
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[50vh] items-center justify-center text-white/50">
-          <Spinner size="lg" />
-        </div>
-      }
-    >
-      <SearchPageClient brands={brands} categories={categories} />
-    </Suspense>
+    <div className="min-h-screen bg-[--bg-base]">
+      <Suspense
+        fallback={
+          <div className="flex min-h-[50vh] items-center justify-center text-[--text-secondary]">
+            <Spinner size="lg" />
+          </div>
+        }
+      >
+        <SearchPageClient brands={brands} categories={categories} />
+      </Suspense>
+    </div>
   )
 }

@@ -38,7 +38,7 @@ export default async function ProductsPage() {
   const brandsForStrip = brands.slice(0, 12)
 
   return (
-    <div className="relative min-h-screen pb-16 pt-6 sm:pb-20 sm:pt-8">
+    <div className="relative min-h-screen bg-[--bg-base] pb-16 pt-6 sm:pb-20 sm:pt-8">
       <div className="border-b border-[--border] bg-[--bg-surface]">
         <div className="page-container py-8 sm:py-10">
           <h1 className="text-2xl font-bold tracking-tight text-[--text-primary] sm:text-3xl">Industrial Products</h1>
