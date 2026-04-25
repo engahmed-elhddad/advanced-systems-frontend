@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <SiteJsonLd />
       </head>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} ${rajdhani.variable} ${inter.className} font-sans antialiased text-white`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} ${rajdhani.variable} ${inter.className} font-sans antialiased text-[--text-primary]`}>
         <AnalyticsClient />
         <Analytics />
         <ThemeProvider>

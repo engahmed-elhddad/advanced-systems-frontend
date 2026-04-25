@@ -46,6 +46,8 @@ export type AdminProduct = {
   imageUrl: string
   datasheetUrl: string
   status: AdminProductStatus
+  /** Product lifecycle (e.g. active, obsolete) from API */
+  lifecycleStatus?: string
   /** AI / pipeline enrichment flag from API */
   is_enriched?: boolean
   /** Weak ETag from admin list/detail for If-Match deletes */
