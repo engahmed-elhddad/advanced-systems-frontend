@@ -18,7 +18,7 @@ const CATEGORY_GRID = [
 export function HeroSection() {
   return (
     <section
-      className="relative flex min-h-[82vh] w-full flex-col justify-center"
+      className="relative flex min-h-[82vh] w-full flex-col justify-center pb-8"
       style={{ backgroundColor: 'var(--bg-header)' }}
     >
       <div className="w-full py-16 sm:py-24 lg:py-28 page-container">

@@ -76,7 +76,6 @@ export function BrandCarousel() {
                 alt={brand.name}
                 loading="lazy"
                 className="max-h-14 w-auto object-contain"
-                style={{ filter: 'brightness(0) invert(1)' }}
               />
             </Link>
           )
