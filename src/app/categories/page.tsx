@@ -1,7 +1,19 @@
+import Link from 'next/link'
+import { Package } from 'lucide-react'
 import { getCategories } from '@/lib/api'
 import { API_BASE_URL } from '@/lib/constants'
 import { CATEGORIES } from '@/lib/constants'
-import { CategoryCard } from '@/components/ui/CategoryCard'
+
+const CDN = 'https://cdn.advancedsystems-int.com/cdn/categories/'
+const CATEGORY_IMAGES: Record<string, string> = {
+  'plc': 'plc.webp',
+  'drive': 'drive.webp',
+  'sensors': 'Sensors.webp',
+  'hmi': 'hmi.png',
+  'power-supply': 'power-supply.jpg',
+  'soft-starter': 'soft-starter.jpg',
+  'safety-relay': 'safety-relay.png',
+}
 
 /** DB category values merged under the "Drives" slug (counts summed on categories page). */
 const DRIVES_CATEGORY_ALIASES = ['Drives', 'VFD', 'Variable Frequency Drive']
@@ -117,12 +129,18 @@ export default async function CategoriesPage() {
       <div className="page-container relative z-10 py-12">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {categories.map((cat) => (
-            <CategoryCard
-              key={cat.name}
-              name={cat.name}
-              slug={cat.slug}
-              product_count={cat.product_count}
-            />
+            <Link key={cat.name} href={cat.slug ? `/categories/${cat.slug}` : `/search?category=${encodeURIComponent(cat.name)}`}>
+              <div className="border border-white/20 bg-white/5 rounded-xl p-5 flex flex-col items-center gap-3 hover:border-[--accent] hover:bg-white/10 transition-all">
+                {cat.slug && CATEGORY_IMAGES[cat.slug] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={CDN + CATEGORY_IMAGES[cat.slug]} alt={cat.name} className="h-20 w-20 object-contain" />
+                ) : (
+                  <Package className="h-10 w-10 text-[--accent]" />
+                )}
+                <span className="text-white font-semibold text-sm text-center">{cat.name}</span>
+                <span className="text-[--text-secondary] text-xs">{cat.product_count} parts</span>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
