@@ -18,7 +18,7 @@ const RecommendationSections = dynamic(
   () => import('./RecommendationSections').then((m) => m.RecommendationSections),
   {
     loading: () => (
-      <div className="mt-10 rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+      <div className="mt-10 rounded-xl border border-[--border] bg-[--bg-elevated] p-6">
         <div className="skeleton mb-4 h-6 w-52 rounded-lg" />
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -444,41 +444,32 @@ export default async function ProductSlugPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      <div
-        className="pointer-events-none absolute left-1/2 top-32 -z-10 h-[min(80vw,480px)] w-[min(80vw,480px)] -translate-x-1/2 rounded-full bg-purple-600/20 blur-[120px]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -right-20 bottom-40 -z-10 h-[min(70vw,400px)] w-[min(70vw,400px)] rounded-full bg-orange-500/18 blur-[120px]"
-        aria-hidden
-      />
-
       <div className="page-container pb-28 pt-6 sm:pb-28 lg:pb-24 lg:px-8">
         <nav className="mb-6" aria-label="Breadcrumb">
           <p className="sr-only">You are here</p>
-          <ol className="flex flex-wrap items-center gap-1 text-xs text-white/50">
+          <ol className="flex flex-wrap items-center gap-1 text-xs text-[--text-secondary]">
             <li>
-              <Link href="/" className="transition-colors hover:text-orange-300">
+              <Link href="/" className="transition-colors hover:text-[--accent]">
                 Home
               </Link>
             </li>
-            <li className="flex items-center text-white/30" aria-hidden>
+            <li className="flex items-center text-[--text-secondary]/50" aria-hidden>
               <ChevronRight className="h-3.5 w-3.5" />
             </li>
             <li>
-              <Link href="/products" className="transition-colors hover:text-orange-300">
+              <Link href="/products" className="transition-colors hover:text-[--accent]">
                 Products
               </Link>
             </li>
             {categoryName && categoryBrowsePathSeg ? (
               <>
-                <li className="flex items-center text-white/30" aria-hidden>
+                <li className="flex items-center text-[--text-secondary]/50" aria-hidden>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </li>
                 <li>
                   <Link
                     href={`/categories/${encodeURIComponent(categoryBrowsePathSeg)}`}
-                    className="max-w-[200px] truncate transition-colors hover:text-orange-300 sm:max-w-xs"
+                    className="max-w-[200px] truncate transition-colors hover:text-[--accent] sm:max-w-xs"
                     title={categoryName}
                   >
                     {categoryName}
@@ -488,13 +479,13 @@ export default async function ProductSlugPage({ params }: Props) {
             ) : null}
             {brandName && brandPathVisual ? (
               <>
-                <li className="flex items-center text-white/30" aria-hidden>
+                <li className="flex items-center text-[--text-secondary]/50" aria-hidden>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </li>
                 <li>
                   <Link
                     href={brandPathVisual}
-                    className="max-w-[180px] truncate transition-colors hover:text-orange-300 sm:max-w-xs"
+                    className="max-w-[180px] truncate transition-colors hover:text-[--accent] sm:max-w-xs"
                     title={brandName}
                   >
                     {brandName}
@@ -502,10 +493,10 @@ export default async function ProductSlugPage({ params }: Props) {
                 </li>
               </>
             ) : null}
-            <li className="flex items-center text-white/30" aria-hidden>
+            <li className="flex items-center text-[--text-secondary]/50" aria-hidden>
               <ChevronRight className="h-3.5 w-3.5" />
             </li>
-            <li className="font-mono font-medium text-white/90" aria-current="page">
+            <li className="font-mono font-medium text-[--text-primary]" aria-current="page">
               {partNum}
             </li>
           </ol>
@@ -571,30 +562,30 @@ async function BrandPage({ brandSlug }: { brandSlug: string }) {
   return (
     <div className="relative z-10 min-h-screen pb-16 pt-8">
       <div className="page-container">
-        <nav className="mb-4 text-xs text-white/50" aria-label="Breadcrumb">
-          <Link href="/" className="hover:text-orange-300">
+        <nav className="mb-4 text-xs text-[--text-secondary]" aria-label="Breadcrumb">
+          <Link href="/" className="hover:text-[--accent]">
             Home
           </Link>
-          <span className="mx-1.5 text-white/25">/</span>
-          <Link href="/products" className="hover:text-orange-300">
+          <span className="mx-1.5 text-[--text-secondary]/50">/</span>
+          <Link href="/products" className="hover:text-[--accent]">
             Products
           </Link>
-          <span className="mx-1.5 text-white/25">/</span>
-          <span className="text-white">{brand}</span>
+          <span className="mx-1.5 text-[--text-secondary]/50">/</span>
+          <span className="text-[--text-primary]">{brand}</span>
         </nav>
-        <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">{brand} Industrial Automation Parts</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-[--text-primary] sm:text-3xl">{brand} Industrial Automation Parts</h1>
       </div>
       <div className="page-container mt-8">
         {fetchError ? (
           <p className="py-16 text-center text-red-300">Unable to load products.</p>
         ) : products.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-white/5 py-16 text-center text-white/60 backdrop-blur-xl">
+          <div className="rounded-xl border border-[--border] bg-[--bg-elevated] py-16 text-center text-[--text-secondary]">
             <p className="mb-4 text-lg">
-              No products found for <span className="text-white">{brand}</span>.
+              No products found for <span className="text-[--text-primary]">{brand}</span>.
             </p>
             <Link
               href="/products"
-              className="inline-flex rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/30"
+              className="inline-flex rounded-xl bg-[--accent] px-6 py-3 text-sm font-semibold text-white hover:bg-[--accent-hover]"
             >
               Browse all
             </Link>
@@ -607,9 +598,9 @@ async function BrandPage({ brandSlug }: { brandSlug: string }) {
                 <Link
                   key={p.part_number}
                   href={`/products/${pathSeg}`}
-                  className="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:border-white/[0.14] hover:shadow-lg hover:shadow-orange-500/10"
+                  className="group flex flex-col overflow-hidden rounded-xl border border-[--border] bg-[--bg-elevated] transition-all duration-300 hover:scale-[1.02] hover:border-[--accent]/30"
                 >
-                  <div className="flex aspect-square items-center justify-center overflow-hidden border-b border-white/10 bg-black/20 p-3">
+                  <div className="flex aspect-square items-center justify-center overflow-hidden border-b border-[--border] bg-[--bg-surface] p-3">
                     <SafeImage
                       src={p.image_url}
                       alt={p.part_number}
@@ -617,11 +608,11 @@ async function BrandPage({ brandSlug }: { brandSlug: string }) {
                     />
                   </div>
                   <div className="flex flex-1 flex-col gap-1 p-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">{p.manufacturer || brand}</span>
-                    <span className="truncate font-mono text-sm font-bold text-orange-200 transition-colors group-hover:text-orange-100">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[--text-secondary]">{p.manufacturer || brand}</span>
+                    <span className="truncate font-mono text-sm font-bold text-[--accent] transition-colors">
                       {p.part_number}
                     </span>
-                    {p.description ? <p className="line-clamp-2 text-xs text-white/50">{p.description}</p> : null}
+                    {p.description ? <p className="line-clamp-2 text-xs text-[--text-secondary]">{p.description}</p> : null}
                   </div>
                 </Link>
               )

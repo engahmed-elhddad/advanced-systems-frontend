@@ -320,7 +320,7 @@ export function ProductDetail({
       ? 'Choose condition · Add to RFQ'
       : 'Add to RFQ — free quote'
 
-  const glass = 'rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300'
+  const glass = 'rounded-xl border border-[--border] bg-[--bg-elevated] transition-all duration-300'
 
   return (
     <>
@@ -331,7 +331,7 @@ export function ProductDetail({
             className={cn(
               glass,
               'relative flex aspect-[4/3] items-center justify-center overflow-hidden p-6',
-              'shadow-lg shadow-black/20 hover:border-white/[0.14] hover:shadow-xl hover:shadow-orange-500/10'
+              'hover:border-[--accent]/30'
             )}
           >
             {displayGallery.length > 0 ? (
@@ -355,7 +355,7 @@ export function ProductDetail({
                     className="object-contain"
                   />
                 </div>
-                <span className="text-xs text-white/45">No product photo — placeholder shown</span>
+                <span className="text-xs text-[--text-secondary]">No product photo — placeholder shown</span>
               </div>
             )}
           </div>
@@ -369,8 +369,8 @@ export function ProductDetail({
                   className={cn(
                     'h-16 w-16 overflow-hidden rounded-lg border p-1 transition-all duration-300',
                     i === selectedImage
-                      ? 'border-orange-400/60 shadow-[0_0_20px_rgba(255,122,0,0.35)]'
-                      : 'border-white/10 bg-white/5 hover:border-white/20 hover:scale-105'
+                      ? 'border-[--accent]/60'
+                      : 'border-[--border] bg-[--bg-elevated] hover:border-[--accent]/30 hover:scale-105'
                   )}
                   aria-label={`View image ${i + 1}`}
                 >
@@ -389,12 +389,12 @@ export function ProductDetail({
         {/* RIGHT — hero + conversion */}
         <div className="flex flex-col gap-6">
           <div>
-            <p className="font-mono text-sm font-semibold tracking-wide text-orange-300/90">{partNumber}</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
+            <p className="font-mono text-sm font-semibold tracking-wide text-[--accent]">{partNumber}</p>
+            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-[--text-primary] sm:text-4xl">
               {productName || partNumber}
             </h1>
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/55 sm:text-[0.9375rem]">
-              Firm quote on this SKU · Typical response <span className="text-orange-200/90">2–6 hours</span> · No
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-[--text-secondary] sm:text-[0.9375rem]">
+              Firm quote on this SKU · Typical response <span className="text-[--accent]/80">2–6 hours</span> · No
               obligation
             </p>
             {showLowStockUrgency ? (
@@ -446,19 +446,19 @@ export function ProductDetail({
               </span>
             </div>
             {hasListPrices && !showExactPricing ? (
-              <div className="mt-4 rounded-xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-md">
+              <div className="mt-4 rounded-xl border border-[--border] bg-[--bg-elevated] px-4 py-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-lg font-semibold text-white">
+                  <p className="text-lg font-semibold text-[--text-primary]">
                     Starting from{' '}
-                    <span className="text-orange-200 tabular-nums">${minListPrice!.toFixed(2)}</span>
-                    <span className="ml-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                    <span className="text-[--accent] tabular-nums">${minListPrice!.toFixed(2)}</span>
+                    <span className="ml-2 text-[10px] font-semibold uppercase tracking-wider text-[--text-secondary]">
                       USD list
                     </span>
                   </p>
                   <button
                     type="button"
                     onClick={openLoginModal}
-                    className="inline-flex shrink-0 items-center justify-center rounded-xl border border-orange-400/45 bg-orange-500/15 px-4 py-2.5 text-sm font-bold text-orange-100 shadow-[0_0_24px_rgba(255,122,0,0.15)] transition-colors hover:bg-orange-500/25"
+                    className="inline-flex shrink-0 items-center justify-center rounded-xl border border-[--accent]/40 bg-[--accent]/10 px-4 py-2.5 text-sm font-bold text-[--accent] transition-colors hover:bg-[--accent]/20"
                   >
                     Login to view pricing
                   </button>
@@ -468,7 +468,7 @@ export function ProductDetail({
           </div>
 
           {description ? (
-            <p className="text-base leading-relaxed text-white/70">{description}</p>
+            <p className="text-base leading-relaxed text-[--text-secondary]">{description}</p>
           ) : null}
 
           {/* Featured spec cards */}
@@ -478,11 +478,11 @@ export function ProductDetail({
                 key={label}
                 className={cn(
                   glass,
-                  'p-4 hover:scale-[1.02] hover:border-white/[0.14] hover:shadow-lg hover:shadow-purple-500/10'
+                  'p-4 hover:scale-[1.02] hover:border-[--accent]/30'
                 )}
               >
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">{label}</p>
-                <p className="mt-1 truncate text-sm font-semibold text-white" title={value}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-secondary]">{label}</p>
+                <p className="mt-1 truncate text-sm font-semibold text-[--text-primary]" title={value}>
                   {value}
                 </p>
               </div>
@@ -491,29 +491,29 @@ export function ProductDetail({
 
           {specEntries.length > 0 ? (
             <div className={cn(glass, 'overflow-hidden')}>
-              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-                <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">Quick specs</h2>
-                <span className="text-[10px] text-white/35">{specEntries.length} fields</span>
+              <div className="flex items-center justify-between border-b border-[--border] px-4 py-3">
+                <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-[--text-secondary]">Quick specs</h2>
+                <span className="text-[10px] text-[--text-secondary]">{specEntries.length} fields</span>
               </div>
               <div className="max-h-[min(280px,45vh)] overflow-y-auto overscroll-contain">
                 <table className="w-full text-left text-sm">
                   <tbody>
                     {specEntries.slice(0, 28).map(([k, v]) => (
-                      <tr key={k} className="border-b border-white/[0.06] last:border-0 hover:bg-white/[0.03]">
+                      <tr key={k} className="border-b border-[--border]/60 last:border-0 hover:bg-[--bg-surface]">
                         <th
                           scope="row"
-                          className="w-[min(42%,200px)] px-4 py-2.5 align-top text-xs font-semibold uppercase tracking-wide text-white/40"
+                          className="w-[min(42%,200px)] px-4 py-2.5 align-top text-xs font-semibold uppercase tracking-wide text-[--text-secondary]"
                         >
                           {k}
                         </th>
-                        <td className="px-4 py-2.5 font-mono text-[13px] leading-snug text-white/90">{v}</td>
+                        <td className="px-4 py-2.5 font-mono text-[13px] leading-snug text-[--text-primary]">{v}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               {specEntries.length > 28 ? (
-                <p className="border-t border-white/10 px-4 py-2 text-center text-[11px] text-white/40">
+                <p className="border-t border-[--border] px-4 py-2 text-center text-[11px] text-[--text-secondary]">
                   Full list in the Specifications tab below.
                 </p>
               ) : null}
@@ -527,7 +527,7 @@ export function ProductDetail({
               variant="primary"
               size="lg"
               leftIcon={<Zap className="h-5 w-5" />}
-              className="min-h-[56px] flex-1 rounded-xl border-2 border-orange-300/40 px-8 text-base font-bold shadow-[0_0_40px_rgba(255,122,0,0.45)] sm:min-w-[260px]"
+              className="min-h-[56px] flex-1 rounded-xl px-8 text-base font-bold sm:min-w-[260px]"
               onClick={() => {
                 trackRfqCtaClick({
                   source: 'product_hero_scroll_rfq',
@@ -545,9 +545,9 @@ export function ProductDetail({
               rel="noopener noreferrer"
               onClick={() => trackWhatsApp({ part_number: partNumber, source: 'product_hero_whatsapp' })}
               className={cn(
-                'inline-flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 px-8 text-base font-semibold text-white',
-                'bg-white/10 backdrop-blur-xl transition-all duration-300',
-                'hover:scale-[1.02] hover:border-emerald-400/35 hover:bg-white/[0.14] hover:shadow-[0_0_28px_rgba(16,185,129,0.2)]',
+                'inline-flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-xl border border-[--border] px-8 text-base font-semibold text-[--text-primary]',
+                'bg-[--bg-elevated] transition-all duration-300',
+                'hover:scale-[1.02] hover:border-emerald-400/35',
                 'sm:min-w-[200px]'
               )}
             >
@@ -567,9 +567,9 @@ export function ProductDetail({
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
                   <Check className="h-7 w-7" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Your request has been received</h3>
-                <p className="font-mono text-xl font-bold text-orange-300">{data.reference}</p>
-                <p className="text-sm text-white/55">We will contact you within 2–6 hours.</p>
+                <h3 className="text-lg font-semibold text-[--text-primary]">Your request has been received</h3>
+                <p className="font-mono text-xl font-bold text-[--accent]">{data.reference}</p>
+                <p className="text-sm text-[--text-secondary]">We will contact you within 2–6 hours.</p>
                 <a
                   href={waLink}
                   target="_blank"
@@ -580,7 +580,7 @@ export function ProductDetail({
                   <MessageCircle className="h-4 w-4" />
                   WhatsApp
                 </a>
-                <Link href={`/account/rfqs/${data.reference}`} className="inline-flex items-center gap-1 text-sm font-semibold text-orange-300 hover:text-orange-200">
+                <Link href={`/account/rfqs/${data.reference}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[--accent] hover:text-[--accent-hover]">
                   Track quote <ChevronRight className="h-4 w-4" />
                 </Link>
                 <Button variant="secondary" fullWidth onClick={handleReset}>
@@ -591,8 +591,8 @@ export function ProductDetail({
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-base font-bold uppercase tracking-wider text-white/80">Request your quote</h2>
-                    <p className="mt-1 text-xs text-white/45">Email &amp; quantity are enough — optional fields below.</p>
+                    <h2 className="text-base font-bold uppercase tracking-wider text-[--text-secondary]">Request your quote</h2>
+                    <p className="mt-1 text-xs text-[--text-secondary]">Email &amp; quantity are enough — optional fields below.</p>
                   </div>
                   <button
                     type="button"
@@ -615,7 +615,7 @@ export function ProductDetail({
                       'inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-xs font-bold transition-all duration-300',
                       isInRFQList
                         ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'
-                        : 'border-orange-400/50 bg-orange-500/20 text-orange-100 shadow-[0_0_20px_rgba(255,122,0,0.2)] hover:border-orange-300/70 hover:bg-orange-500/30',
+                        : 'border-[--accent]/40 bg-[--accent]/10 text-[--accent] hover:bg-[--accent]/20',
                     )}
                   >
                     {isInRFQList ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
@@ -630,8 +630,8 @@ export function ProductDetail({
                     {variantError}
                   </div>
                 ) : null}
-                <fieldset className="space-y-2.5 rounded-xl border border-white/10 bg-black/15 p-4">
-                  <legend className="px-1 text-xs font-bold uppercase tracking-wider text-white/55">
+                <fieldset className="space-y-2.5 rounded-xl border border-[--border] bg-[--bg-surface] p-4">
+                  <legend className="px-1 text-xs font-bold uppercase tracking-wider text-[--text-secondary]">
                     Condition{variants.length > 1 ? ' (select one)' : ''}
                   </legend>
                   <div className="space-y-2.5" role="radiogroup" aria-label="Product condition variant">
@@ -647,8 +647,8 @@ export function ProductDetail({
                           className={cn(
                             'flex cursor-pointer flex-col gap-0.5 rounded-lg border px-3 py-2.5 transition-colors',
                             selected
-                              ? 'border-orange-400/45 bg-orange-500/10'
-                              : 'border-white/10 bg-white/[0.03] hover:border-white/20',
+                              ? 'border-[--accent]/45 bg-[--accent]/10'
+                              : 'border-[--border] bg-[--bg-surface] hover:border-[--accent]/30',
                           )}
                         >
                           <span className="flex items-start gap-3">
@@ -667,10 +667,10 @@ export function ProductDetail({
                               <span className="mb-1 inline-flex w-fit rounded-md border border-violet-400/35 bg-violet-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-200/95">
                                 Condition
                               </span>
-                              <span className="block text-sm font-semibold text-white">
+                              <span className="block text-sm font-semibold text-[--text-primary]">
                                 {formatVariantConditionLabel(v.condition)}
                               </span>
-                              <span className="mt-1 flex items-center gap-1.5 text-xs text-white/50">
+                              <span className="mt-1 flex items-center gap-1.5 text-xs text-[--text-secondary]">
                                 <span
                                   className={cn(
                                     'inline-block h-1.5 w-1.5 rounded-full',
@@ -681,12 +681,12 @@ export function ProductDetail({
                                 {variantStockHint(v)}
                               </span>
                               {showExactPricing && v.price != null && Number.isFinite(v.price) ? (
-                                <span className="mt-1.5 block text-base font-bold tabular-nums text-orange-200">
+                                <span className="mt-1.5 block text-base font-bold tabular-nums text-[--accent]">
                                   ${v.price.toFixed(2)}{' '}
-                                  <span className="text-xs font-medium text-white/45">USD list</span>
+                                  <span className="text-xs font-medium text-[--text-secondary]">USD list</span>
                                 </span>
                               ) : hasListPrices && !showExactPricing ? (
-                                <span className="mt-1.5 block text-xs text-white/38">Sign in to see exact price</span>
+                                <span className="mt-1.5 block text-xs text-[--text-secondary]">Sign in to see exact price</span>
                               ) : null}
                             </span>
                           </span>
@@ -698,7 +698,7 @@ export function ProductDetail({
                     <button
                       type="button"
                       onClick={openLoginModal}
-                      className="w-full rounded-lg border border-orange-400/35 bg-orange-500/10 py-2.5 text-sm font-bold text-orange-100 transition-colors hover:bg-orange-500/20"
+                      className="w-full rounded-lg border border-[--accent]/35 bg-[--accent]/10 py-2.5 text-sm font-bold text-[--accent] transition-colors hover:bg-[--accent]/20"
                     >
                       Login to view pricing
                     </button>
@@ -756,14 +756,14 @@ export function ProductDetail({
                     autoComplete="tel"
                   />
                 </div>
-                <details className="group rounded-xl border border-white/10 bg-black/15 open:border-orange-400/25">
-                  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-white/80 transition-colors marker:content-none [&::-webkit-details-marker]:hidden">
+                <details className="group rounded-xl border border-[--border] bg-[--bg-elevated] open:border-[--accent]/25">
+                  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-[--text-secondary] transition-colors marker:content-none [&::-webkit-details-marker]:hidden">
                     <span className="flex items-center justify-between gap-2">
                       Company, country &amp; notes
-                      <ChevronRight className="h-4 w-4 shrink-0 text-white/40 transition-transform group-open:rotate-90" />
+                      <ChevronRight className="h-4 w-4 shrink-0 text-[--text-secondary] transition-transform group-open:rotate-90" />
                     </span>
                   </summary>
-                  <div className="space-y-4 border-t border-white/10 px-4 pb-4 pt-4">
+                  <div className="space-y-4 border-t border-[--border] px-4 pb-4 pt-4">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Input
                         label="Company"
@@ -783,13 +783,13 @@ export function ProductDetail({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <span className="text-xs font-medium text-white/50">Message</span>
+                      <span className="text-xs font-medium text-[--text-secondary]">Message</span>
                       <textarea
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Urgency, target price, alternate parts…"
                         rows={3}
-                        className="min-h-[88px] w-full resize-y rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-base text-white outline-none transition-colors placeholder:text-white/35 focus:border-orange-400/40 focus:ring-2 focus:ring-orange-400/15 sm:min-h-[72px] sm:text-sm"
+                        className="min-h-[88px] w-full resize-y rounded-xl border border-[--border] bg-[--bg-surface] px-3 py-3 text-base text-[--text-primary] outline-none transition-colors placeholder:text-[--text-secondary]/50 focus:border-[--accent]/40 focus:ring-2 focus:ring-[--accent]/15 sm:min-h-[72px] sm:text-sm"
                       />
                     </div>
                   </div>
@@ -803,11 +803,11 @@ export function ProductDetail({
                       product_id: productId ?? null,
                     })
                   }
-                  className="block text-center text-sm font-medium text-orange-300/85 hover:text-orange-200"
+                  className="block text-center text-sm font-medium text-[--accent] hover:text-[--accent-hover]"
                 >
                   Open full RFQ form
                   {variants.length > 1 && !selectedVariant ? (
-                    <span className="mt-0.5 block text-[11px] font-normal text-white/40">
+                    <span className="mt-0.5 block text-[11px] font-normal text-[--text-secondary]">
                       Select a condition above to include it in the link
                     </span>
                   ) : null}
@@ -824,7 +824,7 @@ export function ProductDetail({
                   size="lg"
                   loading={isLoading}
                   disabled={!selectedVariant}
-                  className="min-h-[52px] rounded-xl border-2 border-orange-200/30 text-base font-bold shadow-[0_0_32px_rgba(255,122,0,0.35)]"
+                  className="min-h-[52px] rounded-xl text-base font-bold"
                   onClick={() =>
                     trackRfqCtaClick({
                       source: 'product_inline_form_submit',
@@ -839,7 +839,7 @@ export function ProductDetail({
                       ? 'Select condition to add to RFQ'
                       : `Submit RFQ · ${formatVariantConditionLabel(selectedVariant.condition)}`}
                 </Button>
-                <p className="text-center text-[11px] text-white/40">Typical reply within 2–6 hours · No obligation</p>
+                <p className="text-center text-[11px] text-[--text-secondary]">Typical reply within 2–6 hours · No obligation</p>
               </form>
             )}
           </section>
@@ -847,7 +847,7 @@ export function ProductDetail({
       </div>
 
       {/* Tabs */}
-      <div className="mt-14 border-b border-white/10">
+      <div className="mt-14 border-b border-[--border]">
         <div className="flex gap-1 overflow-x-auto pb-px sm:gap-2">
           {(
             [
@@ -862,7 +862,7 @@ export function ProductDetail({
               onClick={() => setTab(id)}
               className={cn(
                 'relative flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-semibold transition-all duration-300',
-                tab === id ? 'text-white' : 'text-white/45 hover:text-white/75'
+                tab === id ? 'text-[--text-primary]' : 'text-[--text-secondary] hover:text-[--text-primary]'
               )}
             >
               <Icon className="h-4 w-4 opacity-80" />
@@ -881,7 +881,7 @@ export function ProductDetail({
       <div className="mt-6 min-h-[120px]">
         {tab === 'description' && (
           <div className={cn(glass, 'p-6')}>
-            <p className="leading-relaxed text-white/75">
+            <p className="leading-relaxed text-[--text-secondary]">
               {description || 'Detailed description will appear here when available from the manufacturer.'}
             </p>
           </div>
@@ -893,26 +893,26 @@ export function ProductDetail({
                 {specEntries.map(([k, v]) => (
                   <div
                     key={k}
-                    className="flex flex-col gap-1 rounded-lg border border-white/5 bg-black/20 px-4 py-3 transition-all duration-300 hover:border-white/10"
+                    className="flex flex-col gap-1 rounded-lg border border-[--border] bg-[--bg-surface] px-4 py-3 transition-all duration-300 hover:border-[--accent]/30"
                   >
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-white/40">{k}</dt>
-                    <dd className="font-mono text-sm text-white">{v}</dd>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-[--text-secondary]">{k}</dt>
+                    <dd className="font-mono text-sm text-[--text-primary]">{v}</dd>
                   </div>
                 ))}
               </dl>
             ) : (
-              <p className="text-white/45">Full specifications are not yet available for this SKU.</p>
+              <p className="text-[--text-secondary]">Full specifications are not yet available for this SKU.</p>
             )}
           </div>
         )}
         {tab === 'datasheet' && hasDatasheet && (
           <div className={cn(glass, 'flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between')}>
-            <p className="text-sm text-white/70">Download the official technical datasheet (PDF).</p>
+            <p className="text-sm text-[--text-secondary]">Download the official technical datasheet (PDF).</p>
             <a
               href={datasheetUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition-all duration-300 hover:brightness-110 hover:shadow-orange-500/45"
+              className="inline-flex items-center gap-2 rounded-xl bg-[--accent] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover]"
             >
               <Download className="h-4 w-4" />
               Open datasheet
@@ -927,7 +927,7 @@ export function ProductDetail({
           trackRfqCtaClick({ source: 'product_fab_rfq', part_number: partNumber, product_id: productId ?? null })
           scrollToRfqPanel()
         }}
-        className="pointer-events-auto fixed bottom-8 right-8 z-30 hidden h-14 min-h-[56px] items-center gap-2 rounded-full border-2 border-orange-200/50 bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-6 text-sm font-bold text-white shadow-[0_0_44px_rgba(255,106,0,0.5)] transition-all hover:scale-[1.04] hover:brightness-110 lg:inline-flex"
+        className="pointer-events-auto fixed bottom-8 right-8 z-30 hidden h-14 min-h-[56px] items-center gap-2 rounded-full border-2 border-[--accent]/50 bg-[--accent] px-6 text-sm font-bold text-white transition-all hover:scale-[1.04] hover:bg-[--accent-hover] lg:inline-flex"
         aria-label="Add to RFQ"
       >
         <Zap className="h-5 w-5" />
@@ -935,8 +935,8 @@ export function ProductDetail({
       </button>
 
       {/* Mobile sticky — always visible above the fold when scrolling */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-orange-500/20 bg-[#0a1628]/98 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl lg:hidden">
-        <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-white/50">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[--border] bg-[--bg-header] px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_32px_rgba(0,0,0,0.4)] lg:hidden">
+        <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-white/60">
           {isAvailable ? 'In stock · Fast delivery · Trusted supplier' : 'Fast sourcing · Trusted supplier'}
         </p>
         <div className="mx-auto flex max-w-lg gap-2">
@@ -946,7 +946,7 @@ export function ProductDetail({
               trackRfqCtaClick({ source: 'product_mobile_sticky_rfq', part_number: partNumber, product_id: productId ?? null })
               scrollToRfqPanel()
             }}
-            className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-orange-300/40 bg-gradient-to-r from-[#FF7A00] to-[#FF5500] py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/40"
+            className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[--accent]/40 bg-[--accent] py-3.5 text-sm font-bold text-white hover:bg-[--accent-hover]"
           >
             <Zap className="h-4 w-4" />
             {primaryCtaLabel}
@@ -956,7 +956,7 @@ export function ProductDetail({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackWhatsApp({ part_number: partNumber, source: 'product_mobile_sticky_whatsapp' })}
-            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 py-3.5 text-sm font-semibold text-white"
+            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 py-3.5 text-sm font-semibold text-white"
           >
             <MessageCircle className="h-4 w-4" />
             WhatsApp
