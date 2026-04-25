@@ -21,7 +21,7 @@ export function HeroSection() {
       className="relative w-full"
       style={{ backgroundColor: 'var(--bg-header)' }}
     >
-      <div className="w-full py-12 page-container">
+      <div className="w-full pt-16 pb-10 page-container">
         <div className="mx-auto max-w-3xl text-center">
 
           <p className="mb-5 text-xs font-bold uppercase tracking-[0.18em] text-white/50">
@@ -39,7 +39,7 @@ export function HeroSection() {
           </p>
 
           {/* CTAs */}
-          <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
+          <div className="mb-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/products"
               className="bg-[--accent] hover:bg-[--accent-hover] text-white px-6 py-3 rounded-lg font-semibold"
