@@ -46,10 +46,10 @@ export function BrandCarousel() {
 
   if (loading) {
     return (
-      <section className="w-full px-6 py-8">
-        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl border border-gray-200 bg-gray-100" />
+      <section className="w-full px-6 py-6">
+        <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="h-20 animate-pulse rounded-xl border border-white/20 bg-white/5" />
           ))}
         </div>
       </section>
@@ -59,15 +59,15 @@ export function BrandCarousel() {
   if (!brands.length) return null
 
   return (
-    <section className="w-full bg-[#0E1116] px-6 py-8" aria-label="Brand logos">
-      <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+    <section className="w-full bg-[#0E1116] px-6 py-6" aria-label="Brand logos">
+      <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
         {brands.map((brand) => {
           const src = brand.logo_url || `https://cdn.advancedsystems-int.com/cdn/brands/${brand.slug}.webp`
           return (
             <Link
               key={brand.slug}
               href={`/brands/${encodeURIComponent(brand.slug)}`}
-              className="flex h-16 w-32 items-center justify-center transition-opacity hover:opacity-80"
+              className="flex flex-col items-center gap-1 rounded-xl border border-white/20 bg-white/5 px-4 py-3 transition-all hover:border-[--accent] hover:bg-white/10"
               aria-label={brand.name}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,8 +75,9 @@ export function BrandCarousel() {
                 src={src}
                 alt={brand.name}
                 loading="lazy"
-                className="max-h-10 max-w-[100px] object-contain"
+                className="max-h-10 max-w-[80px] object-contain"
               />
+              <span className="text-center text-xs font-medium text-white">{brand.name}</span>
             </Link>
           )
         })}
