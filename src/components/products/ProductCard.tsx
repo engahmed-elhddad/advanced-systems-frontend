@@ -37,12 +37,12 @@ function KeySpecs({
     <ul className="mt-2 space-y-0.5" aria-label="Key specifications">
       {items.map(({ label, value }) =>
         label ? (
-          <li key={label} className="flex flex-wrap gap-x-1.5 text-xs text-white/50">
-            <span className="font-medium text-white/40">{label}:</span>
+          <li key={label} className="flex flex-wrap gap-x-1.5 text-xs text-[--text-secondary]">
+            <span className="font-medium text-[--text-secondary]">{label}:</span>
             <span>{value}</span>
           </li>
         ) : (
-          <li key="fallback" className="text-xs text-white/50">
+          <li key="fallback" className="text-xs text-[--text-secondary]">
             {value}
           </li>
         )
@@ -81,7 +81,7 @@ export interface ProductCardProps {
 }
 
 const shellClass =
-  'group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:border-orange-400/25 hover:shadow-[0_0_32px_rgba(255,122,0,0.1)] focus-within:border-orange-400/35 focus-within:shadow-[0_0_28px_rgba(255,122,0,0.12)]'
+  'group flex flex-col overflow-hidden rounded-xl border border-[--border] bg-[--bg-elevated] transition-all duration-300 hover:scale-[1.02] hover:border-[--accent]/30 focus-within:border-[--accent]/40'
 
 function ProductCardInner({
   id,
@@ -138,7 +138,7 @@ function ProductCardInner({
       <Link
         href={productHref}
         onClick={() => logProductClick('card_image')}
-        className={`relative block overflow-hidden border-b border-white/[0.06] bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-inset ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
+        className={`relative block overflow-hidden border-b border-[--border] bg-[--bg-surface] focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50 focus-visible:ring-inset ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
       >
         <div className="absolute inset-0">
           <SafeImage
@@ -172,16 +172,16 @@ function ProductCardInner({
             logoSrc={brand_logo_url || (brand_slug ? `https://cdn.advancedsystems-int.com/cdn/brands/${brand_slug}.webp` : null)}
             variant="default"
           />
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[--text-secondary]">
             {highlightQuery?.trim() ? <HighlightMatch text={maker} query={highlightQuery} /> : maker}
           </p>
         </div>
         <Link
           href={productHref}
           onClick={() => logProductClick('card_title')}
-          className="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]"
+          className="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[--bg-elevated]"
         >
-          <h3 className="mt-0.5 break-all font-mono text-base font-semibold leading-snug text-white transition-colors duration-300 group-hover:text-orange-200">
+          <h3 className="mt-0.5 break-all font-mono text-base font-semibold leading-snug text-[--text-primary] transition-colors duration-300 group-hover:text-[--accent]">
             {highlightQuery?.trim() ? (
               <HighlightMatch text={part_number} query={highlightQuery} />
             ) : (
@@ -189,7 +189,7 @@ function ProductCardInner({
             )}
           </h3>
         </Link>
-        <p className="mt-0.5 text-xs text-white/50">
+        <p className="mt-0.5 text-xs text-[--text-secondary]">
           {highlightQuery?.trim() && category ? (
             <HighlightMatch text={category} query={highlightQuery} />
           ) : (
@@ -197,9 +197,9 @@ function ProductCardInner({
           )}
         </p>
         {quickSpecs && <KeySpecs quickSpecs={quickSpecs} />}
-        {!hasSpecs && <p className="mt-2 text-xs text-white/40">Specifications available on request</p>}
+        {!hasSpecs && <p className="mt-2 text-xs text-[--text-secondary]">Specifications available on request</p>}
         {!compact && description && (
-          <p className="mb-3 mt-1 flex-1 line-clamp-2 text-xs leading-relaxed text-white/45">
+          <p className="mb-3 mt-1 flex-1 line-clamp-2 text-xs leading-relaxed text-[--text-secondary]">
             {highlightQuery?.trim() ? <HighlightMatch text={description} query={highlightQuery} /> : description}
           </p>
         )}
@@ -207,11 +207,11 @@ function ProductCardInner({
         {price_usd != null && price_usd > 0 && (
           <div className="mt-2 space-y-2">
             {showExactPricing ? (
-              <p className="text-base font-bold tracking-tight text-orange-200">{format(price_usd)}</p>
+              <p className="text-base font-bold tracking-tight text-[--accent]">{format(price_usd)}</p>
             ) : (
               <>
-                <p className="text-sm font-semibold text-white/90">
-                  Starting from <span className="text-white">{format(price_usd)}</span>
+                <p className="text-sm font-semibold text-[--text-secondary]">
+                  Starting from <span className="text-[--text-primary]">{format(price_usd)}</span>
                 </p>
                 <button
                   type="button"
@@ -220,7 +220,7 @@ function ProductCardInner({
                     e.stopPropagation()
                     openLoginModal()
                   }}
-                  className="text-left text-xs font-semibold text-orange-300/90 underline decoration-orange-400/40 underline-offset-2 hover:text-orange-200"
+                  className="text-left text-xs font-semibold text-[--accent] underline decoration-[--accent]/40 underline-offset-2 hover:text-[--accent-hover]"
                 >
                   Login to view pricing
                 </button>
@@ -229,11 +229,11 @@ function ProductCardInner({
           </div>
         )}
 
-        <div className="mt-auto flex items-center gap-2 border-t border-white/10 pt-3">
+        <div className="mt-auto flex items-center gap-2 border-t border-[--border] pt-3">
           <Link
             href={productHref}
             onClick={() => logProductClick('card_cta_view')}
-            className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition-all duration-300 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1F3A]"
+            className="inline-flex flex-1 items-center justify-center rounded-xl bg-[--accent] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover] focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[--bg-elevated]"
           >
             View product
           </Link>
@@ -252,7 +252,7 @@ function ProductCardInner({
             className={
               isInList
                 ? 'inline-flex cursor-default items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 p-2 text-emerald-200'
-                : 'inline-flex items-center justify-center rounded-xl border border-white/15 p-2 text-white/60 transition-all duration-300 hover:border-orange-400/35 hover:text-orange-200'
+                : 'inline-flex items-center justify-center rounded-xl border border-[--border] p-2 text-[--text-secondary] transition-all duration-300 hover:border-[--accent]/35 hover:text-[--accent]'
             }
             aria-label={isInList ? `${part_number} added to RFQ list` : `Add ${part_number} to RFQ list`}
           >

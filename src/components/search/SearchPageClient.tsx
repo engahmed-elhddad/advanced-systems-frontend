@@ -354,29 +354,20 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
     { value: 'popular', label: 'Popular' },
   ]
 
-  const glassPanel = 'rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,0,0,0.35)] transition-all duration-300'
+  const glassPanel = 'rounded-2xl border border-[--border] bg-[--bg-elevated]'
 
   return (
     <div className="relative pb-16 pt-6 sm:pt-10">
-      <div
-        className="pointer-events-none absolute left-1/2 top-0 h-[280px] w-[min(100%,720px)] -translate-x-1/2 rounded-full bg-orange-500/15 blur-[120px]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute right-0 top-32 h-[200px] w-[200px] rounded-full bg-purple-500/20 blur-[100px]"
-        aria-hidden
-      />
-
-      <div className="page-container relative z-10">
+      <div className="page-container">
         <div className="mb-8 text-center sm:mb-10">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-orange-200/90 backdrop-blur-md">
-            <Sparkles className="h-3.5 w-3.5 text-orange-400" aria-hidden />
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[--border] bg-[--bg-elevated] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[--accent]">
+            <Sparkles className="h-3.5 w-3.5 text-[--accent]" aria-hidden />
             Meilisearch · live filters
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-4xl">
+          <h1 className="text-2xl font-bold tracking-tight text-[--text-primary] sm:text-3xl md:text-4xl">
             Discover industrial parts
           </h1>
-          <p className="mx-auto mt-2 max-w-2xl text-sm text-white/55 sm:text-base">
+          <p className="mx-auto mt-2 max-w-2xl text-sm text-[--text-secondary] sm:text-base">
             Smart search with instant Meilisearch suggestions. Refine by category, brand, availability, and specs —
             all synced to the URL.
           </p>
@@ -407,14 +398,14 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
               'mx-auto mb-10 max-w-2xl px-6 py-14 text-center transition-all duration-300',
             )}
           >
-            <p className="text-lg font-semibold text-white">Start typing to search the catalog</p>
-            <p className="mt-2 text-sm text-white/50">Or pick a popular query — filters apply instantly with no full page reload.</p>
+            <p className="text-lg font-semibold text-[--text-primary]">Start typing to search the catalog</p>
+            <p className="mt-2 text-sm text-[--text-secondary]">Or pick a popular query — filters apply instantly with no full page reload.</p>
             <div className="mt-8 flex flex-wrap justify-center gap-2">
               {POPULAR_QUERIES.map(({ label, q: qq }) => (
                 <Link
                   key={label}
                   href={`/search?q=${encodeURIComponent(qq)}`}
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/85 backdrop-blur-md transition-all duration-300 hover:border-orange-400/35 hover:bg-orange-500/10 hover:text-orange-100"
+                  className="rounded-full border border-[--border] bg-[--bg-elevated] px-4 py-2 text-sm font-medium text-[--text-primary] transition-colors hover:border-[--accent]/35 hover:bg-[--accent]/10 hover:text-[--accent]"
                 >
                   {label}
                 </Link>
@@ -422,7 +413,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
             </div>
             <Link
               href="/products"
-              className="mt-8 inline-block text-sm font-semibold text-violet-300/90 transition-colors hover:text-violet-200"
+              className="mt-8 inline-block text-sm font-semibold text-[--accent] transition-colors hover:text-[--accent-hover]"
             >
               Browse full product catalog →
             </Link>
@@ -435,7 +426,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
               type="button"
               className={cn(
                 glassPanel,
-                'inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white lg:hidden',
+                'inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-[--text-primary] lg:hidden',
               )}
               onClick={() => setMobileFiltersOpen((v) => !v)}
             >
@@ -480,20 +471,20 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     }
                     options={sortOptions}
                     placeholder="Sort"
-                    className="border-white/15 bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                    className="border-[--border] bg-[--bg-elevated] text-[--text-primary]"
                   />
                 </div>
-                <p className="text-sm text-white/55 sm:order-1" aria-live="polite" aria-busy={loading}>
+                <p className="text-sm text-[--text-secondary] sm:order-1" aria-live="polite" aria-busy={loading}>
                   <span className={cn(loading && 'animate-pulse')}>
                     {loading ? (
                       'Updating results…'
                     ) : (
                       <>
-                        <span className="font-semibold text-white">{total.toLocaleString()}</span> results
+                        <span className="font-semibold text-[--text-primary]">{total.toLocaleString()}</span> results
                         {qUrl.trim() ? (
                           <>
                             {' '}
-                            for <span className="text-orange-200/95">&quot;{qUrl}&quot;</span>
+                            for <span className="text-[--accent]">&quot;{qUrl}&quot;</span>
                           </>
                         ) : null}
                       </>
@@ -503,8 +494,8 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
               </div>
 
               {chips.length > 0 && (
-                <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 backdrop-blur-md sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/40 sm:mr-1">Active filters</span>
+                <div className="flex flex-col gap-3 rounded-xl border border-[--border] bg-[--bg-surface] px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[--text-secondary] sm:mr-1">Active filters</span>
                   <div className="flex flex-wrap items-center gap-2">
                     {chips.map((c) => (
                       <FilterChip key={c.key} label={c.label} value="" onRemove={c.onRemove} variant="neutral" />
@@ -513,7 +504,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                   <button
                     type="button"
                     onClick={clearAll}
-                    className="rounded-lg border border-white/12 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-orange-200/90 transition-all duration-300 hover:border-orange-400/35 hover:bg-orange-500/10 sm:ml-auto"
+                    className="rounded-lg border border-[--border] bg-[--bg-elevated] px-3 py-1.5 text-xs font-semibold text-[--accent] transition-colors hover:bg-[--accent]/10 sm:ml-auto"
                   >
                     Clear all
                   </button>
@@ -528,9 +519,9 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                   )}
                   role="status"
                 >
-                  <p className="text-sm text-white/85">
-                    <span className="font-semibold text-sky-100">Did you mean</span>{' '}
-                    <span className="font-mono text-orange-200/95">&quot;{didYouMean}&quot;</span>?
+                  <p className="text-sm text-[--text-secondary]">
+                    <span className="font-semibold text-sky-400">Did you mean</span>{' '}
+                    <span className="font-mono text-[--accent]">&quot;{didYouMean}&quot;</span>?
                   </p>
                   <button
                     type="button"
@@ -547,7 +538,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                         has_filters: false,
                       })
                     }}
-                    className="shrink-0 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-white/15"
+                    className="shrink-0 rounded-full border border-[--border] bg-[--bg-elevated] px-4 py-2 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                   >
                     Search this instead
                   </button>
@@ -562,21 +553,21 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                   )}
                   role="alert"
                 >
-                  <p className="text-lg font-semibold text-white">Could not load search results</p>
-                  <p className="mx-auto mt-2 max-w-md text-sm text-white/55">
+                  <p className="text-lg font-semibold text-[--text-primary]">Could not load search results</p>
+                  <p className="mx-auto mt-2 max-w-md text-sm text-[--text-secondary]">
                     The search service may be unavailable. Check your connection and try again.
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <button
                       type="button"
                       onClick={() => void searchQuery.refetch()}
-                      className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10"
+                      className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2.5 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                     >
                       Try again
                     </button>
                     <Link
                       href="/products"
-                      className="rounded-full border border-white/20 bg-white/[0.08] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:border-orange-400/40 hover:bg-orange-500/10"
+                      className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2.5 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/35 hover:bg-[--accent]/10"
                     >
                       Browse catalog
                     </Link>
@@ -600,13 +591,13 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                             p.set('page', String(page - 1))
                             return p.toString()
                           })()}`}
-                          className="rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10"
+                          className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                           scroll={false}
                         >
                           Previous
                         </Link>
                       )}
-                      <span className="px-3 py-2 text-sm text-white/45">
+                      <span className="px-3 py-2 text-sm text-[--text-secondary]">
                         Page {page} of {pages}
                       </span>
                       {page < pages && (
@@ -616,7 +607,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                             p.set('page', String(page + 1))
                             return p.toString()
                           })()}`}
-                          className="rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10"
+                          className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                           scroll={false}
                         >
                           Next
@@ -638,17 +629,17 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                       storefront display.
                     </p>
                   ) : null}
-                  <p className="font-medium text-white/80">No products match your search and filters.</p>
-                  <p className="mt-2 text-sm text-white/45">
+                  <p className="font-medium text-[--text-primary]">No products match your search and filters.</p>
+                  <p className="mt-2 text-sm text-[--text-secondary]">
                     Try a shorter keyword, clear filters, or explore a popular search below.
                   </p>
-                  <p className="mt-6 text-xs font-semibold uppercase tracking-wider text-white/40">Try instead</p>
+                  <p className="mt-6 text-xs font-semibold uppercase tracking-wider text-[--text-secondary]">Try instead</p>
                   <div className="mt-3 flex flex-wrap justify-center gap-2">
                     {POPULAR_QUERIES.map(({ label, q: qq }) => (
                       <Link
                         key={label}
                         href={`/search?q=${encodeURIComponent(qq)}`}
-                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-md transition-all duration-300 hover:border-orange-400/35 hover:bg-orange-500/10"
+                        className="rounded-full border border-[--border] bg-[--bg-elevated] px-3 py-1.5 text-xs font-medium text-[--text-primary] transition-colors hover:border-[--accent]/35 hover:bg-[--accent]/10"
                       >
                         {label}
                       </Link>
@@ -658,19 +649,19 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     <button
                       type="button"
                       onClick={clearAll}
-                      className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10"
+                      className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2.5 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                     >
                       Reset all
                     </button>
                     <Link
                       href="/products"
-                      className="rounded-full border border-white/20 bg-white/[0.08] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:border-orange-400/40 hover:bg-orange-500/10"
+                      className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2.5 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/35 hover:bg-[--accent]/10"
                     >
                       Browse catalog
                     </Link>
                     <Link
                       href={qUrl.trim() ? `/rfq?part=${encodeURIComponent(qUrl.trim())}` : '/rfq'}
-                      className="rounded-full bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/30 transition-all duration-300 hover:brightness-110"
+                      className="rounded-full bg-[--accent] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[--accent-hover]"
                     >
                       Request a quote
                     </Link>

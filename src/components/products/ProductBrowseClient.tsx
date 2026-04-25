@@ -364,17 +364,17 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
   ]
 
   return (
-    <section className="rounded-2xl bg-gradient-to-br from-[#0B1F3A]/90 via-[#1a2a4a]/85 to-[#2a1f3a]/90 p-5 text-slate-100 shadow-[0_0_80px_rgba(168,85,247,0.06)] ring-1 ring-white/[0.08] backdrop-blur-sm transition-all duration-300 sm:p-8">
+    <section className="rounded-2xl bg-[--bg-base] p-5 sm:p-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white sm:text-xl">Product catalog</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-lg font-bold text-[--text-primary] sm:text-xl">Product catalog</h2>
+          <p className="mt-1 text-sm text-[--text-secondary]">
             Filter by category, brand, availability, and specifications — results update instantly.
           </p>
         </div>
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-md lg:hidden"
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-[--border] bg-[--bg-elevated] px-4 py-2.5 text-sm font-medium text-[--text-primary] lg:hidden"
           onClick={() => setMobileFiltersOpen((v) => !v)}
         >
           <SlidersHorizontal className="h-4 w-4" />
@@ -402,15 +402,15 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
         </div>
 
         <div className="min-w-0 flex-1 space-y-4">
-          <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.05] p-3 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-xl transition-shadow duration-300 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex flex-col gap-3 rounded-xl border border-[--border] bg-[--bg-surface] p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="relative min-w-0 flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-orange-200/40" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--text-secondary]" />
               <input
                 type="search"
                 value={qInput}
                 onChange={(e) => onQChange(e.target.value)}
                 placeholder="Search part number, keyword…"
-                className="w-full rounded-lg border border-white/10 bg-white/[0.06] py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-slate-500 transition-all duration-300 focus:border-orange-400/45 focus:outline-none focus:ring-2 focus:ring-orange-400/20"
+                className="w-full rounded-lg border border-[--border] bg-[--bg-elevated] py-2.5 pl-10 pr-3 text-sm text-[--text-primary] placeholder:text-[--text-secondary] transition-all duration-300 focus:border-[--accent]/45 focus:outline-none focus:ring-2 focus:ring-[--accent]/20"
                 aria-label="Search products"
               />
             </div>
@@ -426,14 +426,14 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
                 }
                 options={sortOptions}
                 placeholder="Sort"
-                className="border-white/15 bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                className="border-[--border] bg-[--bg-elevated] text-[--text-primary]"
               />
             </div>
           </div>
 
           {chips.length > 0 && (
-            <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 backdrop-blur-md sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/40 sm:mr-1">Active filters</span>
+            <div className="flex flex-col gap-3 rounded-xl border border-[--border] bg-[--bg-surface] px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[--text-secondary] sm:mr-1">Active filters</span>
               <div className="flex flex-wrap items-center gap-2">
                 {chips.map((c) => (
                   <FilterChip key={c.key} label={c.label} value="" onRemove={c.onRemove} variant="neutral" />
@@ -442,7 +442,7 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
               <button
                 type="button"
                 onClick={clearAll}
-                className="rounded-lg border border-white/12 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-orange-200/90 transition-all duration-300 hover:border-orange-400/35 hover:bg-orange-500/10 sm:ml-auto"
+                className="rounded-lg border border-[--border] bg-[--bg-elevated] px-3 py-1.5 text-xs font-semibold text-[--accent] transition-colors hover:bg-[--accent]/10 sm:ml-auto"
               >
                 Clear all
               </button>
@@ -454,19 +454,19 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
               className="rounded-2xl border border-red-400/35 bg-red-500/10 px-6 py-10 text-center shadow-[0_0_40px_rgba(239,68,68,0.08)] backdrop-blur-sm"
               role="alert"
             >
-              <p className="text-base font-semibold text-white">Could not load products</p>
+              <p className="text-base font-semibold text-[--text-primary]">Could not load products</p>
               <p className="mx-auto mt-2 max-w-md text-sm text-red-100/90">{loadError}</p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <button
                   type="button"
                   onClick={() => void browseQuery.refetch()}
-                  className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:border-orange-400/35 hover:bg-orange-500/10"
+                  className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2.5 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/35 hover:bg-[--accent]/10"
                 >
                   Try again
                 </button>
                 <Link
                   href="/search"
-                  className="rounded-full bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition-all duration-300 hover:brightness-110"
+                  className="rounded-full bg-[--accent] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[--accent-hover]"
                 >
                   Smart search
                 </Link>
@@ -479,9 +479,9 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
               className="flex flex-col gap-3 rounded-xl border border-sky-400/30 bg-sky-500/10 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
               role="status"
             >
-              <p className="text-sm text-white/85">
-                <span className="font-semibold text-sky-100">Did you mean</span>{' '}
-                <span className="font-mono text-orange-200/95">&quot;{didYouMean}&quot;</span>?
+              <p className="text-sm text-[--text-secondary]">
+                <span className="font-semibold text-sky-400">Did you mean</span>{' '}
+                <span className="font-mono text-[--accent]">&quot;{didYouMean}&quot;</span>?
               </p>
               <button
                 type="button"
@@ -498,7 +498,7 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
                     has_filters: false,
                   })
                 }}
-                className="shrink-0 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-white/15"
+                className="shrink-0 rounded-full border border-[--border] bg-[--bg-elevated] px-4 py-2 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
               >
                 Search this instead
               </button>
@@ -517,7 +517,7 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
           ) : null}
 
           <div
-            className="flex items-center justify-between gap-2 text-sm text-slate-400"
+            className="flex items-center justify-between gap-2 text-sm text-[--text-secondary]"
             aria-live="polite"
             aria-busy={loading}
           >
@@ -546,13 +546,13 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
                         p.set('page', String(page - 1))
                         return p.toString()
                       })()}`}
-                      className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+                      className="rounded-lg border border-[--border] bg-[--bg-elevated] px-4 py-2 text-sm font-medium text-[--text-primary] hover:border-[--accent]/30"
                       scroll={false}
                     >
                       Previous
                     </Link>
                   )}
-                  <span className="px-3 py-2 text-sm text-slate-400">
+                  <span className="px-3 py-2 text-sm text-[--text-secondary]">
                     Page {page} of {pages}
                   </span>
                   {page < pages && (
@@ -562,7 +562,7 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
                         p.set('page', String(page + 1))
                         return p.toString()
                       })()}`}
-                      className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+                      className="rounded-lg border border-[--border] bg-[--bg-elevated] px-4 py-2 text-sm font-medium text-[--text-primary] hover:border-[--accent]/30"
                       scroll={false}
                     >
                       Next
@@ -572,18 +572,18 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
               )}
             </>
           ) : (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-16 text-center shadow-[0_0_60px_rgba(255,122,0,0.06)] backdrop-blur-sm transition-all duration-300">
-              <p className="text-base font-medium text-white/75">No products match these filters</p>
-              <p className="mx-auto mt-2 max-w-md text-sm text-white/45">
+            <div className="rounded-2xl border border-dashed border-[--border] bg-[--bg-surface] px-6 py-16 text-center transition-all duration-300">
+              <p className="text-base font-medium text-[--text-primary]">No products match these filters</p>
+              <p className="mx-auto mt-2 max-w-md text-sm text-[--text-secondary]">
                 Broaden your search, try a popular query, or clear filters — results update instantly.
               </p>
-              <p className="mt-6 text-xs font-semibold uppercase tracking-wider text-white/35">Try instead</p>
+              <p className="mt-6 text-xs font-semibold uppercase tracking-wider text-[--text-secondary]">Try instead</p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {TRY_INSTEAD_QUERIES.map(({ label, q }) => (
                   <Link
                     key={label}
                     href={`/products?q=${encodeURIComponent(q)}`}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 transition-all duration-300 hover:border-orange-400/35 hover:bg-orange-500/10"
+                    className="rounded-full border border-[--border] bg-[--bg-elevated] px-3 py-1.5 text-xs font-medium text-[--text-primary] transition-colors hover:border-[--accent]/35 hover:bg-[--accent]/10"
                   >
                     {label}
                   </Link>
@@ -593,13 +593,13 @@ export function ProductBrowseClient({ brands, categories }: ProductBrowseClientP
                 <button
                   type="button"
                   onClick={clearAll}
-                  className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:border-orange-400/35 hover:bg-orange-500/10"
+                  className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2.5 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/35 hover:bg-[--accent]/10"
                 >
                   Clear all filters
                 </button>
                 <Link
                   href="/search"
-                  className="rounded-full bg-gradient-to-r from-[#FF7A00] to-[#FF5500] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition-all duration-300 hover:brightness-110"
+                  className="rounded-full bg-[--accent] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[--accent-hover]"
                 >
                   Smart search
                 </Link>
