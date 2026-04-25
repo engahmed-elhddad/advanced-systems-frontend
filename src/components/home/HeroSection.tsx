@@ -19,7 +19,7 @@ export function HeroSection() {
   return (
     <section
       className="relative w-full"
-      style={{ backgroundColor: 'var(--bg-header)' }}
+      style={{ backgroundColor: '#0E1116' }}
     >
       <div className="w-full pt-16 pb-10 page-container">
         <div className="mx-auto max-w-3xl text-center">
