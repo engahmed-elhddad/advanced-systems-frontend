@@ -10,6 +10,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { RootSiteChrome } from './RootSiteChrome'
 import { ThemeProvider } from '@/components/ui/ThemeProvider'
+import { CartProvider } from '@/context/CartContext'
 import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
@@ -81,7 +82,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               className="pointer-events-none fixed -left-24 top-0 -z-10 h-[min(90vw,480px)] w-[min(90vw,480px)] rounded-full bg-violet-600/[0.14] blur-[140px]"
               aria-hidden
             />
+            <CartProvider>
             <RootSiteChrome>{children}</RootSiteChrome>
+            </CartProvider>
             <AppToaster />
             </CurrencyProvider>
           </ShopAuthProvider>

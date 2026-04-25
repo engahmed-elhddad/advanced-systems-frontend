@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Menu, X, Zap, Phone, Sun, Moon, Monitor } from 'lucide-react'
 import { SearchBar } from '@/components/search/SearchBar'
 import { useTheme } from '@/components/ui/ThemeProvider'
+import { CartIcon } from '@/components/cart/CartIcon'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
@@ -71,6 +72,12 @@ export function Navbar() {
             >
               Login
             </Link>
+            <Link
+              href="/account/company"
+              className="text-[--text-secondary] hover:text-[--text-primary]"
+            >
+              My Company
+            </Link>
           </div>
         </div>
       </div>
@@ -121,6 +128,7 @@ export function Navbar() {
               <Phone className="h-4 w-4" />
             </a>
             <ThemeToggle />
+            <CartIcon />
             <Link
               href="/rfq"
               className="ml-1 inline-flex items-center rounded-md bg-[--accent] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover]"
@@ -132,6 +140,7 @@ export function Navbar() {
           {/* Mobile: theme toggle + hamburger */}
           <div className="ml-auto flex items-center gap-1 md:hidden">
             <ThemeToggle />
+            <CartIcon />
             <button
               type="button"
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -212,6 +221,13 @@ export function Navbar() {
                 onClick={() => setMobileOpen(false)}
               >
                 Login
+              </Link>
+              <Link
+                href="/account/company"
+                className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+                onClick={() => setMobileOpen(false)}
+              >
+                My Company
               </Link>
               <Link
                 href="/rfq"
