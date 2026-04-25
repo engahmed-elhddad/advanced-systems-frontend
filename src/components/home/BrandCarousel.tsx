@@ -58,10 +58,17 @@ export function BrandCarousel() {
   if (!brands.length) return null
 
   return (
-    <section
-      className="group relative w-full overflow-hidden py-12 before:pointer-events-none before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-28 before:bg-gradient-to-r before:from-[--bg-base] before:to-transparent before:content-[''] after:pointer-events-none after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-28 after:bg-gradient-to-l after:from-[--bg-base] after:to-transparent after:content-['']"
-      aria-label="Brand logos"
-    >
+    <section className="group relative w-full overflow-hidden py-12" aria-label="Brand logos">
+      <div
+        className="pointer-events-none absolute left-0 top-0 z-10 h-full w-28"
+        style={{ background: 'linear-gradient(to right, #0E1116, transparent)' }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute right-0 top-0 z-10 h-full w-28"
+        style={{ background: 'linear-gradient(to left, #0E1116, transparent)' }}
+        aria-hidden
+      />
       <div className="flex w-max animate-scroll gap-14 group-hover:[animation-play-state:paused]">
         {[...brands, ...brands].map((brand, index) => (
           <Link

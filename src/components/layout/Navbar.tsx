@@ -88,7 +88,7 @@ export function Navbar() {
               className="hidden items-baseline gap-[0.15em] sm:inline-flex"
               style={{ fontFamily: 'var(--font-rajdhani)' }}
             >
-              <span className="text-[1.05rem] font-semibold tracking-wide text-[--text-primary]">Advanced</span>
+              <span className="text-[1.05rem] font-semibold tracking-wide text-white">Advanced</span>
               <span className="text-[1.05rem] font-bold uppercase tracking-wider text-[--accent]">Systems</span>
             </span>
           </Link>
