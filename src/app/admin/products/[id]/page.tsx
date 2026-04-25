@@ -23,6 +23,19 @@ export default function AdminEditProductPage() {
   const brandsQuery = useBrands()
   const categoriesQuery = useCategories()
 
+  const enrichMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await api.post(`/api/v1/admin/enrich/${id}`)
+    },
+    onSuccess: async () => {
+      toast.success('Product enriched successfully')
+      await productQuery.refetch()
+    },
+    onError: () => {
+      toast.error('Enrichment failed')
+    },
+  })
+
   const product = productQuery.data
   const loading = productQuery.isLoading
   const brandOptions = (brandsQuery.data ?? [])
