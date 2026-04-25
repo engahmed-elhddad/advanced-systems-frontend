@@ -323,6 +323,21 @@ export type AdminBrandRow = {
   website?: string | null;
   country?: string | null;
   product_count?: number;
+  /** Display strings from list API (`BrandResponse.aliases`) */
+  aliases?: string[];
+  is_verified?: boolean;
+  parent_brand_id?: number | null;
+};
+
+/** Full alias rows from `GET /api/v1/admin/brands/{id}/aliases` */
+export type AdminBrandAliasRow = {
+  id: number;
+  brand_id: number;
+  alias: string;
+  alias_normalized: string;
+  alias_type: string;
+  confidence: number;
+  created_at: string;
 };
 
 export type AdminCategoryRow = {
@@ -356,6 +371,23 @@ export async function updateAdminBrand(id: number, body: Record<string, unknown>
 
 export async function deleteAdminBrand(id: number) {
   return request<{ message: string }>(`/api/v1/admin/brands/${id}`, { method: "DELETE" });
+}
+
+export async function fetchAdminBrandAliases(brandId: number) {
+  return request<AdminBrandAliasRow[]>(`/api/v1/admin/brands/${brandId}/aliases`);
+}
+
+export async function addAdminBrandAlias(brandId: number, alias: string, alias_type?: string) {
+  const body: Record<string, string> = { alias: alias.trim() };
+  if (alias_type != null && alias_type.trim()) body.alias_type = alias_type.trim();
+  return request<AdminBrandAliasRow>(`/api/v1/admin/brands/${brandId}/aliases`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function removeAdminBrandAlias(brandId: number, aliasId: number) {
+  return request<null>(`/api/v1/admin/brands/${brandId}/aliases/${aliasId}`, { method: "DELETE" });
 }
 
 export async function fetchAdminCategories() {
