@@ -1,3 +1,5 @@
+export const revalidate = 0
+
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
