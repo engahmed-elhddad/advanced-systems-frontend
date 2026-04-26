@@ -22,16 +22,20 @@ export function SiteJsonLd() {
   const graph = [
     {
       '@context': 'https://schema.org',
-      '@type': 'Organization',
+      '@type': ['Organization', 'LocalBusiness'],
       name: COMPANY_NAME_EN,
       legalName: COMPANY_NAME_EN,
       description: COMPANY_DESCRIPTION,
       url: SITE_URL,
       logo: logoUrl,
       email: CONTACT_EMAIL,
+      telephone: '+201000629229',
+      priceRange: '$$',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: COMPANY_LOCATION_SINGLE_LINE,
+        streetAddress: 'Jordanian District, Markaz Al-Azm Commercial, Shop 10',
+        addressLocality: '10th of Ramadan City',
+        addressRegion: 'Sharqia',
         addressCountry: 'EG',
       },
       ...(sameAs.length ? { sameAs } : {}),

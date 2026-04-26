@@ -9,7 +9,7 @@ import {
 } from '@/lib/company'
 import { CONTACT_EMAIL, supportPhoneDisplay, supportPhoneTelHref } from '@/lib/constants'
 
-const COPYRIGHT_YEAR = 2026
+const CURRENT_YEAR = new Date().getFullYear()
 
 export function Footer() {
   const tel = supportPhoneTelHref()
@@ -43,10 +43,16 @@ export function Footer() {
           <div>
             <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-white/45">Products</h3>
             <ul className="space-y-2.5 text-sm text-white/55">
-              {['PLCs', 'Drives & Inverters', 'Sensors', 'HMI Panels', 'Safety Systems'].map((item) => (
-                <li key={item}>
-                  <Link href="/products" className="transition-colors hover:text-orange-200">
-                    {item}
+              {[
+                { label: 'PLCs',               href: '/categories/plc' },
+                { label: 'Drives & Inverters', href: '/categories/drive' },
+                { label: 'Sensors',            href: '/categories/sensors' },
+                { label: 'HMI Panels',         href: '/categories/hmi' },
+                { label: 'Safety Systems',     href: '/categories/safety-relay' },
+              ].map(({ label, href }) => (
+                <li key={href}>
+                  <Link href={href} className="transition-colors hover:text-orange-200">
+                    {label}
                   </Link>
                 </li>
               ))}
@@ -107,7 +113,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-10 md:flex-row">
           <p className="text-sm text-white/40">
-            © {COPYRIGHT_YEAR} {COMPANY_BRAND_SHORT}. All rights reserved.
+            © {CURRENT_YEAR} {COMPANY_BRAND_SHORT}. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-white/40">
             <Link href="/sitemap.xml" className="transition-colors hover:text-white/70">
