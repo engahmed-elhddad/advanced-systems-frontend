@@ -74,6 +74,8 @@ export interface ProductCardProps {
   }
   brand_slug?: string
   brand_logo_url?: string
+  /** Display name for brand link under title; when absent, legacy maker row is used. */
+  brand_name?: string
   variant?: 'default' | 'compact'
   productBasePath?: string
   /** When set (e.g. catalog search), matching tokens are emphasized in title lines. */
@@ -92,6 +94,7 @@ function ProductCardInner({
   manufacturer,
   brand_slug,
   brand_logo_url,
+  brand_name,
   category,
   description,
   image_url,
@@ -127,6 +130,11 @@ function ProductCardInner({
       href: productHref,
     })
   const maker = brand ?? manufacturer ?? 'Brand on request'
+  const brandNameTrim = brand_name?.trim()
+  const brandSlugTrim = brand_slug?.trim()
+  const showLegacyBrandRow = !brandNameTrim
+  const showBrandLink = Boolean(brandNameTrim && brandSlugTrim)
+  const brandHref = brandSlugTrim ? `/brands/${encodeURIComponent(brandSlugTrim)}/` : null
   const hasSpecs = Boolean(
     quickSpecs?.coil_voltage?.trim() ||
       quickSpecs?.voltage?.trim() ||
@@ -142,6 +150,19 @@ function ProductCardInner({
         onClick={() => logProductClick('card_image')}
         className={`relative block overflow-hidden border-b border-[--border] bg-[--bg-surface] focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent]/50 focus-visible:ring-inset ${compact ? 'aspect-square' : 'aspect-[4/3]'}`}
       >
+        {brand_logo_url?.trim() ? (
+          <div
+            className="pointer-events-none absolute left-2 top-2 z-10 h-6 w-6 overflow-hidden rounded-md border border-[--border] bg-[--bg-elevated]/90 p-0.5 shadow-sm"
+            aria-hidden
+          >
+            <SafeImage
+              src={brand_logo_url.trim()}
+              alt={brandNameTrim || maker}
+              sizes="24px"
+              className="object-contain"
+            />
+          </div>
+        ) : null}
         <div className="absolute inset-0">
           <SafeImage
             src={image_url}
@@ -178,16 +199,14 @@ function ProductCardInner({
       </Link>
 
       <div className={compact ? 'flex flex-1 flex-col p-3' : 'flex flex-1 flex-col p-4'}>
-        <div className="mb-1 flex items-center gap-2">
-          <BrandLogo
-            brand={maker}
-            logoSrc={brand_logo_url || (brand_slug ? `https://cdn.advancedsystems-int.com/cdn/brands/${brand_slug}.webp` : null)}
-            variant="default"
-          />
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[--text-secondary]">
-            {highlightQuery?.trim() ? <HighlightMatch text={maker} query={highlightQuery} /> : maker}
-          </p>
-        </div>
+        {showLegacyBrandRow ? (
+          <div className="mb-1 flex items-center gap-2">
+            <BrandLogo brand={maker} variant="default" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[--text-secondary]">
+              {highlightQuery?.trim() ? <HighlightMatch text={maker} query={highlightQuery} /> : maker}
+            </p>
+          </div>
+        ) : null}
         <Link
           href={productHref}
           onClick={() => logProductClick('card_title')}
@@ -201,6 +220,29 @@ function ProductCardInner({
             )}
           </h3>
         </Link>
+        {brandNameTrim ? (
+          showBrandLink && brandHref ? (
+            <Link
+              href={brandHref}
+              onClick={() => logProductClick('card_brand')}
+              className="mt-0.5 block w-fit text-xs font-medium text-[--accent] underline decoration-[--accent]/35 underline-offset-2 hover:text-[--accent-hover]"
+            >
+              {highlightQuery?.trim() ? (
+                <HighlightMatch text={brandNameTrim} query={highlightQuery} />
+              ) : (
+                brandNameTrim
+              )}
+            </Link>
+          ) : (
+            <p className="mt-0.5 text-xs font-medium text-[--text-secondary]">
+              {highlightQuery?.trim() ? (
+                <HighlightMatch text={brandNameTrim} query={highlightQuery} />
+              ) : (
+                brandNameTrim
+              )}
+            </p>
+          )
+        ) : null}
         <p className="mt-0.5 text-xs text-[--text-secondary]">
           {highlightQuery?.trim() && category ? (
             <HighlightMatch text={category} query={highlightQuery} />

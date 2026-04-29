@@ -4,17 +4,6 @@ import { getCategories } from '@/lib/api'
 import { API_BASE_URL } from '@/lib/constants'
 import { CATEGORIES } from '@/lib/constants'
 
-const CDN = 'https://cdn.advancedsystems-int.com/cdn/categories/'
-const CATEGORY_IMAGES: Record<string, string> = {
-  'plc': 'plc.webp',
-  'drive': 'drive.webp',
-  'sensors': 'Sensors.webp',
-  'hmi': 'hmi.png',
-  'power-supply': 'power-supply.jpg',
-  'soft-starter': 'soft-starter.jpg',
-  'safety-relay': 'safety-relay.png',
-}
-
 /** DB category values merged under the "Drives" slug (counts summed on categories page). */
 const DRIVES_CATEGORY_ALIASES = ['Drives', 'VFD', 'Variable Frequency Drive']
 
@@ -77,17 +66,18 @@ async function getDrivesProductCount(): Promise<number> {
   return counts.reduce((a, b) => a + b, 0)
 }
 
-type CategoryRow = { name: string; slug?: string; id?: number }
+type CategoryRow = { name: string; slug?: string; id?: number; image_url?: string | null }
 
 export default async function CategoriesPage() {
   let apiCategories: CategoryRow[] = []
   try {
     const data = await getCategories()
     const raw = Array.isArray(data) ? data : data?.categories || []
-    apiCategories = raw.map((c: { name?: string; slug?: string; id?: number }) => ({
+    apiCategories = raw.map((c: { name?: string; slug?: string; id?: number; image_url?: string | null }) => ({
       name: String(c?.name ?? ''),
       slug: c?.slug,
       id: typeof c?.id === 'number' ? c.id : undefined,
+      image_url: c?.image_url ?? null,
     }))
   } catch {}
   const baseCategories: CategoryRow[] =
@@ -105,7 +95,7 @@ export default async function CategoriesPage() {
       } else {
         count = await getCategoryProductCountByName(cat.name)
       }
-      return { name: cat.name, slug: cat.slug, product_count: count }
+      return { name: cat.name, slug: cat.slug, image_url: cat.image_url, product_count: count }
     })
   )
 
@@ -131,9 +121,9 @@ export default async function CategoriesPage() {
           {categories.map((cat) => (
             <Link key={cat.name} href={cat.slug ? `/categories/${cat.slug}` : `/search?category=${encodeURIComponent(cat.name)}`}>
               <div className="border border-white/20 bg-white/5 rounded-xl p-5 flex flex-col items-center gap-3 hover:border-[--accent] hover:bg-white/10 transition-all">
-                {cat.slug && CATEGORY_IMAGES[cat.slug] ? (
+                {cat.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={CDN + CATEGORY_IMAGES[cat.slug]} alt={cat.name} className="h-20 w-20 object-contain" />
+                  <img src={cat.image_url} alt={cat.name} className="h-20 w-20 object-contain" />
                 ) : (
                   <Package className="h-10 w-10 text-[--accent]" />
                 )}

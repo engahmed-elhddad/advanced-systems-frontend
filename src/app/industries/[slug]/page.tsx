@@ -171,6 +171,7 @@ export default async function IndustryPage({ params }: Props) {
                   slug={p.slug}
                   part_number={p.part_number}
                   brand={p.brand_name}
+                  brand_name={p.brand_name}
                   brand_slug={p.brand_slug}
                   brand_logo_url={p.brand_logo_url}
                   description={p.description}

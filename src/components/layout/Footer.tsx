@@ -67,6 +67,7 @@ export function Footer() {
                 { label: 'Product Search', href: '/search' },
                 { label: 'Brands', href: '/brands' },
                 { label: 'Categories', href: '/categories' },
+                { label: 'RMA Policy', href: '/policies/rma' },
                 { label: 'About', href: '/about' },
                 { label: 'Contact', href: '/contact' },
               ].map((item) => (

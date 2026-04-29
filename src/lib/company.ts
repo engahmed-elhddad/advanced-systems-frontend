@@ -58,3 +58,33 @@ export const COMPANY_TRUST_STATEMENTS = [
   'Registered business in Egypt',
   'Tax ID available upon request',
 ] as const
+
+/** Site-wide seller warranty (months) — FR-002. */
+export const WARRANTY_MONTHS = 12
+
+/** Site-wide RMA window (days) — FR-003. */
+export const RMA_WINDOW_DAYS = 30
+
+/** Active ISO certifications; empty in v1 — FR-005. */
+export const ISO_CERTIFICATIONS: Array<{ name: string; year?: number }> = []
+
+export const WARRANTY_BADGE_EN = '12 months warranty'
+export const WARRANTY_BADGE_AR = 'ضمان 12 شهرًا'
+
+export const RMA_BADGE_EN = '30-day return policy'
+export const RMA_BADGE_AR = 'إرجاع خلال 30 يومًا'
+
+export const ISO_LABEL_EN = 'Certified'
+export const ISO_LABEL_AR = 'معتمد'
+
+export const CONTACT_LABEL_WHATSAPP_EN = 'WhatsApp us'
+export const CONTACT_LABEL_WHATSAPP_AR = 'تواصل عبر واتساب'
+
+export const CONTACT_LABEL_EMAIL_EN = 'Email'
+export const CONTACT_LABEL_EMAIL_AR = 'البريد الإلكتروني'
+
+export const CONTACT_LABEL_PHONE_EN = 'Call'
+export const CONTACT_LABEL_PHONE_AR = 'اتصال'
+
+export const WHATSAPP_INQUIRY_TEMPLATE_EN = 'Inquiry about {part_number}'
+export const WHATSAPP_INQUIRY_TEMPLATE_AR = 'استفسار عن {part_number}'

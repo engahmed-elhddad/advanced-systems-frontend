@@ -46,6 +46,8 @@ export type AdminProduct = {
   imageUrl: string
   datasheetUrl: string
   status: AdminProductStatus
+  /** Distinct offer conditions (lowercase) from API ``variants``, for list badges */
+  offerConditions?: string[]
   /** Product lifecycle (e.g. active, obsolete) from API */
   lifecycleStatus?: string
   /** AI / pipeline enrichment flag from API */
@@ -53,6 +55,8 @@ export type AdminProduct = {
   /** Weak ETag from admin list/detail for If-Match deletes */
   _etag?: string
 }
+
+export type AdminProductCondition = 'new' | 'used' | 'refurbished' | 'obsolete'
 
 export type AdminProductFormInput = {
   name: string
@@ -69,6 +73,12 @@ export type AdminProductFormInput = {
   /** Pending local file; uploaded via multipart after product save. */
   imageFile?: File | null
   lifecycleStatus?: string
+  /** Create only: physical-store inventory entry. Backend creates ProductOffer + InventoryItem. */
+  condition?: AdminProductCondition
+  quantity?: number
+  priceEGP?: number | null
+  shelfLocation?: string
+  binLabel?: string
 }
 
 type BrandRow = { id: number; name: string }
@@ -125,6 +135,21 @@ function fromApiStatus(row: any): AdminProductStatus {
   return availability.includes('draft') ? 'Draft' : 'Active'
 }
 
+/** Distinct offer conditions (lowercased) from API ``variants`` (or legacy ``offers``). */
+function extractOfferConditions(row: any): string[] {
+  const list = Array.isArray(row?.variants)
+    ? row.variants
+    : Array.isArray(row?.offers)
+      ? row.offers
+      : []
+  const seen = new Set<string>()
+  for (const v of list) {
+    const c = typeof v?.condition === 'string' ? v.condition.trim().toLowerCase() : ''
+    if (c) seen.add(c)
+  }
+  return Array.from(seen)
+}
+
 function normalizeProduct(row: any): AdminProduct {
   const specsRaw = row?.specs
   const specs: AdminProductSpec[] = Array.isArray(specsRaw)
@@ -166,6 +191,7 @@ function normalizeProduct(row: any): AdminProduct {
     imageUrl: String(row?.image_url ?? '').trim(),
     datasheetUrl: String(row?.datasheet_url || ''),
     status: fromApiStatus(row),
+    offerConditions: extractOfferConditions(row),
     lifecycleStatus: String(row?.lifecycle_status ?? 'active'),
     is_enriched: Boolean(row?.is_enriched),
     _etag: typeof row?._etag === 'string' && row._etag.trim() ? row._etag : undefined,
@@ -282,6 +308,7 @@ async function createAdminProduct(input: AdminProductFormInput) {
   const pn =
     trimmedManualPn ||
     `${autoPartNumber || 'PRODUCT'}-${Date.now().toString().slice(-5)}`
+  const qty = Math.max(1, Math.floor(input.quantity ?? 1))
   const payload = {
     part_number: pn,
     name: input.name,
@@ -290,10 +317,19 @@ async function createAdminProduct(input: AdminProductFormInput) {
     description: input.description || null,
     image_url: normalizeImageUrlForApi(input.imageUrl),
     datasheet_url: input.datasheetUrl?.trim() || null,
-    stock_quantity: 1,
+    stock_quantity: qty,
     specs: input.specs.map((s) => ({ key: s.key, value: s.value })),
     lifecycle_status: input.lifecycleStatus ?? 'active',
     ...initialStatus,
+    // MPN-first inventory entry — backend creates ProductOffer + InventoryItem in same txn.
+    condition: input.condition ?? 'new',
+    initial_quantity: qty,
+    initial_price_egp:
+      typeof input.priceEGP === 'number' && Number.isFinite(input.priceEGP) && input.priceEGP > 0
+        ? input.priceEGP
+        : null,
+    shelf_location: input.shelfLocation?.trim() || null,
+    bin_label: input.binLabel?.trim() || null,
   }
   const res = await api.post<unknown>('/api/v1/admin/products', payload)
   const productId = extractProductIdFromResponse(res.data)

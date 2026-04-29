@@ -66,7 +66,7 @@ export function BrandCarousel() {
           return (
             <Link
               key={brand.slug}
-              href={`/brands/${encodeURIComponent(brand.slug)}`}
+              href={`/brands/${encodeURIComponent(brand.slug)}/`}
               className="flex flex-col items-center gap-1 rounded-xl border border-white/25 bg-white/[0.08] px-5 py-4 transition-all hover:border-[--accent] hover:bg-white/10"
               aria-label={brand.name}
             >

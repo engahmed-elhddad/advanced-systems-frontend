@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import TrustBlock from '@/components/TrustBlock'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { useRFQSubmit } from '@/features/rfq/hooks/useRFQSubmit'
 import { useRFQListStore } from '@/state/rfqListStore'
@@ -563,6 +564,8 @@ export function ProductDetail({
               WhatsApp
             </a>
           </div>
+
+          <TrustBlock partNumber={partNumber} locale="en" className="mt-6" />
 
           {/* RFQ panel */}
           <section

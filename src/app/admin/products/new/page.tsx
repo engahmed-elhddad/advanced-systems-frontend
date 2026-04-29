@@ -22,6 +22,11 @@ const emptyCreateForm = {
   imageUrl: '',
   datasheetUrl: '',
   status: 'Draft' as const,
+  condition: 'new' as const,
+  quantity: 1,
+  priceEGP: null,
+  shelfLocation: '',
+  binLabel: '',
 }
 
 function NewAdminProductPageInner() {

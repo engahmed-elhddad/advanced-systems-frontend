@@ -15,6 +15,7 @@ import {
   createAdminCategory,
   updateAdminCategory,
   deleteAdminCategory,
+  uploadAdminCategoryImage,
 } from '@/lib/admin-api'
 import { formatCategoryNameInput } from '@/lib/brandCategoryFormat'
 import { adminLightTextareaClass } from '@/lib/adminFormClasses'
@@ -50,11 +51,15 @@ export default function AdminCategoriesPage() {
   const [slugTouched, setSlugTouched] = useState(false)
   const [description, setDescription] = useState('')
   const [parentId, setParentId] = useState('')
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [imageUploading, setImageUploading] = useState(false)
 
   const closeDrawer = useCallback(() => {
     setDrawerOpen(false)
     setEditingId(null)
     setSlugTouched(false)
+    setImageUrl(null)
+    setImageUploading(false)
   }, [])
 
   const openAdd = useCallback(() => {
@@ -65,6 +70,7 @@ export default function AdminCategoriesPage() {
     setSlugTouched(false)
     setDescription('')
     setParentId('')
+    setImageUrl(null)
     setDrawerOpen(true)
   }, [])
 
@@ -76,8 +82,28 @@ export default function AdminCategoriesPage() {
     setSlugTouched(true)
     setDescription(row.description ?? '')
     setParentId(row.parent_id != null ? String(row.parent_id) : '')
+    setImageUrl(row.image_url ?? null)
     setDrawerOpen(true)
   }, [])
+
+  const handleImageUpload = useCallback(
+    async (file: File) => {
+      if (editingId == null) return
+      setImageUploading(true)
+      try {
+        const res = await uploadAdminCategoryImage(editingId, file)
+        if (!res.ok) throw new Error(res.message)
+        setImageUrl(res.data.image_url)
+        toast.success('Image uploaded')
+        void qc.invalidateQueries({ queryKey: QKEY })
+      } catch (e) {
+        toast.error(getApiErrorMessage(e, 'Image upload failed'))
+      } finally {
+        setImageUploading(false)
+      }
+    },
+    [editingId, qc],
+  )
 
   useEffect(() => {
     if (drawerMode !== 'add' || slugTouched) return
@@ -373,6 +399,44 @@ export default function AdminCategoriesPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Short category description"
                 />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white/90">
+                  Category image <span className="text-white/40">(optional)</span>
+                </label>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                    {imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={imageUrl} alt="" className="h-full w-full object-contain" />
+                    ) : (
+                      <span className="text-[10px] text-white/40">No image</span>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    {drawerMode === 'edit' ? (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={imageUploading}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) void handleImageUpload(f)
+                            e.target.value = ''
+                          }}
+                          className="block w-full text-xs text-white/70 file:mr-3 file:rounded-md file:border-0 file:bg-orange-500/20 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-orange-200 file:hover:bg-orange-500/30"
+                        />
+                        <p className="text-xs text-white/40">
+                          {imageUploading ? 'Uploading…' : 'PNG, JPG or WebP. Stored on CDN as WebP.'}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-white/40">Save the category first, then upload an image.</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 

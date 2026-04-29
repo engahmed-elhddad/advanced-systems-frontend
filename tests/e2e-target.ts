@@ -12,6 +12,7 @@ export function parseOrigin(url: string): URL {
 }
 
 export function assertNotLoopback(label: string, url: string): void {
+  if ((process.env.E2E_ALLOW_LOOPBACK || '').trim() === '1') return
   let host: string
   try {
     host = parseOrigin(url).hostname

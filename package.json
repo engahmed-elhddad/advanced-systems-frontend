@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "test:e2e": "playwright test -c playwright.e2e.config.ts",
     "test:e2e:headed": "playwright test -c playwright.e2e.config.ts --headed",
     "analyze:e2e-report": "node scripts/analyze-playwright-results.mjs",
@@ -51,6 +53,7 @@
     "eslint-config-next": "14.2.3",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^4.1.5"
   }
 }

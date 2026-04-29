@@ -13,6 +13,20 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.vercel-storage.com', pathname: '/**' },
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
+      // Enrichment image sources (Mouser/DigiKey/manufacturer CDNs surface images during MPN-first lookup)
+      { protocol: 'https', hostname: 'www.mouser.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'eu.mouser.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.mouser.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'media.digikey.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'www.digikey.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.digikey.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'media.distributordatasolutions.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'mediap.industry.siemens.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.siemens.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.schneider-electric.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.abb.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.omron.com', pathname: '/**' },
+      { protocol: 'https', hostname: '*.rockwellautomation.com', pathname: '/**' },
       { protocol: 'http', hostname: 'localhost', pathname: '/**' },
       { protocol: 'http', hostname: '127.0.0.1', pathname: '/**' },
     ],
@@ -31,7 +45,11 @@ const nextConfig = {
     ]
   },
   async rewrites() {
-    return [{ source: '/sitemap-products.xml', destination: '/sitemap-products' }]
+    return [
+      { source: '/sitemap-products.xml', destination: '/sitemap-products' },
+      { source: '/sitemap-brands.xml', destination: '/sitemap-brands' },
+      { source: '/sitemap-categories.xml', destination: '/sitemap-categories' },
+    ]
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],

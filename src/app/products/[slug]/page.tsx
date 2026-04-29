@@ -11,6 +11,7 @@ import { getProductByPartNumber, getProductBySlug, getProducts, apiFetch } from 
 import { COMPANY_NAME_EN } from '@/lib/company'
 import { API_BASE_URL, normalizeCategoryQueryForApi, SITE_URL } from '@/lib/constants'
 import { absoluteUrl, canonicalPath, truncateMetaDescription } from '@/lib/seo'
+import { buildBreadcrumbJsonLd, buildProductJsonLd } from '@/lib/productJsonLd'
 import { normalizeProductVariants } from '@/lib/productVariants'
 import { ProductDetail } from './ProductDetail'
 import { SafeImage } from '@/components/ui/SafeImage'
@@ -103,7 +104,16 @@ function toSchemaAvailability(availability?: string, stockQty?: number): string 
 function parseSpecs(product: Record<string, unknown>): Record<string, string> {
   const raw = product.specifications ?? product.specs
   let obj: Record<string, unknown> = {}
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+  if (Array.isArray(raw)) {
+    // ProductSpec relational rows arrive as [{key, value}, ...]
+    for (const row of raw) {
+      if (row && typeof row === 'object' && 'key' in row && 'value' in row) {
+        const k = String((row as { key: unknown }).key ?? '').trim()
+        const v = (row as { value: unknown }).value
+        if (k && v != null && String(v).trim()) obj[k] = String(v)
+      }
+    }
+  } else if (raw && typeof raw === 'object') {
     obj = raw as Record<string, unknown>
   } else if (typeof raw === 'string') {
     try {
@@ -359,36 +369,22 @@ export default async function ProductSlugPage({ params }: Props) {
   const schemaImages = (galleryImages.length ? galleryImages : ['/placeholder.png']).map((u) => absoluteUrl(u))
   const schemaDescription =
     (description || `Industrial part ${partNum}${brandName ? ` — ${brandName}` : ''}.`).replace(/\s+/g, ' ').trim()
-  const offerPrice =
-    typeof product.price_usd === 'number' && Number.isFinite(product.price_usd)
-      ? product.price_usd
-      : typeof product.list_price === 'number' && Number.isFinite(product.list_price)
-        ? product.list_price
-        : undefined
   const schemaAvailability = toSchemaAvailability(availability, stockQty)
 
-  const productSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: productName,
-    image: schemaImages,
-    description: schemaDescription.slice(0, 5000),
-    sku: partNum,
-    mpn: partNum,
-    category: categoryName || 'Industrial Parts',
-    brand: {
-      '@type': 'Brand',
-      name: brandName || 'Industrial',
-    },
-    url: productUrl,
-    offers: {
-      '@type': 'Offer',
-      url: productUrl,
-      availability: schemaAvailability,
-      seller: { '@type': 'Organization', name: COMPANY_NAME_EN },
-      ...(offerPrice != null ? { price: offerPrice, priceCurrency: 'USD' } : {}),
-    },
-  }
+  const productSchema = buildProductJsonLd({
+    product,
+    variants,
+    productUrl,
+    productName,
+    partNum,
+    brandName,
+    categoryName,
+    schemaImages,
+    schemaDescription,
+    schemaAvailability,
+    companyName: COMPANY_NAME_EN,
+    forceCurrency: 'USD',
+  })
 
   const categoryBrowseUrl =
     categoryName && categoryBrowsePathSeg
@@ -425,11 +421,9 @@ export default async function ProductSlugPage({ params }: Props) {
     item: productUrl,
   })
 
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: breadcrumbItems,
-  }
+  const breadcrumbSchema = buildBreadcrumbJsonLd({
+    items: breadcrumbItems.map((b) => ({ name: b.name, url: String(b.item) })),
+  })
 
   return (
     <div className="relative z-10 min-h-screen">

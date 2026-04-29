@@ -12,6 +12,16 @@ import { getApiBaseUrl, getBrowserBaseUrl, getHealthUrl } from './e2e-target'
 
 const LATENCY_WARN_MS = 3000
 
+function writeLoginDebugHtml(html: string, reason: string): void {
+  const debugPath = path.join(process.cwd(), 'playwright', '.auth', 'global-setup-login-failure.html')
+  fs.mkdirSync(path.dirname(debugPath), { recursive: true })
+  fs.writeFileSync(debugPath, html, 'utf8')
+  // eslint-disable-next-line no-console
+  console.error(`[global-setup] ${reason} — full HTML (${html.length} chars) → ${debugPath}`)
+  // eslint-disable-next-line no-console
+  console.error('[global-setup] HTML (first 16k chars):\n', html.slice(0, 16_000))
+}
+
 export default async function globalSetup(_config: FullConfig): Promise<void> {
   loadE2eEnv()
 
@@ -67,10 +77,32 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
 
   const { email, password } = requireAdminLoginEnv()
 
-  await page.goto('/admin/login', { waitUntil: 'load', timeout: 90_000 })
-  await page.getByLabel('Email').waitFor({ state: 'visible', timeout: 30_000 })
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(password)
+  // `admin/login` is a client component: `load` often fires before React hydrates inputs.
+  // Wait for the form shell, then use stable `id` selectors from `admin/login/page.tsx`.
+  await page.goto('/admin/login', { waitUntil: 'domcontentloaded', timeout: 90_000 })
+  try {
+    await page.getByTestId('admin-login-form').waitFor({ state: 'visible', timeout: 60_000 })
+  } catch {
+    writeLoginDebugHtml(await page.content(), 'admin-login-form not visible within 60s')
+    throw new Error(
+      '[global-setup] /admin/login did not render admin-login-form (client hydration or wrong page). See HTML dump above.',
+    )
+  }
+
+  const emailInput = page.locator('#email')
+  const passwordInput = page.locator('#password')
+  try {
+    await emailInput.waitFor({ state: 'visible', timeout: 30_000 })
+    await passwordInput.waitFor({ state: 'visible', timeout: 30_000 })
+  } catch {
+    writeLoginDebugHtml(await page.content(), 'email or password input not visible')
+    throw new Error(
+      '[global-setup] #email / #password not visible on /admin/login. See HTML dump above.',
+    )
+  }
+
+  await emailInput.fill(email)
+  await passwordInput.fill(password)
   await Promise.all([
     page.waitForURL(/\/admin\/?$/i, { timeout: 90_000 }),
     page.getByRole('button', { name: /sign in/i }).click(),

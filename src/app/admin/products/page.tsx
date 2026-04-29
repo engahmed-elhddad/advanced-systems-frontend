@@ -45,12 +45,51 @@ function ProductRowsSkeleton() {
     <>
       {Array.from({ length: 5 }).map((_, index) => (
         <tr key={index}>
-          <td colSpan={7} className="px-2 py-2">
+          <td colSpan={8} className="px-2 py-2">
             <Skeleton className="h-14 w-full rounded-lg bg-white/10" />
           </td>
         </tr>
       ))}
     </>
+  )
+}
+
+function conditionBadgeClass(condition: string): string {
+  const c = condition.trim().toLowerCase()
+  const base = 'inline-flex rounded-full px-2 py-0.5 text-xs font-medium'
+  switch (c) {
+    case 'new':
+      return `${base} bg-green-100 text-green-800`
+    case 'used':
+      return `${base} bg-yellow-100 text-yellow-800`
+    case 'refurbished':
+      return `${base} bg-blue-100 text-blue-800`
+    case 'obsolete':
+      return `${base} bg-red-100 text-red-800`
+    default:
+      return `${base} bg-gray-100 text-gray-800`
+  }
+}
+
+function formatConditionLabel(condition: string): string {
+  const s = condition.trim().toLowerCase()
+  if (!s) return ''
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+function OfferConditionBadges({ conditions }: { conditions: string[] | undefined }) {
+  const list = conditions ?? []
+  if (list.length === 0) {
+    return <span className="text-white/35">—</span>
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {list.map((c) => (
+        <span key={c} className={conditionBadgeClass(c)} title={c}>
+          {formatConditionLabel(c)}
+        </span>
+      ))}
+    </div>
   )
 }
 
@@ -79,6 +118,7 @@ function AdminProductsTableHead(props: {
         <th className="px-4 py-3 font-semibold">Brand</th>
         <th className="px-4 py-3 font-semibold">Category</th>
         <th className="px-4 py-3 font-semibold">Status</th>
+        <th className="px-4 py-3 font-semibold">Condition</th>
         <th className="px-4 py-3 font-semibold">Actions</th>
       </tr>
     </thead>
@@ -326,6 +366,12 @@ export default function AdminProductsListPage() {
       meta: { cellClassName: 'px-4 py-3.5' } satisfies DataTableColumnMeta,
     },
     {
+      id: 'offerConditions',
+      header: 'Condition',
+      cell: ({ row }) => <OfferConditionBadges conditions={row.original.offerConditions} />,
+      meta: { cellClassName: 'px-4 py-3.5' } satisfies DataTableColumnMeta,
+    },
+    {
       id: 'actions',
       enableHiding: false,
       header: 'Actions',
@@ -415,7 +461,7 @@ export default function AdminProductsListPage() {
               />
               <tbody>
                 <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center">
+                  <td colSpan={8} className="px-4 py-16 text-center">
                     <div className="mx-auto flex max-w-sm flex-col items-center gap-4 text-gray-300">
                       <div className="rounded-full border border-white/10 bg-white/5 p-3">
                         <Boxes className="h-6 w-6 text-white/70" />

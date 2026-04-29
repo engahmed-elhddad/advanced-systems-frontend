@@ -403,13 +403,8 @@ export const adminApi = {
         headers: { "Content-Type": "multipart/form-data" },
       });
     },
-    uploadDatasheet: (id: number, file: File) => {
-      const fd = new FormData();
-      fd.append("file", file);
-      return api.post(`/api/v1/admin/products/${id}/datasheets`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    },
+    uploadDatasheetFromUrl: (id: number, sourceUrl: string) =>
+      api.post(`/api/v1/admin/products/${id}/upload-datasheet`, { source_url: sourceUrl }),
   },
   rfqs: {
     list: (params?: any) => api.get("/api/v1/admin/rfqs", { params }),

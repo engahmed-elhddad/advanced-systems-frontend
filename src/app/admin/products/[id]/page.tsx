@@ -113,6 +113,7 @@ export default function AdminEditProductPage() {
               loading={updateMutation.isPending}
               brandOptions={brandOptions}
               categoryOptions={categoryOptions}
+              productId={product.id}
               initialValue={{
                 name: product.name,
                 brandId: product.brandId != null ? String(product.brandId) : '',

@@ -411,3 +411,24 @@ export async function updateAdminCategory(id: number, body: Record<string, unkno
 export async function deleteAdminCategory(id: number) {
   return request<{ message: string }>(`/api/v1/admin/categories/${id}`, { method: "DELETE" });
 }
+
+export async function uploadAdminCategoryImage(id: number, file: File) {
+  const headers = getAuthHeaders();
+  delete headers["Content-Type"];
+  const form = new FormData();
+  form.append("file", file);
+  const res = await apiFetch(`${API}/api/v1/admin/categories/${id}/image`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+  const payload = await parseJsonSafe(res);
+  if (!res.ok) {
+    return {
+      ok: false as const,
+      message: backendErrorMessage(payload && typeof payload === "object" ? (payload as Record<string, unknown>) : {}),
+      status: res.status,
+    };
+  }
+  return { ok: true as const, data: payload as { image_url: string } };
+}

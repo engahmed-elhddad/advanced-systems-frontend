@@ -1,43 +1,54 @@
 import { NextResponse } from 'next/server'
-import { API_BASE_URL, SITE_URL } from '@/lib/constants'
-
-const BASE = SITE_URL.replace(/\/$/, '')
+import { API_BASE_URL } from '@/lib/constants'
+import { canonicalPath } from '@/lib/seo'
 
 export const revalidate = 3600
 
-/** All catalog product URLs (slug-first), same source as main sitemap PDP list. */
-async function fetchAllProductUrls(): Promise<string[]> {
-  const segments: string[] = []
+type SeoType = 'products' | 'brands' | 'categories'
+
+async function fetchAllSeoLocs(type: SeoType, buildLoc: (segment: string) => string): Promise<string[]> {
+  const locs: string[] = []
   let page = 1
   let pagesTotal = 1
-  const size = 100
+  const size = 5000
   while (page <= pagesTotal && page <= 5000) {
-    try {
-      const params = new URLSearchParams({
-        page: String(page),
-        size: String(size),
-        sort: 'newest',
-      })
-      const res = await fetch(`${API_BASE_URL}/api/v1/products/?${params}`, {
-        next: { revalidate: 3600 },
-      })
-      if (!res.ok) break
-      const data = await res.json()
-      const items = data?.items ?? data?.products ?? []
-      if (typeof data?.pages === 'number' && data.pages >= 1) pagesTotal = data.pages
-      for (const p of items) {
-        const slug = String(p.slug ?? '').trim()
-        const pn = String(p.part_number ?? '').trim()
-        const seg = slug || pn
-        if (seg) segments.push(`${BASE}/products/${encodeURIComponent(seg)}`)
-      }
-      if (!items.length) break
-      page += 1
-    } catch {
-      break
+    const params = new URLSearchParams({
+      type,
+      page: String(page),
+      size: String(size),
+    })
+    const res = await fetch(`${API_BASE_URL}/api/seo/urls?${params}`, {
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) break
+    const data = (await res.json()) as {
+      pages?: number
+      part_numbers?: string[]
+      brands?: string[]
+      categories?: string[]
     }
+    if (typeof data.pages === 'number' && data.pages >= 1) pagesTotal = data.pages
+
+    const rows =
+      type === 'products'
+        ? data.part_numbers ?? []
+        : type === 'brands'
+          ? data.brands ?? []
+          : data.categories ?? []
+
+    for (const raw of rows) {
+      const seg = String(raw ?? '').trim()
+      if (seg) locs.push(buildLoc(seg))
+    }
+    if (!rows.length) break
+    page += 1
   }
-  return [...new Set(segments)]
+  return [...new Set(locs)]
+}
+
+/** Product PDP URLs — upstream `/api/seo/urls` applies Article 5 filters. */
+async function fetchAllProductUrls(): Promise<string[]> {
+  return fetchAllSeoLocs('products', (seg) => canonicalPath(`/products/${encodeURIComponent(seg)}`))
 }
 
 export async function GET() {
@@ -51,7 +62,7 @@ ${urls
     <loc>${url}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-  </url>`
+  </url>`,
   )
   .join('\n')}
 </urlset>`

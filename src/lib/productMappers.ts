@@ -11,6 +11,7 @@ export interface ApiProduct {
   manufacturer?: string
   brand_slug?: string | null
   brand_logo_url?: string | null
+  brand_name?: string | null
   category?: string | { name?: string } | null
   description?: string
   short_description?: string
@@ -45,6 +46,7 @@ export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
     manufacturer: brandStr || undefined,
     brand_slug: p.brand_slug != null ? String(p.brand_slug) : null,
     brand_logo_url: p.brand_logo_url != null ? String(p.brand_logo_url) : null,
+    brand_name: p.brand_name != null ? String(p.brand_name) : null,
     category: categoryStr || undefined,
     description: String(p.description ?? ''),
     short_description: String(p.short_description ?? ''),
@@ -76,6 +78,7 @@ export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct 
     manufacturer: brandStr,
     brand_slug: hit.brand_slug != null ? String(hit.brand_slug) : null,
     brand_logo_url: hit.brand_logo_url != null ? String(hit.brand_logo_url) : null,
+    brand_name: hit.brand_name != null ? String(hit.brand_name) : null,
     category: categoryStr,
     description: String(hit.short_description ?? hit.description ?? ''),
     short_description: String(hit.short_description ?? ''),
@@ -121,6 +124,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
     manufacturer,
     brand_slug: p.brand_slug ?? undefined,
     brand_logo_url: p.brand_logo_url ?? undefined,
+    brand_name: p.brand_name?.trim() ? p.brand_name.trim() : undefined,
     category: categoryDisplay,
     description: p.short_description ?? p.description,
     image_url: getProductImage(p as unknown as Record<string, unknown>),
