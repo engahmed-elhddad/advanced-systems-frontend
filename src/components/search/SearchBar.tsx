@@ -8,6 +8,7 @@ import { SafeImage } from '@/components/ui/SafeImage'
 import { HighlightMatch } from '@/components/search/SearchHighlight'
 import { asApiDisplayString, cn } from '@/lib/utils'
 import { API_BASE_URL } from '@/lib/constants'
+import { getProductByPartNumber } from '@/lib/api'
 
 const API_BASE = API_BASE_URL
 
@@ -412,12 +413,27 @@ export function SearchBar({
   )
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault()
       const qv = query.trim()
-      if (qv) pushSearchWithQ(qv)
+      if (!qv) return
+      try {
+        const product = await getProductByPartNumber(qv)
+        const slug = (product as { slug?: string } | null | undefined)?.slug
+        if (slug && typeof slug === 'string' && slug.length > 0) {
+          pushRecent(qv)
+          setRecent(readRecent())
+          setDropdownOpen(false)
+          applyQuery('')
+          router.push(`${productPath}/${encodeURIComponent(slug)}`)
+          return
+        }
+      } catch {
+        /* fall through to search */
+      }
+      pushSearchWithQ(qv)
     },
-    [query, pushSearchWithQ],
+    [query, pushSearchWithQ, router, productPath, applyQuery],
   )
 
   const selectOption = useCallback(
