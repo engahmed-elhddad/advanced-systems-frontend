@@ -64,7 +64,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${rajdhani.variable} ${inter.className} font-sans antialiased text-[--text-primary]`}>
         <AnalyticsClient />
-        <Analytics />
         <ThemeProvider>
         <QueryProvider>
           <ShopAuthProvider>
