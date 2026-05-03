@@ -30,6 +30,8 @@ export interface SearchSuggestion {
   brand?: string
   brand_name?: string
   category?: string
+  /** Category label from autocomplete (Meili + DB follow-up, spec 011). */
+  category_name?: string
   /** Canonical storefront image URL from search index. */
   image_url?: string
   /** @deprecated Use image_url; retained for older autocomplete payloads. */
@@ -137,6 +139,8 @@ function parseMeiliHits(data: unknown, limit: number): SearchSuggestion[] {
           (typeof o.name === 'number' ? String(o.name) : ''),
         brand: asApiDisplayString(o.brand_name ?? o.brand),
         brand_name: asApiDisplayString(o.brand_name),
+        category: asApiDisplayString(o.category_name ?? o.category),
+        category_name: asApiDisplayString(o.category_name),
         image_url: img,
         primary_image: img,
       }
@@ -164,7 +168,7 @@ function parseLegacySuggest(data: unknown, limit: number): SearchSuggestion[] {
 }
 
 type SuggestionOption =
-  | { type: 'product'; part_number: string; name: string; brand?: string; image?: string }
+  | { type: 'product'; part_number: string; name: string; brand?: string; category?: string; image?: string }
   | { type: 'brand'; name: string; slug: string; logo_url?: string | null }
   | { type: 'category'; name: string; slug: string }
   | { type: 'recent'; text: string }
@@ -330,6 +334,7 @@ export function SearchBar({
         part_number: s.part_number,
         name: s.name || s.part_number,
         brand: s.brand_name || s.brand,
+        category: s.category_name || s.category,
         image: s.image_url ?? s.primary_image,
       }))
       const filteredBrands =
@@ -606,6 +611,12 @@ export function SearchBar({
             ) : (
               <p className="truncate text-[11px] font-medium uppercase tracking-wider text-orange-200/40">Part · search index</p>
             )}
+            {opt.category ? (
+              <p className="truncate text-[11px] text-white/45">
+                <span className="text-white/35">Category </span>
+                <HighlightMatch text={opt.category} query={flatQuery} />
+              </p>
+            ) : null}
           </div>
           <Package className="h-4 w-4 shrink-0 text-orange-400/80" aria-hidden />
         </Link>
