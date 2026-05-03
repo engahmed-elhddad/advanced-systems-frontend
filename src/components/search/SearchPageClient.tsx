@@ -15,10 +15,11 @@ import { searchHitToApiProduct } from '@/lib/productMappers'
 import { trackSearch } from '@/lib/analytics'
 import type { Brand, Category } from '@/types/product'
 import type { FacetValue, PriceBandFacetValue } from '@/types/facet'
-
-const PAGE_SIZE = 30
-
-type SortKey = 'relevance' | 'newest' | 'popular'
+import {
+  SORT_DROPDOWN_OPTIONS,
+  PAGE_SIZE_OPTIONS,
+  DEFAULT_PAGE_SIZE,
+} from '@/types/sort'
 
 const POPULAR_QUERIES = [
   { label: '3RT1015', q: '3RT1015' },
@@ -75,7 +76,15 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
   )
 
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1)
-  const sort = (searchParams.get('sort') as SortKey) || 'relevance'
+  const sortRaw = (searchParams.get('sort') ?? '').trim()
+  const sortForApi = sortRaw || 'relevance'
+  const sortSelectValue = SORT_DROPDOWN_OPTIONS.some((o) => o.value === sortForApi)
+    ? sortForApi
+    : 'relevance'
+  const sizeRaw = parseInt(searchParams.get('size') ?? '', 10)
+  const pageSize: number = (PAGE_SIZE_OPTIONS as readonly number[]).includes(sizeRaw)
+    ? sizeRaw
+    : DEFAULT_PAGE_SIZE
   const brandIds = useMemo(() => parseIntList('brand_id', searchParams), [searchParams])
   const categoryIds = useMemo(() => parseIntList('category_id', searchParams), [searchParams])
   const seriesVals = useMemo(
@@ -112,6 +121,22 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
       router.replace(s ? `/search?${s}` : '/search', { scroll: false })
     },
     [router],
+  )
+
+  const setSingleUrlParam = useCallback(
+    (key: 'sort' | 'size', value: string) => {
+      const p = new URLSearchParams(searchParams.toString())
+      if (key === 'sort') {
+        if (!value || value === 'relevance') p.delete('sort')
+        else p.set('sort', value)
+      } else {
+        if (!value || value === String(DEFAULT_PAGE_SIZE)) p.delete('size')
+        else p.set('size', value)
+      }
+      p.delete('page')
+      replaceUrl(p)
+    },
+    [searchParams, replaceUrl],
   )
 
   const setParam = useCallback(
@@ -191,7 +216,8 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
       [
         'search-page-browse',
         page,
-        sort,
+        pageSize,
+        sortForApi,
         qUrl.trim(),
         [...brandIds].slice().sort((a, b) => a - b).join(','),
         [...categoryIds].slice().sort((a, b) => a - b).join(','),
@@ -203,7 +229,8 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
       ] as const,
     [
       page,
-      sort,
+      pageSize,
+      sortForApi,
       qUrl,
       brandIds,
       categoryIds,
@@ -222,7 +249,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
       const res = await searchBrowse({
         q: qUrl.trim() || undefined,
         page,
-        size: PAGE_SIZE,
+        size: pageSize,
         brand_ids: brandIds.length ? brandIds : undefined,
         category_ids: categoryIds.length ? categoryIds : undefined,
         series_values: seriesVals.length ? seriesVals : undefined,
@@ -231,7 +258,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
         price_band: priceBandVals.length ? priceBandVals : undefined,
         spec: specTokens.length ? specTokens : undefined,
         facets: true,
-        sort: sort === 'relevance' ? 'relevance' : sort,
+        sort: sortForApi,
       })
       const hits = res.items ?? []
       return {
@@ -446,12 +473,6 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
     router.replace('/search', { scroll: false })
   }
 
-  const sortOptions = [
-    { value: 'relevance', label: 'Relevance' },
-    { value: 'newest', label: 'Newest' },
-    { value: 'popular', label: 'Popular' },
-  ]
-
   const glassPanel = 'rounded-2xl border border-[--border] bg-[--bg-elevated]'
 
   return (
@@ -566,19 +587,25 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                   'flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4',
                 )}
               >
-                <div className="w-full shrink-0 sm:max-w-[220px] sm:ml-auto sm:order-2">
+                <div className="flex w-full shrink-0 flex-col gap-2 sm:max-w-[min(100%,440px)] sm:ml-auto sm:flex-row sm:order-2 sm:gap-3">
                   <Select
-                    value={sort}
-                    onChange={(v) =>
-                      setParam((p) => {
-                        if (v === 'relevance') p.delete('sort')
-                        else p.set('sort', v)
-                        p.set('page', '1')
-                      })
-                    }
-                    options={sortOptions}
+                    value={sortSelectValue}
+                    onChange={(v) => setSingleUrlParam('sort', v)}
+                    options={[...SORT_DROPDOWN_OPTIONS]}
                     placeholder="Sort"
-                    className="border-[--border] bg-[--bg-elevated] text-[--text-primary]"
+                    label="Sort"
+                    className="min-w-0 flex-1 border-[--border] bg-[--bg-elevated] text-[--text-primary]"
+                  />
+                  <Select
+                    value={String(pageSize)}
+                    onChange={(v) => setSingleUrlParam('size', v)}
+                    options={PAGE_SIZE_OPTIONS.map((n) => ({
+                      value: String(n),
+                      label: `${n} per page`,
+                    }))}
+                    placeholder="Per page"
+                    label="Results per page"
+                    className="min-w-0 flex-1 border-[--border] bg-[--bg-elevated] text-[--text-primary]"
                   />
                 </div>
                 <p className="text-sm text-[--text-secondary] sm:order-1" aria-live="polite" aria-busy={loading}>

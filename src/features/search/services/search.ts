@@ -38,7 +38,15 @@ export interface BrowseSearchParams {
   price_band?: string[]
   spec?: string[]
   facets?: boolean
-  sort?: 'relevance' | 'newest' | 'popular' | string
+  sort?:
+    | 'relevance'
+    | 'price_asc'
+    | 'price_desc'
+    | 'brand_az'
+    | 'partnumber_az'
+    | 'newest'
+    | 'popular'
+    | string
 }
 
 /** Multi-filter browse (Meilisearch; spec filters use database path on API). */
@@ -47,7 +55,7 @@ export async function searchBrowse(params: BrowseSearchParams): Promise<SearchRe
   const q = (params.q ?? '').trim()
   if (q) sp.set('q', q)
   sp.set('page', String(params.page ?? 1))
-  sp.set('size', String(params.size ?? 30))
+  sp.set('size', String(params.size ?? 20))
   sp.set('sort', params.sort ?? 'relevance')
   for (const id of params.brand_ids ?? []) {
     sp.append('brand_id', String(id))
@@ -87,7 +95,7 @@ export async function searchBrowse(params: BrowseSearchParams): Promise<SearchRe
     estimatedTotalHits: d.estimatedTotalHits,
     pages: d.pages ?? 1,
     page: d.page ?? (params.page ?? 1),
-    size: d.size ?? (params.size ?? 30),
+    size: d.size ?? (params.size ?? 20),
     query: d.query ?? q,
     did_you_mean: d.did_you_mean ?? null,
     processingTimeMs: d.processingTimeMs,
