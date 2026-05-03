@@ -1,3 +1,5 @@
+import type { Facet } from './facet'
+
 export interface Product {
   id: number
   part_number: string
@@ -84,6 +86,8 @@ export interface SearchResponse {
   hits: Product[]
   items: Product[]
   products: Product[]
+  /** Present when ``facets=true`` on search API (spec 012). */
+  facets?: Facet[]
   total: number
   estimatedTotalHits?: number
   pages: number

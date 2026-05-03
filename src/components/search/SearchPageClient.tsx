@@ -14,6 +14,7 @@ import { searchBrowse, getBrowseFacets } from '@/features/search/services'
 import { searchHitToApiProduct } from '@/lib/productMappers'
 import { trackSearch } from '@/lib/analytics'
 import type { Brand, Category } from '@/types/product'
+import type { FacetValue, PriceBandFacetValue } from '@/types/facet'
 
 const PAGE_SIZE = 30
 
@@ -85,6 +86,14 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
     () => searchParams.getAll('availability').map((s) => s.trim()).filter(Boolean),
     [searchParams],
   )
+  const conditionVals = useMemo(
+    () => searchParams.getAll('condition').map((s) => s.trim()).filter(Boolean),
+    [searchParams],
+  )
+  const priceBandVals = useMemo(
+    () => searchParams.getAll('price_band').map((s) => s.trim()).filter(Boolean),
+    [searchParams],
+  )
   const specTokens = useMemo(() => parseSpecTokens(searchParams), [searchParams])
 
   const hasMeiliFilters =
@@ -93,6 +102,8 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
     categoryIds.length > 0 ||
     seriesVals.length > 0 ||
     availabilityVals.length > 0 ||
+    conditionVals.length > 0 ||
+    priceBandVals.length > 0 ||
     specTokens.length > 0
 
   const replaceUrl = useCallback(
@@ -139,6 +150,19 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
     })
   }
 
+  const toggleFacetParam = (key: 'condition' | 'availability' | 'price_band', value: string) => {
+    setParam((p) => {
+      const cur = p.getAll(key)
+      const has = cur.includes(value)
+      p.delete(key)
+      for (const x of cur) {
+        if (x !== value) p.append(key, x)
+      }
+      if (!has) p.append(key, value)
+      p.set('page', '1')
+    })
+  }
+
   const toggleSpec = (token: string) => {
     setParam((p) => {
       const cur = p.getAll('spec')
@@ -173,9 +197,22 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
         [...categoryIds].slice().sort((a, b) => a - b).join(','),
         [...seriesVals].slice().sort().join('\0'),
         [...availabilityVals].slice().sort().join('\0'),
+        [...conditionVals].slice().sort().join('\0'),
+        [...priceBandVals].slice().sort().join('\0'),
         [...specTokens].slice().sort().join('\0'),
       ] as const,
-    [page, sort, qUrl, brandIds, categoryIds, seriesVals, availabilityVals, specTokens],
+    [
+      page,
+      sort,
+      qUrl,
+      brandIds,
+      categoryIds,
+      seriesVals,
+      availabilityVals,
+      conditionVals,
+      priceBandVals,
+      specTokens,
+    ],
   )
 
   const searchQuery = useQuery({
@@ -189,8 +226,11 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
         brand_ids: brandIds.length ? brandIds : undefined,
         category_ids: categoryIds.length ? categoryIds : undefined,
         series_values: seriesVals.length ? seriesVals : undefined,
-        availability_in: availabilityVals.length ? availabilityVals : undefined,
+        availability: availabilityVals.length ? availabilityVals : undefined,
+        condition: conditionVals.length ? conditionVals : undefined,
+        price_band: priceBandVals.length ? priceBandVals : undefined,
         spec: specTokens.length ? specTokens : undefined,
+        facets: true,
         sort: sort === 'relevance' ? 'relevance' : sort,
       })
       const hits = res.items ?? []
@@ -203,6 +243,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
         pages: res.pages ?? 1,
         readinessHint: (res.total ?? 0) === 0,
         did_you_mean: res.did_you_mean ?? null,
+        facets: res.facets ?? [],
       }
     },
     staleTime: 90_000,
@@ -218,11 +259,24 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
   const loading = hasMeiliFilters && searchQuery.isFetching
   const searchFailed = hasMeiliFilters && searchQuery.isError
 
+  const apiFacets = searchQuery.data?.facets ?? []
+  const conditionFacetSlice = apiFacets.find((f) => f.name === 'condition')?.values as FacetValue[] | undefined
+  const availabilityFacetSlice = apiFacets.find((f) => f.name === 'availability')?.values as FacetValue[] | undefined
+  const priceBandFacetSlice = apiFacets.find((f) => f.name === 'price_band')?.values as PriceBandFacetValue[] | undefined
+
   useEffect(() => {
     if (loading || !hasMeiliFilters || searchFailed) return
     const q = qUrl.trim()
-    const key = `${q}|${page}|${total}|${brandIds.join(',')}|${categoryIds.join(',')}`
-    if (!q && brandIds.length + categoryIds.length + seriesVals.length === 0) return
+    const key = `${q}|${page}|${total}|${brandIds.join(',')}|${categoryIds.join(',')}|${conditionVals.join(',')}|${priceBandVals.join(',')}`
+    if (
+      !q &&
+      brandIds.length + categoryIds.length + seriesVals.length === 0 &&
+      availabilityVals.length === 0 &&
+      conditionVals.length === 0 &&
+      priceBandVals.length === 0 &&
+      specTokens.length === 0
+    )
+      return
     if (lastSearchTrackKey.current === key) return
     lastSearchTrackKey.current = key
     trackSearch({
@@ -234,6 +288,8 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
         categoryIds.length > 0 ||
         seriesVals.length > 0 ||
         availabilityVals.length > 0 ||
+        conditionVals.length > 0 ||
+        priceBandVals.length > 0 ||
         specTokens.length > 0,
     })
   }, [
@@ -247,6 +303,8 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
     categoryIds,
     seriesVals,
     availabilityVals,
+    conditionVals,
+    priceBandVals,
     specTokens,
   ])
 
@@ -324,6 +382,34 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
           }),
       })
     }
+    for (const c of conditionVals) {
+      out.push({
+        key: `cond:${c}`,
+        label: `Condition: ${c}`,
+        onRemove: () =>
+          setParam((p) => {
+            p.delete('condition')
+            for (const x of conditionVals) {
+              if (x !== c) p.append('condition', x)
+            }
+            p.set('page', '1')
+          }),
+      })
+    }
+    for (const pb of priceBandVals) {
+      out.push({
+        key: `pb:${pb}`,
+        label: `Price band: ${pb}`,
+        onRemove: () =>
+          setParam((p) => {
+            p.delete('price_band')
+            for (const x of priceBandVals) {
+              if (x !== pb) p.append('price_band', x)
+            }
+            p.set('page', '1')
+          }),
+      })
+    }
     for (const t of specTokens) {
       const [k, ...rest] = t.split(':')
       const v = rest.join(':')
@@ -341,7 +427,19 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
       })
     }
     return out
-  }, [qUrl, brandIds, categoryIds, seriesVals, availabilityVals, specTokens, brands, categories, setParam])
+  }, [
+    qUrl,
+    brandIds,
+    categoryIds,
+    seriesVals,
+    availabilityVals,
+    conditionVals,
+    priceBandVals,
+    specTokens,
+    brands,
+    categories,
+    setParam,
+  ])
 
   const clearAll = () => {
     setQDraft('')
@@ -449,6 +547,15 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                 onToggleSeries={(s) => toggleString('series', s)}
                 onToggleAvailability={(a) => toggleString('availability', a)}
                 onToggleSpec={toggleSpec}
+                conditionFacet={conditionFacetSlice}
+                selectedConditions={conditionVals}
+                onToggleCondition={(v) => toggleFacetParam('condition', v)}
+                availabilityFacet={availabilityFacetSlice}
+                selectedAvailabilityFacet={availabilityVals}
+                onToggleAvailabilityFacet={(v) => toggleFacetParam('availability', v)}
+                priceBandFacet={priceBandFacetSlice}
+                selectedPriceBands={priceBandVals}
+                onTogglePriceBand={(v) => toggleFacetParam('price_band', v)}
               />
             </div>
 

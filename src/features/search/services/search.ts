@@ -1,11 +1,13 @@
 import { api } from '@/lib/api'
 import { normalizeCategoryQueryForApi } from '@/lib/constants'
+import type { Facet } from '@/types/facet'
 import type { Product, SearchParams, SearchResponse } from '@/types/product'
 
 interface RawSearchResponse {
   hits?: Product[]
   items?: Product[]
   products?: Product[]
+  facets?: Facet[]
   total?: number
   estimatedTotalHits?: number
   pages?: number
@@ -28,8 +30,14 @@ export interface BrowseSearchParams {
   brand_ids?: number[]
   category_ids?: number[]
   series_values?: string[]
+  /** Repeated ``availability`` query param (spec 012); merged with ``availability_in``. */
+  availability?: string[]
+  /** Legacy repeated param name — still sent for backward compat. */
   availability_in?: string[]
+  condition?: string[]
+  price_band?: string[]
   spec?: string[]
+  facets?: boolean
   sort?: 'relevance' | 'newest' | 'popular' | string
 }
 
@@ -42,16 +50,26 @@ export async function searchBrowse(params: BrowseSearchParams): Promise<SearchRe
   sp.set('size', String(params.size ?? 30))
   sp.set('sort', params.sort ?? 'relevance')
   for (const id of params.brand_ids ?? []) {
-    sp.append('brand_ids', String(id))
+    sp.append('brand_id', String(id))
   }
   for (const id of params.category_ids ?? []) {
-    sp.append('category_ids', String(id))
+    sp.append('category_id', String(id))
   }
   for (const s of params.series_values ?? []) {
     if (s.trim()) sp.append('series_values', s)
   }
-  for (const a of params.availability_in ?? []) {
-    if (a.trim()) sp.append('availability_in', a)
+  const avail = [...(params.availability ?? []), ...(params.availability_in ?? [])]
+  for (const a of avail) {
+    if (a.trim()) sp.append('availability', a.trim())
+  }
+  for (const c of params.condition ?? []) {
+    if (c.trim()) sp.append('condition', c.trim())
+  }
+  for (const pb of params.price_band ?? []) {
+    if (pb.trim()) sp.append('price_band', pb.trim())
+  }
+  if (params.facets === true) {
+    sp.set('facets', 'true')
   }
   for (const spec of params.spec ?? []) {
     if (spec.includes(':')) sp.append('spec', spec)
@@ -64,6 +82,7 @@ export async function searchBrowse(params: BrowseSearchParams): Promise<SearchRe
     hits,
     items: hits,
     products: hits,
+    facets: d.facets,
     total: d.total ?? d.estimatedTotalHits ?? hits.length,
     estimatedTotalHits: d.estimatedTotalHits,
     pages: d.pages ?? 1,

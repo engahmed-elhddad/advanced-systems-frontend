@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CDN_BASE_URL } from '@/lib/constants'
 import { resolvePublicMediaUrl } from '@/lib/resolveImage'
 import type { Brand, Category } from '@/types/product'
+import type { FacetValue, PriceBandFacetValue } from '@/types/facet'
 
 export function brandLogoSrc(url?: string | null): string | undefined {
   if (!url?.trim()) return undefined
@@ -57,6 +58,16 @@ export interface IndustrialFilterSidebarProps {
   onToggleSeries: (s: string) => void
   onToggleAvailability: (a: string) => void
   onToggleSpec: (token: string) => void
+  /** Spec 012 — API facet slices (optional). */
+  conditionFacet?: FacetValue[]
+  selectedConditions?: string[]
+  onToggleCondition?: (value: string) => void
+  availabilityFacet?: FacetValue[]
+  selectedAvailabilityFacet?: string[]
+  onToggleAvailabilityFacet?: (value: string) => void
+  priceBandFacet?: PriceBandFacetValue[]
+  selectedPriceBands?: string[]
+  onTogglePriceBand?: (value: string) => void
   className?: string
 }
 
@@ -74,6 +85,15 @@ export function IndustrialFilterSidebar({
   onToggleSeries,
   onToggleAvailability,
   onToggleSpec,
+  conditionFacet,
+  selectedConditions,
+  onToggleCondition,
+  availabilityFacet,
+  selectedAvailabilityFacet,
+  onToggleAvailabilityFacet,
+  priceBandFacet,
+  selectedPriceBands,
+  onTogglePriceBand,
   className,
 }: IndustrialFilterSidebarProps) {
   const shell =
@@ -146,22 +166,121 @@ export function IndustrialFilterSidebar({
         </div>
       </FilterSection>
 
-      <FilterSection title="Availability">
-        {[
-          { id: 'in_stock', label: 'In stock' },
-          { id: 'on_request', label: 'On request' },
-        ].map((o) => (
-          <label key={o.id} className="flex cursor-pointer items-center gap-2.5 text-sm text-slate-200">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-white/20 bg-white/5 text-orange-500"
-              checked={availabilityVals.includes(o.id)}
-              onChange={() => onToggleAvailability(o.id)}
-            />
-            {o.label}
-          </label>
-        ))}
-      </FilterSection>
+      {conditionFacet && conditionFacet.length > 0 && onToggleCondition ? (
+        <FilterSection title="Condition">
+          {conditionFacet.map((row) => {
+            const id = String(row.value)
+            const disabled = row.count === 0
+            return (
+              <label
+                key={id}
+                className={cn(
+                  'flex cursor-pointer items-center gap-2.5 text-sm text-slate-200',
+                  disabled && 'cursor-not-allowed opacity-45',
+                )}
+              >
+                <input
+                  type="checkbox"
+                  disabled={disabled}
+                  className="h-4 w-4 rounded border-white/20 bg-white/5 text-orange-500"
+                  checked={(selectedConditions ?? []).includes(id)}
+                  onChange={() => onToggleCondition(id)}
+                />
+                <span className="leading-snug">
+                  {row.label}
+                  <span className="ml-1 text-xs text-slate-500">({row.count})</span>
+                </span>
+              </label>
+            )
+          })}
+        </FilterSection>
+      ) : null}
+
+      {priceBandFacet && priceBandFacet.length > 0 && onTogglePriceBand ? (
+        <FilterSection title="Price Band">
+          {priceBandFacet.map((row) => {
+            const disabled = row.count === 0
+            return (
+              <label
+                key={row.value}
+                className={cn(
+                  'flex cursor-pointer items-start gap-2.5 text-sm text-slate-200',
+                  disabled && 'cursor-not-allowed opacity-45',
+                )}
+              >
+                <input
+                  type="checkbox"
+                  disabled={disabled}
+                  className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-orange-500"
+                  checked={(selectedPriceBands ?? []).includes(row.value)}
+                  onChange={() => onTogglePriceBand(row.value)}
+                />
+                <span className="flex min-w-0 flex-col gap-0.5 leading-snug">
+                  <span>{row.label_en}</span>
+                  {row.label_egp ? (
+                    <span className="text-xs text-white/45">{row.label_egp}</span>
+                  ) : (
+                    <span
+                      className="inline-flex items-center gap-1 text-xs text-slate-500"
+                      title="EGP unavailable — refresh shortly"
+                    >
+                      <Info className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                    </span>
+                  )}
+                  <span className="text-xs text-slate-500">({row.count})</span>
+                </span>
+              </label>
+            )
+          })}
+        </FilterSection>
+      ) : null}
+
+      {availabilityFacet && availabilityFacet.length > 0 && onToggleAvailabilityFacet ? (
+        <FilterSection title="Stock Status">
+          {availabilityFacet.map((row) => {
+            const id = String(row.value)
+            const disabled = row.count === 0
+            return (
+              <label
+                key={id}
+                className={cn(
+                  'flex cursor-pointer items-center gap-2.5 text-sm text-slate-200',
+                  disabled && 'cursor-not-allowed opacity-45',
+                )}
+              >
+                <input
+                  type="checkbox"
+                  disabled={disabled}
+                  className="h-4 w-4 rounded border-white/20 bg-white/5 text-orange-500"
+                  checked={(selectedAvailabilityFacet ?? []).includes(id)}
+                  onChange={() => onToggleAvailabilityFacet(id)}
+                />
+                <span className="leading-snug">
+                  {row.label}
+                  <span className="ml-1 text-xs text-slate-500">({row.count})</span>
+                </span>
+              </label>
+            )
+          })}
+        </FilterSection>
+      ) : (
+        <FilterSection title="Availability">
+          {[
+            { id: 'in_stock', label: 'In stock' },
+            { id: 'on_request', label: 'On request' },
+          ].map((o) => (
+            <label key={o.id} className="flex cursor-pointer items-center gap-2.5 text-sm text-slate-200">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-white/20 bg-white/5 text-orange-500"
+                checked={availabilityVals.includes(o.id)}
+                onChange={() => onToggleAvailability(o.id)}
+              />
+              {o.label}
+            </label>
+          ))}
+        </FilterSection>
+      )}
 
       {facets.series.length > 0 && (
         <FilterSection title="Series">
