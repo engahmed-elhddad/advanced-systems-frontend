@@ -10,6 +10,7 @@ import { SearchBar } from '@/components/search/SearchBar'
 import { IndustrialFilterSidebar } from '@/components/products/IndustrialFilterSidebar'
 import { ProductGrid } from '@/components/products/ProductGrid'
 import { ProductGridSkeleton, FilterChip, Select } from '@/components/ui'
+import type { SelectOption } from '@/components/ui/Select'
 import { searchBrowse, getBrowseFacets } from '@/features/search/services'
 import { searchHitToApiProduct } from '@/lib/productMappers'
 import { trackSearch } from '@/lib/analytics'
@@ -20,6 +21,14 @@ import {
   PAGE_SIZE_OPTIONS,
   DEFAULT_PAGE_SIZE,
 } from '@/types/sort'
+
+/** Radix Select value when URL has a legacy/non-dropdown sort (newest, popular, …). */
+const SORT_LEGACY_SELECT_VALUE = '_014_url_only_sort'
+
+const SORT_TOOLBAR_OPTIONS: SelectOption[] = [
+  ...SORT_DROPDOWN_OPTIONS,
+  { value: SORT_LEGACY_SELECT_VALUE, label: '— (from URL)', disabled: true },
+]
 
 const POPULAR_QUERIES = [
   { label: '3RT1015', q: '3RT1015' },
@@ -80,7 +89,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
   const sortForApi = sortRaw || 'relevance'
   const sortSelectValue = SORT_DROPDOWN_OPTIONS.some((o) => o.value === sortForApi)
     ? sortForApi
-    : 'relevance'
+    : SORT_LEGACY_SELECT_VALUE
   const sizeRaw = parseInt(searchParams.get('size') ?? '', 10)
   const pageSize: number = (PAGE_SIZE_OPTIONS as readonly number[]).includes(sizeRaw)
     ? sizeRaw
@@ -590,8 +599,11 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                 <div className="flex w-full shrink-0 flex-col gap-2 sm:max-w-[min(100%,440px)] sm:ml-auto sm:flex-row sm:order-2 sm:gap-3">
                   <Select
                     value={sortSelectValue}
-                    onChange={(v) => setSingleUrlParam('sort', v)}
-                    options={[...SORT_DROPDOWN_OPTIONS]}
+                    onChange={(v) => {
+                      if (v === SORT_LEGACY_SELECT_VALUE) return
+                      setSingleUrlParam('sort', v)
+                    }}
+                    options={SORT_TOOLBAR_OPTIONS}
                     placeholder="Sort"
                     label="Sort"
                     className="min-w-0 flex-1 border-[--border] bg-[--bg-elevated] text-[--text-primary]"
