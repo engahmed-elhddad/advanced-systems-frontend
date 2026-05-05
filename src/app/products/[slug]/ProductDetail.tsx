@@ -29,6 +29,8 @@ import { usePricingGate } from '@/lib/hooks/usePricingGate'
 import { cn } from '@/lib/utils'
 import { formatEgp, formatUsd, pricingVatLabel } from '@/lib/pricing'
 import type { ProductPricing } from '@/types/product'
+import type { StockBadge } from '@/types/warehouse'
+import { StockBadgeList } from '@/components/products/StockBadgeList'
 import type { ProductVariantOption } from '@/lib/productVariants'
 import {
   buildRfqVariantFooter,
@@ -64,6 +66,7 @@ interface Props {
   availability: string
   /** Catalog stock (used with variants for “only X left” urgency). */
   stockQuantity?: number
+  stockBadges?: StockBadge[]
   pricing?: ProductPricing | null
   variants: ProductVariantOption[]
   lifecycleStatus?: string
@@ -92,10 +95,12 @@ export function ProductDetail({
   datasheetUrl,
   availability,
   stockQuantity = 0,
+  stockBadges,
   pricing,
   variants,
   lifecycleStatus,
 }: Props) {
+  const badges = stockBadges ?? [{ kind: 'indent' }]
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState('1')
   const [company, setCompany] = useState('')
@@ -574,6 +579,7 @@ export function ProductDetail({
             </a>
           </div>
 
+          <StockBadgeList badges={badges} className="mb-3 mt-2" />
           <TrustBlock partNumber={partNumber} locale="en" className="mt-6" />
 
           {/* RFQ panel */}

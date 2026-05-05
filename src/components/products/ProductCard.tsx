@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
 import { formatEgp, formatUsd, pricingVatLabel } from '@/lib/pricing'
 import type { ProductPricing } from '@/types/product'
+import type { StockBadge } from '@/types/warehouse'
+import { StockBadgeList } from '@/components/products/StockBadgeList'
 
 function KeySpecs({
   quickSpecs,
@@ -83,6 +85,7 @@ export interface ProductCardProps {
   /** When set (e.g. catalog search), matching tokens are emphasized in title lines. */
   highlightQuery?: string
   lifecycle_status?: string
+  stock_badges?: StockBadge[]
 }
 
 const shellClass =
@@ -109,6 +112,7 @@ function ProductCardInner({
   productBasePath = '/products',
   highlightQuery,
   lifecycle_status,
+  stock_badges,
 }: ProductCardProps) {
   const { showExactPricing, openLoginModal } = usePricingGate()
   const addItem = useRFQListStore((s) => s.addItem)
@@ -252,6 +256,7 @@ function ProductCardInner({
             category ?? 'Industrial component'
           )}
         </p>
+        <StockBadgeList badges={stock_badges ?? [{ kind: 'indent' }]} compact className="mt-1" />
         {quickSpecs && <KeySpecs quickSpecs={quickSpecs} />}
         {!hasSpecs && <p className="mt-2 text-xs text-[--text-secondary]">Specifications available on request</p>}
         {!compact && description && (

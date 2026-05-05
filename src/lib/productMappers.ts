@@ -2,6 +2,40 @@ import type { ProductCardProps } from '@/components/products/ProductCard'
 import { getProductImage } from '@/lib/productImageUrl'
 import { asApiDisplayString } from '@/lib/utils'
 import type { ProductPricing } from '@/types/product'
+import type { StockBadge } from '@/types/warehouse'
+
+const INDENT_BADGE: StockBadge = { kind: 'indent' }
+
+export function coerceStockBadges(raw: unknown): StockBadge[] {
+  if (!Array.isArray(raw) || raw.length === 0) return [INDENT_BADGE]
+  const out: StockBadge[] = []
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue
+    const o = row as Record<string, unknown>
+    if (
+      o.kind === 'in_stock' &&
+      typeof o.warehouse_id === 'number' &&
+      typeof o.name_en === 'string' &&
+      typeof o.name_ar === 'string'
+    ) {
+      out.push({
+        kind: 'in_stock',
+        warehouse_id: o.warehouse_id,
+        name_en: o.name_en,
+        name_ar: o.name_ar,
+      })
+      continue
+    }
+    if (o.kind === 'lead_time' && (o.days === 7 || o.days === 14)) {
+      out.push({ kind: 'lead_time', days: o.days })
+      continue
+    }
+    if (o.kind === 'indent') {
+      out.push({ kind: 'indent' })
+    }
+  }
+  return out.length ? out : [INDENT_BADGE]
+}
 
 /** Flexible product shape from API (various backend responses) */
 export interface ApiProduct {
@@ -23,6 +57,7 @@ export interface ApiProduct {
   price_usd?: number | null
   price?: number | null
   pricing?: ProductPricing | null
+  stock_badges?: StockBadge[]
   series?: string | null
   voltage?: string | null
   current?: string | null
@@ -57,6 +92,7 @@ export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
     availability: String(p.availability ?? ''),
     price_usd: (p.price_usd as number) ?? null,
     pricing: (p.pricing as ProductPricing) ?? null,
+    stock_badges: coerceStockBadges(p.stock_badges),
     series: p.series != null ? String(p.series) : null,
   }
 }
@@ -90,6 +126,7 @@ export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct 
     availability: String(hit.availability ?? ''),
     price_usd: typeof hit.price_usd === 'number' ? hit.price_usd : null,
     pricing: (hit.pricing as ProductPricing) ?? null,
+    stock_badges: coerceStockBadges(hit.stock_badges),
     series: hit.series != null ? String(hit.series) : null,
   }
 }
@@ -136,6 +173,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
     availability: isAvailable ? 'in_stock' : 'on_request',
     price_usd: p.price_usd,
     pricing: p.pricing ?? undefined,
+    stock_badges: p.stock_badges ?? coerceStockBadges(undefined),
     quickSpecs,
   }
 }

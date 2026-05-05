@@ -13,6 +13,7 @@ import { API_BASE_URL, normalizeCategoryQueryForApi, SITE_URL } from '@/lib/cons
 import { absoluteUrl, canonicalPath, truncateMetaDescription } from '@/lib/seo'
 import { buildBreadcrumbJsonLd, buildProductJsonLd } from '@/lib/productJsonLd'
 import { normalizeProductVariants } from '@/lib/productVariants'
+import { coerceStockBadges } from '@/lib/productMappers'
 import { ProductDetail } from './ProductDetail'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { ViewProductTracker } from '@/components/analytics/ViewProductTracker'
@@ -366,6 +367,8 @@ export default async function ProductSlugPage({ params }: Props) {
         ? Number(rawPid)
         : undefined
 
+  const stockBadges = coerceStockBadges(product.stock_badges)
+
   const schemaImages = (galleryImages.length ? galleryImages : ['/placeholder.png']).map((u) => absoluteUrl(u))
   const schemaDescription =
     (description || `Industrial part ${partNum}${brandName ? ` — ${brandName}` : ''}.`).replace(/\s+/g, ' ').trim()
@@ -517,6 +520,7 @@ export default async function ProductSlugPage({ params }: Props) {
           datasheetUrl={datasheetUrl}
           availability={availability}
           stockQuantity={stockQty}
+          stockBadges={stockBadges}
           pricing={(product as { pricing?: unknown }).pricing as never}
           variants={variants}
           lifecycleStatus={String(product.lifecycle_status ?? 'active')}

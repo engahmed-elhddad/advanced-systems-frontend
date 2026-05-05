@@ -88,3 +88,20 @@ export const CONTACT_LABEL_PHONE_AR = 'اتصال'
 
 export const WHATSAPP_INQUIRY_TEMPLATE_EN = 'Inquiry about {part_number}'
 export const WHATSAPP_INQUIRY_TEMPLATE_AR = 'استفسار عن {part_number}'
+
+/** Stock badges on PDP / cards (spec 017). */
+export const STOCK_BADGE_LABELS_EN = {
+  in_stock_prefix: 'In Stock',
+  lead_time_7: '7-day',
+  lead_time_14: '14-day',
+  indent: 'Indent',
+} as const
+
+export const STOCK_BADGE_LABELS_AR = {
+  in_stock_prefix: 'متوفر في',
+  lead_time_7: '٧ أيام',
+  lead_time_14: '١٤ يومًا',
+  indent: 'تحت الطلب',
+} as const
+
+export const WAREHOUSE_PRIORITY = ['EG', 'EU'] as const
