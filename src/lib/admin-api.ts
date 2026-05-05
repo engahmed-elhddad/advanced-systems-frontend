@@ -412,6 +412,44 @@ export async function deleteAdminCategory(id: number) {
   return request<{ message: string }>(`/api/v1/admin/categories/${id}`, { method: "DELETE" });
 }
 
+export type AdminWarehouseRow = {
+  id: number
+  code: string
+  name_en: string
+  name_ar: string
+  country_code: string
+  default_hs_code: string | null
+  default_lead_time_days: number | null
+  is_active: boolean
+  created_at: string
+  updated_at?: string | null
+}
+
+export async function fetchAdminWarehouses(includeDisabled?: boolean) {
+  const q = includeDisabled ? "?include_disabled=true" : ""
+  return request<{ warehouses: AdminWarehouseRow[] }>(`/api/v1/admin/warehouses${q}`)
+}
+
+export async function createAdminWarehouse(body: Record<string, unknown>) {
+  return request<AdminWarehouseRow>(`/api/v1/admin/warehouses`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  })
+}
+
+export async function updateAdminWarehouse(id: number, body: Record<string, unknown>) {
+  return request<AdminWarehouseRow>(`/api/v1/admin/warehouses/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  })
+}
+
+export async function disableAdminWarehouse(id: number) {
+  return request<{ id: number; is_active: boolean }>(`/api/v1/admin/warehouses/${id}`, {
+    method: "DELETE",
+  })
+}
+
 export async function uploadAdminCategoryImage(id: number, file: File) {
   const headers = getAuthHeaders();
   delete headers["Content-Type"];
