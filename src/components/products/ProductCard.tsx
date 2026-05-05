@@ -5,12 +5,13 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { useRFQListStore } from '@/state/rfqListStore'
 import { trackAddToRfq, trackClickProduct } from '@/lib/analytics'
-import { useCurrency } from '@/lib/hooks/useCurrency'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { HighlightMatch } from '@/components/search/SearchHighlight'
 import { cn } from '@/lib/utils'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
+import { formatEgp, formatUsd, pricingVatLabel } from '@/lib/pricing'
+import type { ProductPricing } from '@/types/product'
 
 function KeySpecs({
   quickSpecs,
@@ -65,6 +66,7 @@ export interface ProductCardProps {
   stock_quantity?: number
   availability?: 'in_stock' | 'on_request'
   price_usd?: number | null
+  pricing?: ProductPricing | null
   quickSpecs?: {
     series?: string
     voltage?: string
@@ -101,13 +103,13 @@ function ProductCardInner({
   stock_quantity = 0,
   availability = 'on_request',
   price_usd,
+  pricing,
   quickSpecs,
   variant = 'default',
   productBasePath = '/products',
   highlightQuery,
   lifecycle_status,
 }: ProductCardProps) {
-  const { format } = useCurrency()
   const { showExactPricing, openLoginModal } = usePricingGate()
   const addItem = useRFQListStore((s) => s.addItem)
   const isInListFromStore = useRFQListStore((s) => s.items.some((i) => i.part_number === part_number))
@@ -258,28 +260,39 @@ function ProductCardInner({
           </p>
         )}
 
-        {price_usd != null && price_usd > 0 && (
+        {(pricing?.unit_price_usd != null || (price_usd != null && price_usd > 0)) && (
           <div className="mt-2 space-y-2">
-            {showExactPricing ? (
-              <p className="text-base font-bold tracking-tight text-[--accent]">{format(price_usd)}</p>
-            ) : (
-              <>
-                <p className="text-sm font-semibold text-[--text-secondary]">
-                  Starting from <span className="text-[--text-primary]">{format(price_usd)}</span>
-                </p>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    openLoginModal()
-                  }}
-                  className="text-left text-xs font-semibold text-[--accent] underline decoration-[--accent]/40 underline-offset-2 hover:text-[--accent-hover]"
-                >
-                  Login to view pricing
-                </button>
-              </>
-            )}
+            {(() => {
+              const usdText = formatUsd(pricing?.unit_price_usd ?? price_usd)
+              const egpText = formatEgp(pricing?.unit_price_egp)
+              if (!usdText) return null
+              return showExactPricing ? (
+                <>
+                  <p className="text-base font-bold tracking-tight text-[--accent]">{usdText}</p>
+                  {egpText ? <p className="text-xs font-semibold text-[--text-secondary]">{egpText}</p> : null}
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[--text-secondary]">
+                    {pricingVatLabel(pricing ?? undefined)}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-[--text-secondary]">
+                    Starting from <span className="text-[--text-primary]">{usdText}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      openLoginModal()
+                    }}
+                    className="text-left text-xs font-semibold text-[--accent] underline decoration-[--accent]/40 underline-offset-2 hover:text-[--accent-hover]"
+                  >
+                    Login to view pricing
+                  </button>
+                </>
+              )
+            })()}
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import type { ProductCardProps } from '@/components/products/ProductCard'
 import { getProductImage } from '@/lib/productImageUrl'
 import { asApiDisplayString } from '@/lib/utils'
+import type { ProductPricing } from '@/types/product'
 
 /** Flexible product shape from API (various backend responses) */
 export interface ApiProduct {
@@ -21,6 +22,7 @@ export interface ApiProduct {
   availability?: string
   price_usd?: number | null
   price?: number | null
+  pricing?: ProductPricing | null
   series?: string | null
   voltage?: string | null
   current?: string | null
@@ -54,6 +56,7 @@ export function ormProductToApiProduct(p: Record<string, unknown>): ApiProduct {
     stock_quantity: Number(p.stock_quantity ?? 0),
     availability: String(p.availability ?? ''),
     price_usd: (p.price_usd as number) ?? null,
+    pricing: (p.pricing as ProductPricing) ?? null,
     series: p.series != null ? String(p.series) : null,
   }
 }
@@ -86,6 +89,7 @@ export function searchHitToApiProduct(hit: Record<string, unknown>): ApiProduct 
     stock_quantity: typeof hit.stock_quantity === 'number' ? hit.stock_quantity : 0,
     availability: String(hit.availability ?? ''),
     price_usd: typeof hit.price_usd === 'number' ? hit.price_usd : null,
+    pricing: (hit.pricing as ProductPricing) ?? null,
     series: hit.series != null ? String(hit.series) : null,
   }
 }
@@ -131,6 +135,7 @@ export function productToCardProps(p: ApiProduct): ProductCardProps {
     stock_quantity: stock,
     availability: isAvailable ? 'in_stock' : 'on_request',
     price_usd: p.price_usd,
+    pricing: p.pricing ?? undefined,
     quickSpecs,
   }
 }

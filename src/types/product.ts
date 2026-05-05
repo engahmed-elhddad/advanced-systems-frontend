@@ -1,5 +1,22 @@
 import type { Facet } from './facet'
 
+export interface PricingVat {
+  rate: number
+  included: boolean
+  amount_usd?: number | null
+  amount_egp?: number | null
+}
+
+export interface ProductPricing {
+  source_type: 'default' | 'tier' | 'contract' | string
+  currency_primary: 'USD' | string
+  unit_price_usd: number
+  unit_price_egp?: number | null
+  fx_rate?: number | null
+  fx_locked_at?: string | null
+  vat: PricingVat
+}
+
 export interface Product {
   id: number
   part_number: string
@@ -17,6 +34,7 @@ export interface Product {
   specs?: Record<string, unknown>
   price?: number
   price_usd?: number
+  pricing?: ProductPricing
   is_enriched?: boolean
   is_featured?: boolean
   is_ready?: boolean

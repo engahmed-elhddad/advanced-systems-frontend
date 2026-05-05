@@ -27,6 +27,8 @@ import { getProductImage } from '@/lib/productImageUrl'
 import { trackAddToRfq, trackPricingView, trackRfqCtaClick, trackWhatsApp } from '@/lib/analytics'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
 import { cn } from '@/lib/utils'
+import { formatEgp, formatUsd, pricingVatLabel } from '@/lib/pricing'
+import type { ProductPricing } from '@/types/product'
 import type { ProductVariantOption } from '@/lib/productVariants'
 import {
   buildRfqVariantFooter,
@@ -62,6 +64,7 @@ interface Props {
   availability: string
   /** Catalog stock (used with variants for “only X left” urgency). */
   stockQuantity?: number
+  pricing?: ProductPricing | null
   variants: ProductVariantOption[]
   lifecycleStatus?: string
 }
@@ -89,6 +92,7 @@ export function ProductDetail({
   datasheetUrl,
   availability,
   stockQuantity = 0,
+  pricing,
   variants,
   lifecycleStatus,
 }: Props) {
@@ -116,6 +120,8 @@ export function ProductDetail({
   const isInRFQList = rfqListItems.some((i) => i.part_number === partNumber)
   const { showExactPricing, openLoginModal } = usePricingGate()
   const minListPrice = useMemo(() => minPositiveVariantPrice(variants), [variants])
+  const pricingUsd = pricing?.unit_price_usd ?? minListPrice ?? null
+  const pricingEgp = pricing?.unit_price_egp ?? null
   const hasListPrices = minListPrice != null
   const pricingTrackedKey = useRef<string | null>(null)
 
@@ -454,14 +460,17 @@ export function ProductDetail({
                 Trusted supplier
               </span>
             </div>
-            {hasListPrices && !showExactPricing ? (
+            {(pricingUsd != null || hasListPrices) && !showExactPricing ? (
               <div className="mt-4 rounded-xl border border-[--border] bg-[--bg-elevated] px-4 py-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-lg font-semibold text-[--text-primary]">
                     Starting from{' '}
-                    <span className="text-[--accent] tabular-nums">${minListPrice!.toFixed(2)}</span>
+                    <span className="text-[--accent] tabular-nums">{formatUsd(pricingUsd) ?? '$0.00'}</span>
+                    {formatEgp(pricingEgp) ? (
+                      <span className="ml-2 text-sm font-medium text-[--text-secondary]">{formatEgp(pricingEgp)}</span>
+                    ) : null}
                     <span className="ml-2 text-[10px] font-semibold uppercase tracking-wider text-[--text-secondary]">
-                      USD list
+                      {pricingVatLabel(pricing ?? undefined)}
                     </span>
                   </p>
                   <button

@@ -517,6 +517,7 @@ export default async function ProductSlugPage({ params }: Props) {
           datasheetUrl={datasheetUrl}
           availability={availability}
           stockQuantity={stockQty}
+          pricing={(product as { pricing?: unknown }).pricing as never}
           variants={variants}
           lifecycleStatus={String(product.lifecycle_status ?? 'active')}
         />
