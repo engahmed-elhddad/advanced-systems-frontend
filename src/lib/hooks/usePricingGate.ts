@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { useShopAuth } from '@/components/providers/ShopAuthProvider'
 
-/** Exact list prices only after shop session is loaded and user is signed in. */
+/** Pricing is public; keep auth hooks for account-only actions. */
 export function usePricingGate() {
-  const { user, loading, openLoginModal } = useShopAuth()
-  const showExactPricing = Boolean(user) && !loading
+  const { loading, openLoginModal } = useShopAuth()
+  const showExactPricing = true
   return useMemo(
     () => ({ showExactPricing, openLoginModal, loading }),
     [showExactPricing, openLoginModal, loading],

@@ -9,8 +9,8 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useRouter } from 'next/navigation'
 import { fetchShopSession, signOutShop, type ShopUser } from '@/lib/auth'
-import { LoginModal } from '@/components/auth/LoginModal'
 
 type ShopAuthContextValue = {
   user: ShopUser | null
@@ -25,9 +25,9 @@ type ShopAuthContextValue = {
 const ShopAuthContext = createContext<ShopAuthContextValue | null>(null)
 
 export function ShopAuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter()
   const [user, setUser] = useState<ShopUser | null>(null)
   const [loading, setLoading] = useState(true)
-  const [loginModalOpen, setLoginModalOpen] = useState(false)
 
   const refreshSession = useCallback(async () => {
     try {
@@ -44,8 +44,10 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
     void refreshSession()
   }, [refreshSession])
 
-  const openLoginModal = useCallback(() => setLoginModalOpen(true), [])
-  const closeLoginModal = useCallback(() => setLoginModalOpen(false), [])
+  const openLoginModal = useCallback(() => {
+    router.push('/login')
+  }, [router])
+  const closeLoginModal = useCallback(() => {}, [])
 
   const signOut = useCallback(async () => {
     try {
@@ -60,25 +62,17 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       refreshSession,
-      loginModalOpen,
+      loginModalOpen: false,
       openLoginModal,
       closeLoginModal,
       signOut,
     }),
-    [user, loading, refreshSession, loginModalOpen, openLoginModal, closeLoginModal, signOut],
+    [user, loading, refreshSession, openLoginModal, closeLoginModal, signOut],
   )
 
   return (
     <ShopAuthContext.Provider value={value}>
       {children}
-      <LoginModal
-        open={loginModalOpen}
-        onClose={closeLoginModal}
-        onSignedIn={() => {
-          void refreshSession()
-          closeLoginModal()
-        }}
-      />
     </ShopAuthContext.Provider>
   )
 }
