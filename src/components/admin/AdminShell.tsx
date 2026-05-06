@@ -39,14 +39,14 @@ export function AdminShell({
   }
 
   const navLinkBase =
-    'rounded-xl py-2.5 pl-3 pr-2 text-sm transition-all duration-300 border-l-2'
+    'rounded-xl px-3 py-2.5 text-sm transition-all duration-200 border border-transparent'
 
   return (
-    <div className="relative flex min-h-screen overflow-x-hidden bg-[#0E1116] text-white">
+    <div className="relative flex min-h-screen overflow-x-hidden bg-[#0B1018] text-white">
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
-        <div className="absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-purple-600/25 blur-[120px]" />
-        <div className="absolute -bottom-40 -right-20 h-[440px] w-[440px] rounded-full bg-orange-500/22 blur-[120px]" />
-        <div className="absolute left-1/2 top-1/4 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-violet-500/18 blur-[120px]" />
+        <div className="absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-blue-600/20 blur-[120px]" />
+        <div className="absolute -bottom-40 -right-20 h-[440px] w-[440px] rounded-full bg-orange-500/20 blur-[120px]" />
+        <div className="absolute left-1/2 top-1/4 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-violet-500/16 blur-[120px]" />
         <div
           className="absolute inset-0 opacity-[0.035]"
           style={{
@@ -67,7 +67,7 @@ export function AdminShell({
 
       <aside
         className={cn(
-          'relative z-50 flex w-[248px] flex-col border-r border-white/10 bg-black/40 backdrop-blur-2xl transition-transform duration-300',
+          'relative z-50 flex w-[284px] flex-col border-r border-white/10 bg-[#0d1420]/90 backdrop-blur-2xl transition-transform duration-300',
           'fixed inset-y-0 left-0 lg:static',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
@@ -77,7 +77,7 @@ export function AdminShell({
             <Zap className="h-[18px] w-[18px] text-white" aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold tracking-tight text-white">AdvancedSystems</p>
+            <p className="truncate text-sm font-bold tracking-tight text-white">Advanced Systems</p>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">Admin</p>
           </div>
           <button
@@ -98,8 +98,8 @@ export function AdminShell({
               'mb-4 flex items-center gap-2 font-semibold',
               navLinkBase,
               navActive(pathname, '/admin') && pathname === '/admin'
-                ? 'border-orange-400 bg-white/[0.08] text-white shadow-[0_0_28px_rgba(255,122,0,0.28),0_0_48px_rgba(192,38,211,0.12)]'
-                : 'border-transparent text-white/70 hover:translate-x-1 hover:bg-white/[0.06] hover:text-white'
+                ? 'border-orange-300/60 bg-white/[0.10] text-white shadow-[0_10px_30px_-20px_rgba(255,122,0,0.55)]'
+                : 'text-white/80 hover:bg-white/[0.07] hover:text-white'
             )}
           >
             <LayoutGrid className="h-4 w-4 shrink-0 opacity-85" aria-hidden />
@@ -110,7 +110,7 @@ export function AdminShell({
             const Icon = section.icon
             return (
               <div key={section.title} className="mb-5">
-                <div className="mb-2 flex items-center gap-2 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-white/38">
+                <div className="mb-2 flex items-center gap-2 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
                   <Icon className="h-3.5 w-3.5" aria-hidden />
                   {section.title}
                 </div>
@@ -126,11 +126,12 @@ export function AdminShell({
                             'block',
                             navLinkBase,
                             active
-                              ? 'border-orange-400 bg-white/[0.08] font-semibold text-white shadow-[0_0_24px_rgba(255,122,0,0.22)]'
-                              : 'border-transparent text-white/65 hover:translate-x-1 hover:bg-white/[0.06] hover:text-white'
+                              ? 'border-orange-300/50 bg-white/[0.10] font-semibold text-white shadow-[0_10px_30px_-22px_rgba(255,122,0,0.6)]'
+                              : 'text-white/75 hover:bg-white/[0.07] hover:text-white'
                           )}
                         >
-                          {link.label}
+                          <span className="block text-sm">{link.label}</span>
+                          <span className="mt-0.5 block text-[11px] text-white/45">{link.desc}</span>
                         </Link>
                       </li>
                     )
@@ -151,7 +152,7 @@ export function AdminShell({
       </aside>
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-black/30 px-4 backdrop-blur-xl lg:h-16 lg:px-6">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-[#0b1018]/90 px-4 backdrop-blur-xl lg:h-16 lg:px-6">
           <button
             type="button"
             className="rounded-xl p-2 text-white/80 transition-all duration-300 hover:bg-white/10 lg:hidden"
@@ -169,7 +170,7 @@ export function AdminShell({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search catalog, part #, brand…"
-              className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.06] py-2 pl-11 pr-4 text-sm text-white shadow-inner shadow-black/20 placeholder:text-white/40 transition-all duration-300 backdrop-blur-xl focus:border-orange-400/45 focus:outline-none focus:ring-2 focus:ring-orange-500/35 focus:shadow-[0_0_36px_rgba(255,122,0,0.22),0_0_60px_rgba(168,85,247,0.12)]"
+              className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.08] py-2 pl-11 pr-4 text-sm text-white shadow-inner shadow-black/20 placeholder:text-white/50 transition-all duration-300 backdrop-blur-xl focus:border-orange-400/45 focus:outline-none focus:ring-2 focus:ring-orange-500/35 focus:shadow-[0_0_36px_rgba(255,122,0,0.22),0_0_60px_rgba(168,85,247,0.12)]"
               aria-label="Search"
             />
           </form>
@@ -190,7 +191,7 @@ export function AdminShell({
         </header>
 
         <main className="relative flex-1 overflow-auto">
-          <div className="relative z-[1] mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
+          <div className="relative z-[1] mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
         </main>
       </div>
     </div>

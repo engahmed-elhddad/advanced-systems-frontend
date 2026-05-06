@@ -10,14 +10,14 @@
 :root {
   /* Tokens for ui/Select, Modal, Toast (dark shell — matches marketing layout) */
   --color-fg: #f8fafc;
-  --color-fg-muted: #94a3b8;
+  --color-fg-muted: #b6c2d6;
   --color-foreground: #f8fafc;
-  --color-foreground-muted: #94a3b8;
+  --color-foreground-muted: #b6c2d6;
   --color-background: rgba(10, 22, 41, 0.5);
   --color-background-secondary: rgba(15, 23, 42, 0.96);
   --color-background-tertiary: rgba(30, 41, 59, 0.92);
   --color-input-background: rgba(15, 23, 42, 0.72);
-  --color-border: rgba(255, 255, 255, 0.14);
+  --color-border: rgba(255, 255, 255, 0.2);
   --color-ring: rgba(255, 138, 51, 0.55);
   --color-destructive: #f87171;
   --color-primary: #ff7a00;

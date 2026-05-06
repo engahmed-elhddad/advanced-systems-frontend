@@ -1,13 +1,12 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  Package,
-  FileText,
-  Image,
-  Tag,
-  FolderTree,
   BarChart3,
-  Zap,
-  Settings,
+  Bot,
+  FileText,
+  FolderTree,
+  Image,
+  Package,
+  Tag,
 } from 'lucide-react'
 
 export type AdminNavLink = { href: string; label: string; desc: string }
@@ -16,76 +15,76 @@ export type AdminNavSection = { title: string; icon: LucideIcon; links: AdminNav
 
 export const adminNavSections: AdminNavSection[] = [
   {
-    title: 'Product Manager',
+    title: 'Catalog',
     icon: Package,
     links: [
-      { href: '/admin/add-product', label: 'Add Product', desc: 'Create a new product' },
-      { href: '/admin/import', label: 'Import CSV', desc: 'Bulk import from CSV' },
-      { href: '/admin/bulk-import', label: 'Bulk Import', desc: 'Bulk data import' },
+      { href: '/admin/products', label: 'Products', desc: 'Manage product records, inventory, and publishing' },
+      { href: '/admin/products/new', label: 'New Product', desc: 'Create a product manually' },
+      { href: '/admin/import', label: 'Import', desc: 'Upload and process catalog files' },
+      { href: '/admin/warehouses', label: 'Warehouses', desc: 'Manage fulfillment warehouses and statuses' },
     ],
   },
   {
-    title: 'Image Manager',
-    icon: Image,
-    links: [
-      { href: '/admin/image-manager', label: 'Product Image Manager', desc: 'Upload, replace, delete, set primary' },
-      { href: '/admin/upload-images', label: 'Upload Images', desc: 'Legacy upload' },
-      { href: '/admin/crawl-images', label: 'Crawl Images', desc: 'Fetch from distributors' },
-    ],
-  },
-  {
-    title: 'Data Enrichment',
-    icon: Zap,
-    links: [
-      { href: '/admin/enrich', label: 'Enrich Products', desc: 'Auto-fill missing data' },
-      { href: '/admin/intelligence', label: 'Part Intelligence', desc: 'Analyze part numbers' },
-      { href: '/admin/pattern-rules', label: 'Pattern Rules', desc: 'Manage brand & category detection rules' },
-      { href: '/admin/seo-engine', label: 'SEO Mass Generator', desc: 'Generate product pages from series' },
-    ],
-  },
-  {
-    title: 'RFQ Manager',
-    icon: FileText,
-    links: [
-      { href: '/admin/rfq', label: 'RFQ Management', desc: 'View and respond to RFQs' },
-      { href: '/admin/leads', label: 'CRM Leads', desc: 'Pipeline, notes, link to RFQs' },
-    ],
-  },
-  {
-    title: 'Brands & Categories',
+    title: 'Taxonomy',
     icon: Tag,
     links: [
-      { href: '/admin/brands', label: 'Brands', desc: 'Add, edit, delete brands' },
-      { href: '/admin/categories', label: 'Categories', desc: 'Add, edit, delete categories' },
-      { href: '/admin/suppliers', label: 'Suppliers', desc: 'Manage supplier list' },
+      { href: '/admin/brands', label: 'Brands', desc: 'Brand profiles and aliases' },
+      { href: '/admin/categories', label: 'Categories', desc: 'Category structure and schema links' },
+      { href: '/admin/suppliers', label: 'Suppliers', desc: 'Supplier records and sourcing info' },
+      { href: '/admin/attributes', label: 'Attributes', desc: 'Attribute dictionaries and value rules' },
+    ],
+  },
+  {
+    title: 'Content & Media',
+    icon: Image,
+    links: [
+      { href: '/admin/image-manager', label: 'Image Manager', desc: 'Upload and manage product media' },
+      { href: '/admin/crawl-images', label: 'Crawl Images', desc: 'Fetch from distributors' },
+      { href: '/admin/seo-engine', label: 'SEO Engine', desc: 'Generate SEO pages and metadata at scale' },
+    ],
+  },
+  {
+    title: 'Sales & RFQ',
+    icon: FileText,
+    links: [
+      { href: '/admin/rfq', label: 'RFQs', desc: 'Review and update RFQ lifecycle' },
+      { href: '/admin/quotations', label: 'Quotations', desc: 'Build and send customer quotations' },
+      { href: '/admin/orders', label: 'Orders', desc: 'Track approved and submitted orders' },
+      { href: '/admin/leads', label: 'Leads', desc: 'CRM pipeline linked to RFQ activity' },
+      { href: '/admin/rfq-instant', label: 'Instant RFQ', desc: 'Monitor instant RFQ channel traffic' },
+    ],
+  },
+  {
+    title: 'Automation',
+    icon: Bot,
+    links: [
+      { href: '/admin/enrich', label: 'Enrichment', desc: 'Run assisted product enrichment workflows' },
+      { href: '/admin/intelligence', label: 'Part Intelligence', desc: 'Parse and classify part numbers' },
+      { href: '/admin/pattern-rules', label: 'Pattern Rules', desc: 'Tune detection and matching rules' },
+      { href: '/admin/data-engine', label: 'Data Engine', desc: 'Background discovery and enrichment jobs' },
+      { href: '/admin/knowledge-graph', label: 'Knowledge Graph', desc: 'Explore part relationships' },
     ],
   },
   {
     title: 'Analytics',
     icon: BarChart3,
     links: [
-      { href: '/admin/analytics', label: 'Industrial Analytics', desc: 'Search, RFQ trends & demand' },
+      { href: '/admin/analytics', label: 'Analytics', desc: 'Search demand and RFQ trend insights' },
       { href: '/admin/stock', label: 'Stock Dashboard', desc: 'Inventory overview' },
-      { href: '/admin/ai', label: 'AI Assistant', desc: 'AI tools' },
-      { href: '/admin/ui-kit', label: 'UI kit', desc: 'Design system (glass / industrial)' },
-      { href: '/admin/dev', label: 'Dev Tools', desc: 'Developer utilities' },
+      { href: '/admin/dashboard', label: 'Dashboard', desc: 'Operational KPIs and system health' },
     ],
   },
   {
-    title: 'System Tools',
+    title: 'Platform',
     icon: FolderTree,
     links: [
-      { href: '/admin/system-tools', label: 'Scripts Manager', desc: 'Run enrichment, image, datasheet scripts' },
-      { href: '/admin/data-engine', label: 'Data Engine', desc: 'Autonomous discovery & enrichment' },
-      { href: '/admin/knowledge-graph', label: 'Knowledge Graph', desc: 'Build & explore product relationships' },
-    ],
-  },
-  {
-    title: 'Control Center',
-    icon: Settings,
-    links: [
-      { href: '/admin/users', label: 'User Management', desc: 'Manage admin users & roles' },
-      { href: '/admin/system', label: 'System Parameters', desc: 'Configure search, SEO, crawler, RFQ' },
+      { href: '/admin/system', label: 'System Settings', desc: 'Environment and operational configuration' },
+      { href: '/admin/system-tools', label: 'System Tools', desc: 'Run backend maintenance scripts' },
+      { href: '/admin/users', label: 'Users', desc: 'Admin user access and role controls' },
+      { href: '/admin/settings', label: 'App Settings', desc: 'UI and panel behavior settings' },
+      { href: '/admin/ui-kit', label: 'UI Kit', desc: 'Design primitives and component reference' },
+      { href: '/admin/dev', label: 'Developer Tools', desc: 'Diagnostics and development utilities' },
+      { href: '/admin/ai', label: 'AI Workspace', desc: 'Admin AI copilots and assistants' },
     ],
   },
 ]
