@@ -105,12 +105,12 @@ export default async function CategoriesPage() {
         className="pointer-events-none absolute left-1/2 top-0 h-[240px] w-[min(100%,640px)] -translate-x-1/2 rounded-full bg-orange-500/12 blur-[100px]"
         aria-hidden
       />
-      <div className="border-b border-white/10 bg-white/[0.04] px-4 py-12 backdrop-blur-xl sm:py-14">
+      <div className="border-b border-[--border] bg-[--bg-elevated] px-4 py-12 backdrop-blur-xl sm:py-14">
         <div className="page-container">
-          <h1 className="mb-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h1 className="mb-3 text-3xl font-bold tracking-tight text-[--text-primary] sm:text-4xl">
             Product Categories
           </h1>
-          <p className="max-w-2xl text-sm text-white/60 sm:text-base">
+          <p className="max-w-2xl text-sm text-[--text-secondary] sm:text-base">
             Browse our industrial automation catalog by category. Find PLCs, drives, sensors, and more.
           </p>
         </div>
@@ -120,14 +120,14 @@ export default async function CategoriesPage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {categories.map((cat) => (
             <Link key={cat.name} href={cat.slug ? `/categories/${cat.slug}` : `/search?category=${encodeURIComponent(cat.name)}`}>
-              <div className="border border-white/20 bg-white/5 rounded-xl p-5 flex flex-col items-center gap-3 hover:border-[--accent] hover:bg-white/10 transition-all">
+              <div className="flex flex-col items-center gap-3 rounded-xl border border-[--border] bg-[--bg-surface] p-5 transition-all hover:border-[--accent] hover:bg-[--bg-elevated]">
                 {cat.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={cat.image_url} alt={cat.name} className="h-20 w-20 object-contain" />
                 ) : (
                   <Package className="h-10 w-10 text-[--accent]" />
                 )}
-                <span className="text-white font-semibold text-sm text-center">{cat.name}</span>
+                <span className="text-center text-sm font-semibold text-[--text-primary]">{cat.name}</span>
                 <span className="text-[--text-secondary] text-xs">{cat.product_count} parts</span>
               </div>
             </Link>
