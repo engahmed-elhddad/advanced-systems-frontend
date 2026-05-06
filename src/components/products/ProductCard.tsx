@@ -3,14 +3,14 @@
 import { memo, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import { useRFQListStore } from '@/state/rfqListStore'
-import { trackAddToRfq, trackClickProduct } from '@/lib/analytics'
+import { trackClickProduct } from '@/lib/analytics'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { BrandLogo } from '@/components/ui/BrandLogo'
 import { HighlightMatch } from '@/components/search/SearchHighlight'
 import { cn } from '@/lib/utils'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
 import { formatEgp, formatUsd, pricingVatLabel } from '@/lib/pricing'
+import { useCart } from '@/context/CartContext'
 import type { ProductPricing } from '@/types/product'
 import type { StockBadge } from '@/types/warehouse'
 import { StockBadgeList } from '@/components/products/StockBadgeList'
@@ -115,8 +115,8 @@ function ProductCardInner({
   stock_badges,
 }: ProductCardProps) {
   const { showExactPricing, openLoginModal } = usePricingGate()
-  const addItem = useRFQListStore((s) => s.addItem)
-  const isInListFromStore = useRFQListStore((s) => s.items.some((i) => i.part_number === part_number))
+  const { addItem, items: cartItems } = useCart()
+  const isInListFromStore = cartItems.some((i) => i.part_number === part_number)
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => {
     setHydrated(true)
@@ -312,13 +312,7 @@ function ProductCardInner({
           <button
             type="button"
             onClick={() => {
-              trackAddToRfq({
-                source: 'product_card',
-                part_number,
-                product_id: id,
-                quantity: 1,
-              })
-              addItem({ part_number, quantity: 1 })
+              void addItem({ part_number, qty: 1 })
             }}
             disabled={isInList}
             className={
@@ -326,7 +320,7 @@ function ProductCardInner({
                 ? 'inline-flex cursor-default items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 p-2 text-emerald-200'
                 : 'inline-flex items-center justify-center rounded-xl border border-[--border] p-2 text-[--text-secondary] transition-all duration-300 hover:border-[--accent]/35 hover:text-[--accent]'
             }
-            aria-label={isInList ? `${part_number} added to RFQ list` : `Add ${part_number} to RFQ list`}
+            aria-label={isInList ? `${part_number} added to cart` : `Add ${part_number} to cart`}
           >
             <Plus className="h-4 w-4" />
           </button>

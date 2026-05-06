@@ -21,10 +21,10 @@ import { Badge } from '@/components/ui/Badge'
 import TrustBlock from '@/components/TrustBlock'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { useRFQSubmit } from '@/features/rfq/hooks/useRFQSubmit'
-import { useRFQListStore } from '@/state/rfqListStore'
+import { useCart } from '@/context/CartContext'
 import { API_BASE_URL, whatsappHref } from '@/lib/constants'
 import { getProductImage } from '@/lib/productImageUrl'
-import { trackAddToRfq, trackPricingView, trackRfqCtaClick, trackWhatsApp } from '@/lib/analytics'
+import { trackPricingView, trackRfqCtaClick, trackWhatsApp } from '@/lib/analytics'
 import { usePricingGate } from '@/lib/hooks/usePricingGate'
 import { cn } from '@/lib/utils'
 import { formatEgp, formatUsd, pricingVatLabel } from '@/lib/pricing'
@@ -120,9 +120,8 @@ export function ProductDetail({
     errorToast: false,
     analyticsSource: 'product_page',
   })
-  const addItem = useRFQListStore((s) => s.addItem)
-  const rfqListItems = useRFQListStore((s) => s.items)
-  const isInRFQList = rfqListItems.some((i) => i.part_number === partNumber)
+  const { addItem, items: cartItems } = useCart()
+  const isInRFQList = cartItems.some((i) => i.part_number === partNumber)
   const { showExactPricing, openLoginModal } = usePricingGate()
   const minListPrice = useMemo(() => minPositiveVariantPrice(variants), [variants])
   const pricingUsd = pricing?.unit_price_usd ?? minListPrice ?? null
@@ -624,17 +623,11 @@ export function ProductDetail({
                     type="button"
                     onClick={() => {
                       if (!selectedVariant) {
-                        setVariantError('Choose a condition before adding to your list.')
+                        setVariantError('Choose a condition before adding to cart.')
                         scrollToRfqPanel()
                         return
                       }
-                      trackAddToRfq({
-                        source: 'product_page',
-                        part_number: partNumber,
-                        product_id: productId,
-                        quantity: Math.max(1, Number(quantity) || 1),
-                      })
-                      addItem({ part_number: partNumber, quantity: Math.max(1, Number(quantity) || 1) })
+                      void addItem({ part_number: partNumber, qty: Math.max(1, Number(quantity) || 1) })
                     }}
                     disabled={isInRFQList}
                     className={cn(
@@ -645,7 +638,7 @@ export function ProductDetail({
                     )}
                   >
                     {isInRFQList ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                    {isInRFQList ? 'In RFQ list' : 'Quick add to list'}
+                    {isInRFQList ? 'In cart' : 'Quick add to cart'}
                   </button>
                 </div>
                 {variantError ? (

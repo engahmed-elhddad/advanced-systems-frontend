@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Minus, Plus, ShoppingCart, Trash2, X } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { Button } from '@/components/ui/Button'
+import { formatEgp, formatUsd } from '@/lib/pricing'
 
 export type CartDrawerProps = {
   open: boolean
@@ -12,15 +13,12 @@ export type CartDrawerProps = {
 }
 
 export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
-  const { items, isLoading, removeItem, updateQty, submitCart } = useCart()
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState<{ bulk_ref: string } | null>(null)
+  const { items, totals, isLoading, removeItem, updateQty } = useCart()
+  const [mutateError, setMutateError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) {
-      setSubmitError(null)
-      setSubmitSuccess(null)
+      setMutateError(null)
     }
   }, [open])
 
@@ -32,21 +30,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onOpenChange])
-
-  async function handleSubmit() {
-    if (!items.length) return
-    setSubmitting(true)
-    setSubmitError(null)
-    setSubmitSuccess(null)
-    try {
-      const result = await submitCart()
-      setSubmitSuccess({ bulk_ref: result.bulk_ref })
-    } catch {
-      setSubmitError('Could not submit your quote request. Try again.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   if (!open) return null
 
@@ -89,18 +72,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
-          {submitSuccess ? (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-[--text-primary]">
-              <p className="font-semibold text-emerald-200/95">RFQ submitted</p>
-              <p className="mt-2 text-[--text-secondary]">
-                Reference:{' '}
-                <span className="font-mono text-[--text-primary]">{submitSuccess.bulk_ref}</span>
-              </p>
-              <Button type="button" variant="secondary" className="mt-4 w-full" onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-            </div>
-          ) : isLoading ? (
+          {isLoading ? (
             <p className="text-sm text-[--text-secondary]">Loading cart…</p>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
@@ -123,15 +95,27 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-mono text-sm font-semibold text-[--text-primary]">{item.part_number}</p>
+                    {item.product_name ? <p className="mt-0.5 text-xs text-[--text-secondary]">{item.product_name}</p> : null}
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[--text-secondary]">
+                      <span>HS: {item.hs_code ?? 'N/A'}</span>
+                      <span>{formatUsd(item.unit_price_usd) ?? '$0.00'} / unit</span>
+                      <span>{formatEgp(item.unit_price_egp) ?? 'EGP 0.00'} / unit</span>
+                    </div>
                     {item.notes ? (
                       <p className="mt-0.5 line-clamp-2 text-xs text-[--text-secondary]">{item.notes}</p>
                     ) : null}
+                    <div className="mt-1 text-xs font-semibold text-[--text-primary]">
+                      Line: {formatUsd(item.line_total_usd) ?? '$0.00'} · {formatEgp(item.line_total_egp) ?? 'EGP 0.00'}
+                    </div>
                     <div className="mt-2 flex items-center gap-2">
                       <button
                         type="button"
                         aria-label="Decrease quantity"
                         disabled={item.qty <= 1}
-                        onClick={() => void updateQty(item.part_number, item.qty - 1)}
+                        onClick={() => {
+                          setMutateError(null)
+                          void updateQty(item.part_number, item.qty - 1).catch(() => setMutateError('Could not update quantity.'))
+                        }}
                         className="flex h-8 w-8 items-center justify-center rounded-md border border-[--border-dark] text-[--text-secondary] transition-colors hover:border-white/20 hover:text-[--text-primary] disabled:opacity-30"
                       >
                         <Minus className="h-3.5 w-3.5" />
@@ -142,7 +126,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                       <button
                         type="button"
                         aria-label="Increase quantity"
-                        onClick={() => void updateQty(item.part_number, item.qty + 1)}
+                        onClick={() => {
+                          setMutateError(null)
+                          void updateQty(item.part_number, item.qty + 1).catch(() => setMutateError('Could not update quantity.'))
+                        }}
                         className="flex h-8 w-8 items-center justify-center rounded-md border border-[--border-dark] text-[--text-secondary] transition-colors hover:border-white/20 hover:text-[--text-primary]"
                       >
                         <Plus className="h-3.5 w-3.5" />
@@ -152,7 +139,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                   <button
                     type="button"
                     aria-label={`Remove ${item.part_number}`}
-                    onClick={() => void removeItem(item.part_number)}
+                    onClick={() => {
+                      setMutateError(null)
+                      void removeItem(item.part_number).catch(() => setMutateError('Could not remove item.'))
+                    }}
                     className="shrink-0 rounded-md p-2 text-[--text-secondary] transition-colors hover:bg-red-500/15 hover:text-red-300"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -163,15 +153,31 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
           )}
         </div>
 
-        {!submitSuccess && items.length > 0 && (
+        {items.length > 0 && (
           <div className="border-t border-[--border-dark] px-4 py-4 sm:px-5">
-            {submitError ? (
+            <div className="mb-3 space-y-1 rounded-lg border border-[--border-dark] bg-white/[0.03] p-3 text-xs">
+              <p className="flex justify-between text-[--text-secondary]">
+                <span>Subtotal</span>
+                <span>{formatUsd(totals.subtotal_usd)} · {formatEgp(totals.subtotal_egp)}</span>
+              </p>
+              <p className="flex justify-between text-[--text-secondary]">
+                <span>VAT 14%</span>
+                <span>{formatUsd(totals.vat_usd)} · {formatEgp(totals.vat_egp)}</span>
+              </p>
+              <p className="flex justify-between font-semibold text-[--text-primary]">
+                <span>Total</span>
+                <span>{formatUsd(totals.total_usd)} · {formatEgp(totals.total_egp)}</span>
+              </p>
+            </div>
+            {mutateError ? (
               <p className="mb-3 text-sm text-red-300" role="alert">
-                {submitError}
+                {mutateError}
               </p>
             ) : null}
-            <Button type="button" className="w-full" disabled={submitting} onClick={() => void handleSubmit()}>
-              {submitting ? 'Submitting…' : 'Submit RFQ'}
+            <Button asChild type="button" className="w-full">
+              <Link href="/checkout" onClick={() => onOpenChange(false)}>
+                Proceed to checkout
+              </Link>
             </Button>
           </div>
         )}
