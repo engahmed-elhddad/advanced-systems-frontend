@@ -68,14 +68,14 @@ export function ProductSlugNotFoundClient() {
   }, [decoded])
 
   return (
-    <section className="mt-10 rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl sm:p-8">
+    <section className="mt-10 rounded-2xl border border-[--border] bg-[--bg-elevated] p-6 backdrop-blur-xl sm:p-8">
       <div className="mb-6 flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 text-orange-200">
           <PackageSearch className="h-5 w-5" aria-hidden />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-white">Similar products you can request</h2>
-          <p className="mt-1 text-sm text-white/55">
+          <h2 className="text-lg font-bold text-[--text-primary]">Similar products you can request</h2>
+          <p className="mt-1 text-sm text-[--text-secondary]">
             We couldn&apos;t load this exact URL — browse these close matches or search the catalog.
           </p>
         </div>
@@ -84,7 +84,7 @@ export function ProductSlugNotFoundClient() {
       {loading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-white/10" />
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-[--bg-surface]" />
           ))}
         </div>
       ) : items.length > 0 ? (
@@ -96,11 +96,11 @@ export function ProductSlugNotFoundClient() {
                 <Link
                   href={href}
                   className={cn(
-                    'flex items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-3 transition-all',
-                    'hover:border-orange-400/35 hover:bg-orange-500/10',
+                    'flex items-center gap-3 rounded-xl border border-[--border] bg-[--bg-surface] p-3 transition-all',
+                    'hover:border-[--accent]/35 hover:bg-[--accent]/10',
                   )}
                 >
-                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-[--border] bg-[--bg-elevated]">
                     <SafeImage
                       src={p.image_url}
                       alt=""
@@ -109,9 +109,9 @@ export function ProductSlugNotFoundClient() {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-mono text-sm font-semibold text-white">{p.part_number}</p>
-                    {p.name ? <p className="truncate text-xs text-white/45">{p.name}</p> : null}
-                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-orange-300">
+                    <p className="font-mono text-sm font-semibold text-[--text-primary]">{p.part_number}</p>
+                    {p.name ? <p className="truncate text-xs text-[--text-secondary]">{p.name}</p> : null}
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[--accent]">
                       View &amp; RFQ <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
@@ -121,7 +121,7 @@ export function ProductSlugNotFoundClient() {
           })}
         </ul>
       ) : (
-        <p className="text-sm text-white/50">
+        <p className="text-sm text-[--text-secondary]">
           No automatic matches for &quot;{decoded}&quot;. Try a shorter part number or keyword in search.
         </p>
       )}
@@ -136,13 +136,13 @@ export function ProductSlugNotFoundClient() {
         </Link>
         <Link
           href="/products"
-          className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-orange-400/35"
+          className="inline-flex items-center gap-2 rounded-xl border border-[--border] bg-[--bg-surface] px-5 py-3 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/35"
         >
           Browse all products
         </Link>
         <Link
           href={decoded ? `/rfq?part_number=${encodeURIComponent(decoded)}` : '/rfq'}
-          className="inline-flex items-center gap-2 rounded-xl border border-orange-400/40 bg-orange-500/10 px-5 py-3 text-sm font-semibold text-orange-100 transition-colors hover:bg-orange-500/20"
+          className="inline-flex items-center gap-2 rounded-xl border border-[--accent]/40 bg-[--accent]/10 px-5 py-3 text-sm font-semibold text-[--accent] transition-colors hover:bg-[--accent]/20"
         >
           RFQ this part number
         </Link>

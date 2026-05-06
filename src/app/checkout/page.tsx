@@ -7,12 +7,9 @@ import { useCart } from '@/context/CartContext'
 import { formatEgp, formatUsd } from '@/lib/pricing'
 import { useI18n } from '@/lib/i18n'
 
-type PaymentMethod = 'paymob_card' | 'bank_transfer' | 'net_30'
-
 export default function CheckoutPage() {
   const { items, totals, checkout, isLoading } = useCart()
   const { locale, t } = useI18n()
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('paymob_card')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [notes, setNotes] = useState('')
@@ -27,41 +24,20 @@ export default function CheckoutPage() {
   }>(null)
 
   const canSubmit = useMemo(() => items.length > 0 && !submitting, [items.length, submitting])
-  const methods: Array<{ id: PaymentMethod; label: string; hint: string }> = useMemo(
-    () => [
-      {
-        id: 'paymob_card',
-        label: t('checkout.paymentCard'),
-        hint: locale === 'ar' ? 'ادفع بأمان عبر بوابة Paymob.' : 'Pay securely via Paymob checkout.',
-      },
-      {
-        id: 'bank_transfer',
-        label: t('checkout.paymentBank'),
-        hint: locale === 'ar' ? 'حوّل إلى حسابنا البنكي ثم شارك إيصال التحويل.' : 'Transfer to our bank account and share receipt.',
-      },
-      {
-        id: 'net_30',
-        label: t('checkout.paymentNet30'),
-        hint: locale === 'ar' ? 'متاح فقط للشركات المعتمدة.' : 'Available for verified company accounts.',
-      },
-    ],
-    [locale, t],
-  )
-
   async function onSubmit() {
     if (!canSubmit) return
     setSubmitting(true)
     setError(null)
     try {
       const res = await checkout({
-        payment_method: paymentMethod,
+        payment_method: 'bank_transfer',
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
         notes: notes.trim() || undefined,
       })
       setResult(res)
     } catch (e) {
-      setError(e instanceof Error ? e.message : locale === 'ar' ? 'فشل إتمام الشراء' : 'Checkout failed')
+      setError(e instanceof Error ? e.message : locale === 'ar' ? 'فشل إرسال طلب عرض السعر' : 'Quote request failed')
     } finally {
       setSubmitting(false)
     }
@@ -78,14 +54,14 @@ export default function CheckoutPage() {
 
       {result ? (
         <section className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 p-5">
-          <h2 className="text-lg font-semibold text-emerald-100">
+          <h2 className="text-lg font-semibold text-[--text-primary]">
             {result.approval_required ? t('checkout.approvalRequested') : t('checkout.confirmed')}
           </h2>
           <p className="mt-2 text-sm text-[--text-primary]">
             {locale === 'ar' ? 'المرجع' : 'Reference'}: <span className="font-mono">{result.order_ref}</span>
           </p>
           <p className="mt-1 text-sm text-[--text-secondary]">
-            {locale === 'ar' ? 'الدفع' : 'Payment'}: {result.payment_method.replace('_', ' ')}
+            {locale === 'ar' ? 'التدفق' : 'Flow'}: {locale === 'ar' ? 'طلب عرض سعر' : 'Quote request'}
           </p>
           {result.approval_required ? (
             <p className="mt-1 text-sm text-amber-200">
@@ -117,25 +93,10 @@ export default function CheckoutPage() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
           <section className="rounded-xl border border-[--border] bg-[--bg-elevated] p-5">
-            <h2 className="text-lg font-semibold text-[--text-primary]">{t('checkout.paymentMethod')}</h2>
-            <div className="mt-4 space-y-3">
-              {methods.map((method) => (
-                <label key={method.id} className="block cursor-pointer rounded-lg border border-[--border] p-3 hover:border-[--accent]/35">
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="radio"
-                      name="payment_method"
-                      checked={paymentMethod === method.id}
-                      onChange={() => setPaymentMethod(method.id)}
-                      className="mt-1 h-4 w-4"
-                    />
-                    <div>
-                      <p className="font-medium text-[--text-primary]">{method.label}</p>
-                      <p className="text-xs text-[--text-secondary]">{method.hint}</p>
-                    </div>
-                  </div>
-                </label>
-              ))}
+            <h2 className="text-lg font-semibold text-[--text-primary]">{t('checkout.quoteFlow')}</h2>
+            <div className="mt-4 rounded-lg border border-[--border] bg-[--bg-surface] p-3">
+              <p className="font-medium text-[--text-primary]">{t('checkout.quoteOnlyTitle')}</p>
+              <p className="text-xs text-[--text-secondary]">{t('checkout.quoteOnlyHint')}</p>
             </div>
 
             <h3 className="mt-6 text-sm font-semibold text-[--text-primary]">

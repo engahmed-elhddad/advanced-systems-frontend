@@ -226,7 +226,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   let product: Record<string, unknown> | null = await loadBySlug(decoded)
   let resolvedViaPart = false
-  if (!product) {
+  if (!product && looksLikePartNumber(decoded)) {
     product = await loadByPart(decoded)
     resolvedViaPart = Boolean(product)
   }
@@ -234,17 +234,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     product = await enrichProductFromCatalogSearch(product)
   }
 
-  if (!product && !looksLikePartNumber(decoded)) {
-    const brand = decoded.replace(/\b\w/g, (l) => l.toUpperCase())
-    return {
-      title: `${brand} Industrial Automation Parts | Advanced Systems`,
-      description: `${brand} PLCs, drives, sensors, and spare parts. Request a quote — fast response.`,
-      alternates: { canonical: canonicalPath(`/products/${encodeSlugForUrl(decoded)}`) },
-    }
-  }
-
   if (!product) {
-    return { title: 'Product | Advanced Systems' }
+    return { title: 'Product not found | Advanced Systems' }
   }
 
   const canonicalSlug = String(product.slug ?? decoded).trim() || decoded
