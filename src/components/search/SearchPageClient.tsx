@@ -21,6 +21,7 @@ import {
   PAGE_SIZE_OPTIONS,
   DEFAULT_PAGE_SIZE,
 } from '@/types/sort'
+import { useI18n } from '@/lib/i18n'
 
 /** Radix Select value when URL has a legacy/non-dropdown sort (newest, popular, …). */
 const SORT_LEGACY_SELECT_VALUE = '_014_url_only_sort'
@@ -28,15 +29,6 @@ const SORT_LEGACY_SELECT_VALUE = '_014_url_only_sort'
 const SORT_TOOLBAR_OPTIONS: SelectOption[] = [
   ...SORT_DROPDOWN_OPTIONS,
   { value: SORT_LEGACY_SELECT_VALUE, label: '— (from URL)', disabled: true },
-]
-
-const POPULAR_QUERIES = [
-  { label: '3RT1015', q: '3RT1015' },
-  { label: 'Siemens PLC', q: 'Siemens PLC' },
-  { label: 'ABB Drive', q: 'ABB Drive' },
-  { label: 'Omron Sensor', q: 'Omron Sensor' },
-  { label: 'SICK photoelectric', q: 'SICK photoelectric' },
-  { label: '6ES7315', q: '6ES7315' },
 ]
 
 function parseIntList(key: string, sp: URLSearchParams): number[] {
@@ -56,9 +48,18 @@ export interface SearchPageClientProps {
 }
 
 export function SearchPageClient({ brands, categories }: SearchPageClientProps) {
+  const { locale } = useI18n()
   const router = useRouter()
   const searchParams = useSearchParams()
   const spKey = searchParams.toString()
+  const POPULAR_QUERIES = [
+    { label: '3RT1015', q: '3RT1015' },
+    { label: locale === 'ar' ? 'سيمنس PLC' : 'Siemens PLC', q: 'Siemens PLC' },
+    { label: locale === 'ar' ? 'ABB درايف' : 'ABB Drive', q: 'ABB Drive' },
+    { label: locale === 'ar' ? 'حساس أومرون' : 'Omron Sensor', q: 'Omron Sensor' },
+    { label: locale === 'ar' ? 'حساس ضوئي SICK' : 'SICK photoelectric', q: 'SICK photoelectric' },
+    { label: '6ES7315', q: '6ES7315' },
+  ]
 
   const qUrl = searchParams.get('q') ?? ''
   const [qDraft, setQDraft] = useState(qUrl)
@@ -486,7 +487,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
 
   return (
     <div className="relative pb-16 pt-6 sm:pt-10">
-      <div className="page-container">
+      <div className="page-container" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
         <div className="mb-8 text-center sm:mb-10">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[--border] bg-[--bg-elevated] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[--accent]">
             <Sparkles className="h-3.5 w-3.5 text-[--accent]" aria-hidden />
@@ -506,7 +507,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
             value={qDraft}
             onValueChange={onSearchValueChange}
             variant="hero"
-            placeholder="Search part numbers, brands, series…"
+            placeholder={locale === 'ar' ? 'ابحث برقم القطعة أو العلامة أو السلسلة…' : 'Search part numbers, brands, series…'}
             showSuggestions
             debounceMs={300}
             minLength={1}
@@ -526,8 +527,14 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
               'mx-auto mb-10 max-w-2xl px-6 py-14 text-center transition-all duration-300',
             )}
           >
-            <p className="text-lg font-semibold text-[--text-primary]">Start typing to search the catalog</p>
-            <p className="mt-2 text-sm text-[--text-secondary]">Or pick a popular query — filters apply instantly with no full page reload.</p>
+            <p className="text-lg font-semibold text-[--text-primary]">
+              {locale === 'ar' ? 'ابدأ الكتابة للبحث في الكتالوج' : 'Start typing to search the catalog'}
+            </p>
+            <p className="mt-2 text-sm text-[--text-secondary]">
+              {locale === 'ar'
+                ? 'أو اختر بحثًا شائعًا - يتم تطبيق الفلاتر فورًا دون إعادة تحميل الصفحة.'
+                : 'Or pick a popular query — filters apply instantly with no full page reload.'}
+            </p>
             <div className="mt-8 flex flex-wrap justify-center gap-2">
               {POPULAR_QUERIES.map(({ label, q: qq }) => (
                 <Link
@@ -543,7 +550,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
               href="/products"
               className="mt-8 inline-block text-sm font-semibold text-[--accent] transition-colors hover:text-[--accent-hover]"
             >
-              Browse full product catalog →
+              {locale === 'ar' ? 'تصفح كتالوج المنتجات بالكامل ←' : 'Browse full product catalog →'}
             </Link>
           </div>
         )}
@@ -559,7 +566,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
               onClick={() => setMobileFiltersOpen((v) => !v)}
             >
               <SlidersHorizontal className="h-4 w-4" />
-              Filters
+              {locale === 'ar' ? 'الفلاتر' : 'Filters'}
             </button>
 
             <div className={cn('lg:block', mobileFiltersOpen ? 'block' : 'hidden')}>
@@ -604,8 +611,8 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                       setSingleUrlParam('sort', v)
                     }}
                     options={SORT_TOOLBAR_OPTIONS}
-                    placeholder="Sort"
-                    label="Sort"
+                    placeholder={locale === 'ar' ? 'الترتيب' : 'Sort'}
+                    label={locale === 'ar' ? 'الترتيب' : 'Sort'}
                     className="min-w-0 flex-1 border-[--border] bg-[--bg-elevated] text-[--text-primary]"
                   />
                   <Select
@@ -613,24 +620,25 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     onChange={(v) => setSingleUrlParam('size', v)}
                     options={PAGE_SIZE_OPTIONS.map((n) => ({
                       value: String(n),
-                      label: `${n} per page`,
+                      label: locale === 'ar' ? `${n} لكل صفحة` : `${n} per page`,
                     }))}
-                    placeholder="Per page"
-                    label="Results per page"
+                    placeholder={locale === 'ar' ? 'لكل صفحة' : 'Per page'}
+                    label={locale === 'ar' ? 'نتائج لكل صفحة' : 'Results per page'}
                     className="min-w-0 flex-1 border-[--border] bg-[--bg-elevated] text-[--text-primary]"
                   />
                 </div>
                 <p className="text-sm text-[--text-secondary] sm:order-1" aria-live="polite" aria-busy={loading}>
                   <span className={cn(loading && 'animate-pulse')}>
                     {loading ? (
-                      'Updating results…'
+                      locale === 'ar' ? 'جاري تحديث النتائج…' : 'Updating results…'
                     ) : (
                       <>
-                        <span className="font-semibold text-[--text-primary]">{total.toLocaleString()}</span> results
+                        <span className="font-semibold text-[--text-primary]">{total.toLocaleString()}</span>{' '}
+                        {locale === 'ar' ? 'نتيجة' : 'results'}
                         {qUrl.trim() ? (
                           <>
                             {' '}
-                            for <span className="text-[--accent]">&quot;{qUrl}&quot;</span>
+                            {locale === 'ar' ? 'لـ' : 'for'} <span className="text-[--accent]">&quot;{qUrl}&quot;</span>
                           </>
                         ) : null}
                       </>
@@ -641,7 +649,9 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
 
               {chips.length > 0 && (
                 <div className="flex flex-col gap-3 rounded-xl border border-[--border] bg-[--bg-surface] px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[--text-secondary] sm:mr-1">Active filters</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[--text-secondary] sm:mr-1">
+                    {locale === 'ar' ? 'الفلاتر النشطة' : 'Active filters'}
+                  </span>
                   <div className="flex flex-wrap items-center gap-2">
                     {chips.map((c) => (
                       <FilterChip key={c.key} label={c.label} value="" onRemove={c.onRemove} variant="neutral" />
@@ -652,7 +662,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     onClick={clearAll}
                     className="rounded-lg border border-[--border] bg-[--bg-elevated] px-3 py-1.5 text-xs font-semibold text-[--accent] transition-colors hover:bg-[--accent]/10 sm:ml-auto"
                   >
-                    Clear all
+                    {locale === 'ar' ? 'مسح الكل' : 'Clear all'}
                   </button>
                 </div>
               )}
@@ -666,7 +676,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                   role="status"
                 >
                   <p className="text-sm text-[--text-secondary]">
-                    <span className="font-semibold text-sky-400">Did you mean</span>{' '}
+                    <span className="font-semibold text-sky-400">{locale === 'ar' ? 'هل تقصد' : 'Did you mean'}</span>{' '}
                     <span className="font-mono text-[--accent]">&quot;{didYouMean}&quot;</span>?
                   </p>
                   <button
@@ -686,7 +696,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     }}
                     className="shrink-0 rounded-full border border-[--border] bg-[--bg-elevated] px-4 py-2 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                   >
-                    Search this instead
+                    {locale === 'ar' ? 'ابحث بهذا بدلًا من ذلك' : 'Search this instead'}
                   </button>
                 </div>
               ) : null}
@@ -699,9 +709,13 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                   )}
                   role="alert"
                 >
-                  <p className="text-lg font-semibold text-[--text-primary]">Could not load search results</p>
+                  <p className="text-lg font-semibold text-[--text-primary]">
+                    {locale === 'ar' ? 'تعذر تحميل نتائج البحث' : 'Could not load search results'}
+                  </p>
                   <p className="mx-auto mt-2 max-w-md text-sm text-[--text-secondary]">
-                    The search service may be unavailable. Check your connection and try again.
+                    {locale === 'ar'
+                      ? 'قد تكون خدمة البحث غير متاحة. تحقق من اتصالك وحاول مرة أخرى.'
+                      : 'The search service may be unavailable. Check your connection and try again.'}
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <button
@@ -709,13 +723,13 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                       onClick={() => void searchQuery.refetch()}
                       className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2.5 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                     >
-                      Try again
+                      {locale === 'ar' ? 'حاول مرة أخرى' : 'Try again'}
                     </button>
                     <Link
                       href="/products"
                       className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2.5 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/35 hover:bg-[--accent]/10"
                     >
-                      Browse catalog
+                      {locale === 'ar' ? 'تصفح الكتالوج' : 'Browse catalog'}
                     </Link>
                   </div>
                 </div>
@@ -729,7 +743,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                     <ProductGrid products={rows} productBasePath="/products" highlightQuery={qUrl.trim()} />
                   </div>
                   {pages > 1 && (
-                    <nav className="flex flex-wrap justify-center gap-2 pt-4" aria-label="Pagination">
+                    <nav className="flex flex-wrap justify-center gap-2 pt-4" aria-label={locale === 'ar' ? 'ترقيم الصفحات' : 'Pagination'}>
                       {page > 1 && (
                         <Link
                           href={`/search?${(() => {
@@ -740,11 +754,11 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                           className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                           scroll={false}
                         >
-                          Previous
+                          {locale === 'ar' ? 'السابق' : 'Previous'}
                         </Link>
                       )}
                       <span className="px-3 py-2 text-sm text-[--text-secondary]">
-                        Page {page} of {pages}
+                        {locale === 'ar' ? `الصفحة ${page} من ${pages}` : `Page ${page} of ${pages}`}
                       </span>
                       {page < pages && (
                         <Link
@@ -756,7 +770,7 @@ export function SearchPageClient({ brands, categories }: SearchPageClientProps) 
                           className="rounded-full border border-[--border] bg-[--bg-elevated] px-5 py-2 text-sm font-semibold text-[--text-primary] transition-colors hover:border-[--accent]/30"
                           scroll={false}
                         >
-                          Next
+                          {locale === 'ar' ? 'التالي' : 'Next'}
                         </Link>
                       )}
                     </nav>

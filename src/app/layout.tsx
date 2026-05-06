@@ -10,6 +10,7 @@ import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { RootSiteChrome } from './RootSiteChrome'
 import { ThemeProvider } from '@/components/ui/ThemeProvider'
 import { CartProvider } from '@/context/CartContext'
+import { I18nProvider } from '@/lib/i18n'
 import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" dir="ltr" className="scroll-smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AnalyticsClient />
         <Analytics />
         <ThemeProvider>
+        <I18nProvider>
         <QueryProvider>
           <ShopAuthProvider>
             <CurrencyProvider>
@@ -88,6 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </CurrencyProvider>
           </ShopAuthProvider>
         </QueryProvider>
+        </I18nProvider>
         </ThemeProvider>
         <Analytics />
       </body>

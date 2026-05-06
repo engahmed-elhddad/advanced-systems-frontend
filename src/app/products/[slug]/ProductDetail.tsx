@@ -40,6 +40,7 @@ import {
   variantOptionKey,
   variantStockHint,
 } from '@/lib/productVariants'
+import { useI18n } from '@/lib/i18n'
 
 const rfqSchema = z.object({
   email: z.string().email('Valid email required'),
@@ -100,6 +101,7 @@ export function ProductDetail({
   variants,
   lifecycleStatus,
 }: Props) {
+  const { locale } = useI18n()
   const badges = stockBadges ?? [{ kind: 'indent' }]
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState('1')
@@ -330,13 +332,17 @@ export function ProductDetail({
 
   const primaryCtaLabel =
     variants.length > 1 && !selectedVariant
-      ? 'Choose condition · Add to RFQ'
-      : 'Add to RFQ — free quote'
+      ? locale === 'ar'
+        ? 'اختر الحالة · أضف إلى طلب العرض'
+        : 'Choose condition · Add to RFQ'
+      : locale === 'ar'
+        ? 'أضف إلى طلب العرض - عرض سعر مجاني'
+        : 'Add to RFQ — free quote'
 
   const glass = 'rounded-xl border border-[--border] bg-[--bg-elevated] transition-all duration-300'
 
   return (
-    <>
+    <div dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
         {/* LEFT — gallery */}
         <div className="space-y-4">
@@ -368,7 +374,9 @@ export function ProductDetail({
                     className="object-contain"
                   />
                 </div>
-                <span className="text-xs text-[--text-secondary]">No product photo — placeholder shown</span>
+                <span className="text-xs text-[--text-secondary]">
+                  {locale === 'ar' ? 'لا توجد صورة للمنتج - يتم عرض صورة بديلة' : 'No product photo — placeholder shown'}
+                </span>
               </div>
             )}
           </div>
@@ -579,7 +587,7 @@ export function ProductDetail({
           </div>
 
           <StockBadgeList badges={badges} className="mb-3 mt-2" />
-          <TrustBlock partNumber={partNumber} locale="en" className="mt-6" />
+          <TrustBlock partNumber={partNumber} locale={locale} className="mt-6" />
 
           {/* RFQ panel */}
           <section
@@ -592,9 +600,13 @@ export function ProductDetail({
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
                   <Check className="h-7 w-7" />
                 </div>
-                <h3 className="text-lg font-semibold text-[--text-primary]">Your request has been received</h3>
+                <h3 className="text-lg font-semibold text-[--text-primary]">
+                  {locale === 'ar' ? 'تم استلام طلبك' : 'Your request has been received'}
+                </h3>
                 <p className="font-mono text-xl font-bold text-[--accent]">{data.reference}</p>
-                <p className="text-sm text-[--text-secondary]">We will contact you within 2–6 hours.</p>
+                <p className="text-sm text-[--text-secondary]">
+                  {locale === 'ar' ? 'سنتواصل معك خلال 2-6 ساعات.' : 'We will contact you within 2–6 hours.'}
+                </p>
                 <a
                   href={waLink}
                   target="_blank"
@@ -603,21 +615,27 @@ export function ProductDetail({
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-500/20"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  WhatsApp
+                  {locale === 'ar' ? 'واتساب' : 'WhatsApp'}
                 </a>
                 <Link href={`/account/rfqs/${data.reference}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[--accent] hover:text-[--accent-hover]">
-                  Track quote <ChevronRight className="h-4 w-4" />
+                  {locale === 'ar' ? 'تتبع عرض السعر' : 'Track quote'} <ChevronRight className="h-4 w-4" />
                 </Link>
                 <Button variant="secondary" fullWidth onClick={handleReset}>
-                  Request another
+                  {locale === 'ar' ? 'طلب آخر' : 'Request another'}
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-base font-bold uppercase tracking-wider text-[--text-secondary]">Request your quote</h2>
-                    <p className="mt-1 text-xs text-[--text-secondary]">Email &amp; quantity are enough — optional fields below.</p>
+                    <h2 className="text-base font-bold uppercase tracking-wider text-[--text-secondary]">
+                      {locale === 'ar' ? 'اطلب عرض السعر' : 'Request your quote'}
+                    </h2>
+                    <p className="mt-1 text-xs text-[--text-secondary]">
+                      {locale === 'ar'
+                        ? 'البريد الإلكتروني والكمية كافيان - الحقول التالية اختيارية.'
+                        : 'Email &amp; quantity are enough — optional fields below.'}
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -638,7 +656,7 @@ export function ProductDetail({
                     )}
                   >
                     {isInRFQList ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                    {isInRFQList ? 'In cart' : 'Quick add to cart'}
+                    {isInRFQList ? (locale === 'ar' ? 'في السلة' : 'In cart') : locale === 'ar' ? 'إضافة سريعة إلى السلة' : 'Quick add to cart'}
                   </button>
                 </div>
                 {variantError ? (
@@ -651,7 +669,9 @@ export function ProductDetail({
                 ) : null}
                 <fieldset className="space-y-2.5 rounded-xl border border-[--border] bg-[--bg-surface] p-4">
                   <legend className="px-1 text-xs font-bold uppercase tracking-wider text-[--text-secondary]">
-                    Condition{variants.length > 1 ? ' (select one)' : ''}
+                    {locale === 'ar'
+                      ? `الحالة${variants.length > 1 ? ' (اختر واحدة)' : ''}`
+                      : `Condition${variants.length > 1 ? ' (select one)' : ''}`}
                   </legend>
                   <div className="space-y-2.5" role="radiogroup" aria-label="Product condition variant">
                     {variants.map((v, idx) => {
@@ -684,7 +704,7 @@ export function ProductDetail({
                             />
                             <span className="min-w-0 flex-1">
                               <span className="mb-1 inline-flex w-fit rounded-md border border-violet-400/35 bg-violet-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-200/95">
-                                Condition
+                                {locale === 'ar' ? 'الحالة' : 'Condition'}
                               </span>
                               <span className="block text-sm font-semibold text-[--text-primary]">
                                 {formatVariantConditionLabel(v.condition)}
@@ -719,12 +739,12 @@ export function ProductDetail({
                       onClick={openLoginModal}
                       className="w-full rounded-lg border border-[--accent]/35 bg-[--accent]/10 py-2.5 text-sm font-bold text-[--accent] transition-colors hover:bg-[--accent]/20"
                     >
-                      Login to view pricing
+                      {locale === 'ar' ? 'سجّل الدخول لرؤية الأسعار' : 'Login to view pricing'}
                     </button>
                   ) : null}
                 </fieldset>
                 <Input
-                  label="Part number"
+                  label={locale === 'ar' ? 'رقم القطعة' : 'Part number'}
                   value={partNumber}
                   readOnly
                   comfortable
@@ -732,7 +752,7 @@ export function ProductDetail({
                 />
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input
-                    label="Work email"
+                    label={locale === 'ar' ? 'بريد العمل' : 'Work email'}
                     type="email"
                     required
                     value={email}
@@ -743,7 +763,7 @@ export function ProductDetail({
                     autoComplete="email"
                   />
                   <Input
-                    label="Quantity"
+                    label={locale === 'ar' ? 'الكمية' : 'Quantity'}
                     type="number"
                     min={1}
                     required
@@ -756,16 +776,16 @@ export function ProductDetail({
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input
-                    label="Your name (optional)"
+                    label={locale === 'ar' ? 'اسمك (اختياري)' : 'Your name (optional)'}
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                     error={errors.contact_name}
-                    placeholder="Helps us personalize your quote"
+                    placeholder={locale === 'ar' ? 'يساعدنا على تخصيص عرض السعر' : 'Helps us personalize your quote'}
                     comfortable
                     autoComplete="name"
                   />
                   <Input
-                    label="Phone (optional)"
+                    label={locale === 'ar' ? 'الهاتف (اختياري)' : 'Phone (optional)'}
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -983,6 +1003,6 @@ export function ProductDetail({
         </div>
       </div>
       <div className="h-20 lg:hidden" aria-hidden />
-    </>
+    </div>
   )
 }

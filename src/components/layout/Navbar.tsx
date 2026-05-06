@@ -9,22 +9,24 @@ import { useTheme } from '@/components/ui/ThemeProvider'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { CartIcon } from '@/components/cart/CartIcon'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
 
 const NAV_ITEMS = [
-  { label: 'Brands', href: '/brands' },
-  { label: 'Categories', href: '/categories' },
-  { label: 'RFQ Tool', href: '/rfq' },
+  { key: 'nav.brands', href: '/brands' },
+  { key: 'nav.categories', href: '/categories' },
+  { key: 'nav.rfq', href: '/rfq' },
 ]
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const { t } = useI18n()
   return (
     <button
       type="button"
       onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')}
       className="flex h-8 w-8 items-center justify-center rounded-md text-[--text-secondary] transition-colors hover:bg-white/[0.08] hover:text-[--text-primary]"
-      aria-label="Toggle theme"
-      title={`Theme: ${theme}`}
+      aria-label={t('nav.themeToggle', 'Toggle theme', 'تبديل المظهر')}
+      title={`${t('nav.theme', 'Theme', 'المظهر')}: ${theme}`}
     >
       {theme === 'light' ? (
         <Sun className="h-4 w-4" />
@@ -42,6 +44,7 @@ export function Navbar() {
   const [cartOpen, setCartOpen] = useState(false)
   const pathname = usePathname()
   const hideInlineSearch = pathname === '/search'
+  const { locale, setLocale, t } = useI18n()
 
   return (
     <header
@@ -51,13 +54,13 @@ export function Navbar() {
       {/* ── Row 1: Utility bar ─────────────────────────────────────────── */}
       <div className="hidden border-b border-white/[0.06] md:block">
         <div className="page-container flex h-8 items-center justify-between text-xs">
-          <span className="text-[--text-secondary]">Industrial Automation Parts &amp; Components</span>
+          <span className="text-[--text-secondary]">{t('nav.utilityTagline')}</span>
           <div className="flex items-center gap-4">
             <Link
               href="/rfq/dashboard"
               className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
             >
-              Track Order
+              {t('nav.trackOrder')}
             </Link>
             <a
               href="tel:+201000629229"
@@ -71,14 +74,21 @@ export function Navbar() {
               href="/admin/login"
               className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
             >
-              Login
+              {t('nav.login')}
             </Link>
             <Link
               href="/account/company"
               className="text-[--text-secondary] hover:text-[--text-primary]"
             >
-              My Company
+              {t('nav.myCompany')}
             </Link>
+            <button
+              type="button"
+              className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+              onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+            >
+              {t('nav.langToggle')}
+            </button>
           </div>
         </div>
       </div>
@@ -106,7 +116,7 @@ export function Navbar() {
             <div className="mx-auto w-full max-w-[52%] min-w-0">
               <SearchBar
                 variant="header"
-                placeholder="Search by part number, brand, or category"
+                placeholder={t('nav.searchPlaceholder')}
                 showSuggestions
                 debounceMs={300}
                 searchPath="/search"
@@ -134,7 +144,7 @@ export function Navbar() {
               href="/rfq"
               className="ml-1 inline-flex items-center rounded-md bg-[--accent] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover]"
             >
-              Get Price
+              {t('nav.getPrice')}
             </Link>
           </div>
 
@@ -147,7 +157,7 @@ export function Navbar() {
               onClick={() => setMobileOpen(!mobileOpen)}
               className="rounded-md p-2 text-[--text-secondary] transition-colors hover:bg-white/[0.08] hover:text-[--text-primary]"
               aria-expanded={mobileOpen}
-              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-label={mobileOpen ? t('nav.closeMenu', 'Close menu', 'إغلاق القائمة') : t('nav.openMenu', 'Open menu', 'فتح القائمة')}
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -172,7 +182,7 @@ export function Navbar() {
                   : 'text-[--text-secondary] hover:bg-white/[0.06] hover:text-[--text-primary]'
               )}
             >
-              {item.label}
+              {t(item.key)}
             </Link>
           ))}
         </div>
@@ -189,7 +199,7 @@ export function Navbar() {
             <div className="pb-2">
               <SearchBar
                 variant="header"
-                placeholder="Search parts, brands…"
+                placeholder={t('nav.mobileSearchPlaceholder')}
                 showSuggestions
                 debounceMs={300}
                 searchPath="/search"
@@ -205,7 +215,7 @@ export function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className="block rounded-md px-4 py-2.5 text-sm font-medium text-[--text-secondary] transition-colors hover:bg-white/[0.08] hover:text-[--text-primary]"
               >
-                {item.label}
+                {t(item.key)}
               </Link>
             ))}
             <div className="border-t border-white/[0.06] pt-2">
@@ -221,21 +231,28 @@ export function Navbar() {
                 className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
                 onClick={() => setMobileOpen(false)}
               >
-                Login
+                {t('nav.login')}
               </Link>
               <Link
                 href="/account/company"
                 className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
                 onClick={() => setMobileOpen(false)}
               >
-                My Company
+                {t('nav.myCompany')}
               </Link>
+              <button
+                type="button"
+                className="block w-full px-4 py-2.5 text-start text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+                onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+              >
+                {t('nav.langToggle')}
+              </button>
               <Link
                 href="/rfq"
                 onClick={() => setMobileOpen(false)}
                 className="mt-2 block rounded-md bg-[--accent] px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-[--accent-hover]"
               >
-                Get Price
+                {t('nav.getPrice')}
               </Link>
             </div>
           </div>
