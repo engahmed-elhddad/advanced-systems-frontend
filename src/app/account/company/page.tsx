@@ -20,6 +20,8 @@ type CompanyPayload = {
   phone: string | null
   website: string | null
   is_verified: boolean
+  approval_threshold_usd: number
+  approver_phone: string | null
   created_at: string
 }
 
@@ -70,6 +72,12 @@ export default function CompanyAccountPage() {
   const [inviteSubmitting, setInviteSubmitting] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteOk, setInviteOk] = useState<string | null>(null)
+  const [inviteRole, setInviteRole] = useState<'buyer' | 'approver' | 'admin'>('buyer')
+  const [thresholdInput, setThresholdInput] = useState('0')
+  const [approverPhoneInput, setApproverPhoneInput] = useState('')
+  const [settingsSubmitting, setSettingsSubmitting] = useState(false)
+  const [settingsMessage, setSettingsMessage] = useState<string | null>(null)
+  const [settingsError, setSettingsError] = useState<string | null>(null)
 
   const loadCompany = useCallback(async () => {
     if (!user) {
@@ -95,6 +103,8 @@ export default function CompanyAccountPage() {
     }
     const data = (await res.json()) as CompanyWithMembers
     setCompanyData(data)
+    setThresholdInput(String(data.company.approval_threshold_usd ?? 0))
+    setApproverPhoneInput(data.company.approver_phone ?? '')
     setCompanyState('ready')
   }, [user])
 
@@ -147,7 +157,7 @@ export default function CompanyAccountPage() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, role: inviteRole }),
     })
     setInviteSubmitting(false)
     if (!res.ok) {
@@ -159,11 +169,54 @@ export default function CompanyAccountPage() {
     void loadCompany()
   }
 
-  const meIsOwner =
+  const meIsAdmin =
     user &&
     companyData?.members.some(
-      (m) => m.email.toLowerCase() === user.email.toLowerCase() && m.company_role === 'owner',
+      (m) => m.email.toLowerCase() === user.email.toLowerCase() && m.company_role === 'admin',
     )
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const threshold = Number(thresholdInput)
+    if (!Number.isFinite(threshold) || threshold < 0) {
+      setSettingsError('Threshold must be a non-negative number.')
+      return
+    }
+    setSettingsSubmitting(true)
+    setSettingsError(null)
+    setSettingsMessage(null)
+    const res = await fetch(`${base}/api/v1/companies/settings`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        approval_threshold_usd: threshold,
+        approver_phone: approverPhoneInput.trim() || null,
+      }),
+    })
+    setSettingsSubmitting(false)
+    if (!res.ok) {
+      setSettingsError(await readErrorDetail(res))
+      return
+    }
+    setSettingsMessage('Settings saved.')
+    void loadCompany()
+  }
+
+  const handleRoleChange = async (memberId: number, nextRole: 'buyer' | 'approver' | 'admin') => {
+    setSettingsError(null)
+    const res = await fetch(`${base}/api/v1/companies/members/${memberId}/role`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ role: nextRole }),
+    })
+    if (!res.ok) {
+      setSettingsError(await readErrorDetail(res))
+      return
+    }
+    void loadCompany()
+  }
 
   if (authLoading) {
     return (
@@ -319,15 +372,32 @@ export default function CompanyAccountPage() {
                   </thead>
                   <tbody className="divide-y divide-[--border-dark] text-[--text-primary]">
                     {companyData.members.map((m) => {
-                      const role = (m.company_role ?? 'member').toLowerCase()
-                      const label = role === 'owner' ? 'Owner' : 'Member'
-                      const variant = role === 'owner' ? 'success' : 'default'
+                      const role = (m.company_role ?? 'buyer').toLowerCase()
+                      const label =
+                        role === 'admin' ? 'Admin' : role === 'approver' ? 'Approver' : 'Buyer'
+                      const variant = role === 'admin' ? 'success' : role === 'approver' ? 'pending' : 'default'
                       return (
                         <tr key={m.id}>
                           <td className="px-4 py-3">{m.full_name?.trim() || '—'}</td>
                           <td className="px-4 py-3 text-[--text-secondary]">{m.email}</td>
                           <td className="px-4 py-3">
                             <Badge variant={variant}>{label}</Badge>
+                            {meIsAdmin && m.email.toLowerCase() !== user.email.toLowerCase() ? (
+                              <select
+                                className="ml-3 rounded-md border border-[--border-dark] bg-[--bg-surface] px-2 py-1 text-xs"
+                                value={role}
+                                onChange={(e) =>
+                                  void handleRoleChange(
+                                    m.id,
+                                    e.target.value as 'buyer' | 'approver' | 'admin',
+                                  )
+                                }
+                              >
+                                <option value="buyer">Buyer</option>
+                                <option value="approver">Approver</option>
+                                <option value="admin">Admin</option>
+                              </select>
+                            ) : null}
                           </td>
                         </tr>
                       )
@@ -342,7 +412,7 @@ export default function CompanyAccountPage() {
               <p className="mt-1 text-sm text-[--text-secondary]">
                 The person must already have a shop account (same email they used to sign in).
               </p>
-              {meIsOwner ? (
+              {meIsAdmin ? (
                 <>
                   <form onSubmit={handleInvite} className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
                     <div className="min-w-0 flex-1 sm:max-w-md">
@@ -355,6 +425,18 @@ export default function CompanyAccountPage() {
                         placeholder="colleague@company.com"
                         required
                       />
+                    </div>
+                    <div className="sm:w-44">
+                      <label className="mb-1 block text-sm text-[--text-secondary]">Role</label>
+                      <select
+                        className="w-full rounded-lg border border-[--border-dark] bg-[--bg-surface] px-3 py-2 text-sm"
+                        value={inviteRole}
+                        onChange={(e) => setInviteRole(e.target.value as 'buyer' | 'approver' | 'admin')}
+                      >
+                        <option value="buyer">Buyer</option>
+                        <option value="approver">Approver</option>
+                        <option value="admin">Admin</option>
+                      </select>
                     </div>
                     <Button type="submit" disabled={inviteSubmitting}>
                       {inviteSubmitting ? 'Sending…' : 'Invite'}
@@ -372,7 +454,39 @@ export default function CompanyAccountPage() {
                   )}
                 </>
               ) : (
-                <p className="mt-4 text-sm text-[--text-secondary]">Only the company owner can invite members.</p>
+                <p className="mt-4 text-sm text-[--text-secondary]">Only company admins can invite members.</p>
+              )}
+            </section>
+
+            <section className={cardShell}>
+              <h2 className="text-lg font-semibold text-[--text-primary]">Approval settings</h2>
+              {meIsAdmin ? (
+                <form onSubmit={handleSaveSettings} className="mt-4 space-y-4">
+                  <Input
+                    label="Approval threshold (USD)"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={thresholdInput}
+                    onChange={(e) => setThresholdInput(e.target.value)}
+                  />
+                  <Input
+                    label="Approver WhatsApp phone"
+                    value={approverPhoneInput}
+                    onChange={(e) => setApproverPhoneInput(e.target.value)}
+                    placeholder="+2010..."
+                  />
+                  {settingsError ? <p className="text-sm text-red-300">{settingsError}</p> : null}
+                  {settingsMessage ? <p className="text-sm text-emerald-300">{settingsMessage}</p> : null}
+                  <Button type="submit" disabled={settingsSubmitting}>
+                    {settingsSubmitting ? 'Saving…' : 'Save settings'}
+                  </Button>
+                </form>
+              ) : (
+                <p className="mt-2 text-sm text-[--text-secondary]">
+                  Approval threshold: <span className="text-[--text-primary]">{companyData.company.approval_threshold_usd}</span>{' '}
+                  USD
+                </p>
               )}
             </section>
           </div>

@@ -25,6 +25,7 @@ export default function CheckoutPage() {
   const [result, setResult] = useState<null | {
     order_ref: string
     payment_method: string
+    approval_required?: boolean
     payment_context: Record<string, unknown>
     notification: { attempted: boolean; sent: boolean; error?: string | null }
   }>(null)
@@ -61,13 +62,20 @@ export default function CheckoutPage() {
 
       {result ? (
         <section className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 p-5">
-          <h2 className="text-lg font-semibold text-emerald-100">Order confirmed</h2>
+          <h2 className="text-lg font-semibold text-emerald-100">
+            {result.approval_required ? 'Approval requested' : 'Order confirmed'}
+          </h2>
           <p className="mt-2 text-sm text-[--text-primary]">
             Reference: <span className="font-mono">{result.order_ref}</span>
           </p>
           <p className="mt-1 text-sm text-[--text-secondary]">
             Payment: {result.payment_method.replace('_', ' ')}
           </p>
+          {result.approval_required ? (
+            <p className="mt-1 text-sm text-amber-200">
+              An approver has been notified on WhatsApp. Your order will continue after approval.
+            </p>
+          ) : null}
           {result.notification.attempted ? (
             <p className="mt-1 text-sm text-[--text-secondary]">
               WhatsApp confirmation: {result.notification.sent ? 'sent' : `failed (${result.notification.error ?? 'unknown'})`}
