@@ -193,7 +193,7 @@ function SkeletonBlock() {
 
 export function SearchBar({
   variant: variantProp,
-  placeholder = 'Search part numbers, brands, categories…',
+  placeholder = 'Search parts, brands, or categories',
   size = 'sm',
   className = '',
   showSuggestions = true,
@@ -241,6 +241,7 @@ export function SearchBar({
   const manualCloseRef = useRef(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const inputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -422,8 +423,13 @@ export function SearchBar({
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
+      setDropdownOpen(false)
+      setActiveIndex(-1)
       const qv = query.trim()
-      if (!qv) return
+      if (!qv) {
+        inputRef.current?.focus()
+        return
+      }
       try {
         const product = await getProductByPartNumber(qv)
         const slug = (product as { slug?: string } | null | undefined)?.slug
@@ -517,6 +523,32 @@ export function SearchBar({
     const el = document.getElementById(`${listboxId}-opt-${activeIndex}`)
     el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [activeIndex, listboxId])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!containerRef.current) return
+      if (containerRef.current.contains(event.target as Node)) return
+      setDropdownOpen(false)
+      setActiveIndex(-1)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setDropdownOpen(false)
+      setActiveIndex(-1)
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [])
+
+  useEffect(() => {
+    setDropdownOpen(false)
+    setActiveIndex(-1)
+  }, [pathname])
 
   const showDropdown =
     showSuggestions &&
@@ -752,6 +784,7 @@ export function SearchBar({
 
   return (
     <div
+      ref={containerRef}
       className={cn('relative', isHero && 'mx-auto w-full max-w-3xl', className)}
       role="combobox"
       aria-expanded={showDropdown}

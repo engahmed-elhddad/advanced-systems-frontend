@@ -309,7 +309,7 @@ export default async function ProductSlugPage({ params }: Props) {
 
   let product: Record<string, unknown> | null = await loadBySlug(decoded)
   let openedViaPartNumber = false
-  if (!product) {
+  if (!product && looksLikePartNumber(decoded)) {
     product = await loadByPart(decoded)
     openedViaPartNumber = Boolean(product)
   }
@@ -317,9 +317,6 @@ export default async function ProductSlugPage({ params }: Props) {
     product = await enrichProductFromCatalogSearch(product)
   }
 
-  if (!product && !looksLikePartNumber(decoded)) {
-    return <BrandPage brandSlug={decoded} />
-  }
   if (!product) return notFound()
 
   const canonicalSlug = String(product.slug ?? '').trim()

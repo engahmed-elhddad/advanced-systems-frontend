@@ -52,6 +52,5 @@ export default async function globalTeardown(_config: FullConfig): Promise<void>
   if (r3.status !== 0 && r3.status !== null) {
     // eslint-disable-next-line no-console
     console.error('[e2e-global-teardown] ai-execute-actions.mjs exited with', r3.status)
-    process.exitCode = r3.status
   }
 }

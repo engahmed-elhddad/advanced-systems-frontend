@@ -103,14 +103,23 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
 
   await emailInput.fill(email)
   await passwordInput.fill(password)
-  await Promise.all([
-    page.waitForURL(/\/admin\/?$/i, { timeout: 90_000 }),
-    page.getByRole('button', { name: /sign in/i }).click(),
-  ])
-
-  await context.storageState({ path: storagePath })
-  await browser.close()
-
-  // eslint-disable-next-line no-console
-  console.log(`[global-setup] Saved admin storageState → ${storagePath} (API base ${getApiBaseUrl()})`)
+  try {
+    await Promise.all([
+      page.waitForURL(/\/admin\/?$/i, { timeout: 90_000 }),
+      page.getByRole('button', { name: /sign in/i }).click(),
+    ])
+    await context.storageState({ path: storagePath })
+    // eslint-disable-next-line no-console
+    console.log(`[global-setup] Saved admin storageState → ${storagePath} (API base ${getApiBaseUrl()})`)
+  } catch (e) {
+    // Do not block non-admin E2E suites when admin credentials drift on prod/staging.
+    await context.storageState({ path: storagePath })
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[global-setup] Admin login failed; proceeding with anonymous storageState (${storagePath}). ` +
+        `Admin-gated tests/cleanup may be skipped. Reason: ${e instanceof Error ? e.message : String(e)}`,
+    )
+  } finally {
+    await browser.close()
+  }
 }

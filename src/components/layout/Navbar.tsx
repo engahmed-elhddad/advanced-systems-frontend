@@ -26,7 +26,7 @@ function ThemeToggle() {
       type="button"
       onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')}
       className="flex h-8 w-8 items-center justify-center rounded-md text-[--text-secondary] transition-colors hover:bg-white/[0.08] hover:text-[--text-primary]"
-      aria-label={t('nav.themeToggle', 'Toggle theme', 'تبديل المظهر')}
+      aria-label="Toggle theme"
       title={`${t('nav.theme', 'Theme', 'المظهر')}: ${theme}`}
     >
       {theme === 'light' ? (
@@ -73,11 +73,14 @@ export function Navbar() {
               <Phone className="h-3 w-3" />
               {phoneDisplay}
             </a>
+            <Link href="/login" className="text-[--text-secondary] transition-colors hover:text-[--text-primary]">
+              {t('nav.customerLogin')}
+            </Link>
             <Link
-              href="/login"
+              href="/admin/login"
               className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
             >
-              {t('nav.login')}
+              {t('nav.adminLogin')}
             </Link>
             <Link
               href="/account/company"
@@ -89,6 +92,7 @@ export function Navbar() {
               type="button"
               className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
               onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+                title={t('nav.langToggle', 'EN | عربي', 'EN | عربي')}
             >
               {t('nav.langToggle')}
             </button>
@@ -234,7 +238,14 @@ export function Navbar() {
                 className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
                 onClick={() => setMobileOpen(false)}
               >
-                {t('nav.login')}
+                {t('nav.customerLogin')}
+              </Link>
+              <Link
+                href="/admin/login"
+                className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t('nav.adminLogin')}
               </Link>
               <Link
                 href="/account/company"

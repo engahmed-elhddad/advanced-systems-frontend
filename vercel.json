@@ -5,5 +5,11 @@
   "outputDirectory": ".next",
   "env": {
     "NEXT_PUBLIC_API_BASE_URL": "https://api.advancedsystems-int.com"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/sitemap-refresh",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }
