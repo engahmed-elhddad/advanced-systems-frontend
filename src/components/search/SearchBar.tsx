@@ -238,6 +238,7 @@ export function SearchBar({
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const [fetching, setFetching] = useState(false)
+  const manualCloseRef = useRef(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -289,7 +290,7 @@ export function SearchBar({
           const parsed = parseMeiliHits(data, lim)
           if (parsed.length > 0) {
             setProductSuggestions(parsed)
-            setDropdownOpen(true)
+            if (!manualCloseRef.current) setDropdownOpen(true)
             setActiveIndex(-1)
             setFetching(false)
             return
@@ -303,7 +304,7 @@ export function SearchBar({
           const parsedS = parseLegacySuggest(sdata, lim)
           if (parsedS.length > 0) {
             setProductSuggestions(parsedS)
-            setDropdownOpen(true)
+            if (!manualCloseRef.current) setDropdownOpen(true)
             setActiveIndex(-1)
             setFetching(false)
             return
@@ -312,11 +313,11 @@ export function SearchBar({
         const leg = await fetch(`${API_BASE}/search/suggest?q=${encodeURIComponent(q)}&limit=${lim}`)
         const legData = leg.ok ? await leg.json() : { suggestions: [] }
         setProductSuggestions(parseLegacySuggest(legData, lim))
-        setDropdownOpen(true)
+        if (!manualCloseRef.current) setDropdownOpen(true)
         setActiveIndex(-1)
       } catch {
         setProductSuggestions([])
-        setDropdownOpen(true)
+        if (!manualCloseRef.current) setDropdownOpen(true)
         setActiveIndex(-1)
       } finally {
         setFetching(false)
@@ -393,6 +394,7 @@ export function SearchBar({
 
   const pushSearchWithQ = useCallback(
     (qv: string) => {
+      manualCloseRef.current = true
       pushRecent(qv)
       setRecent(readRecent())
       setDropdownOpen(false)
@@ -444,18 +446,21 @@ export function SearchBar({
   const selectOption = useCallback(
     (opt: SuggestionOption) => {
       if (opt.type === 'product') {
+        manualCloseRef.current = true
         pushRecent(opt.part_number)
         setRecent(readRecent())
         setDropdownOpen(false)
         applyQuery('')
         router.push(`${productPath}/${encodeURIComponent(opt.part_number)}`)
       } else if (opt.type === 'brand') {
+        manualCloseRef.current = true
         pushRecent(opt.name)
         setRecent(readRecent())
         setDropdownOpen(false)
         applyQuery('')
         router.push(`${brandPath}/${encodeURIComponent(opt.slug)}`)
       } else if (opt.type === 'category') {
+        manualCloseRef.current = true
         pushRecent(opt.name)
         setRecent(readRecent())
         setDropdownOpen(false)
@@ -780,10 +785,12 @@ export function SearchBar({
             type="search"
             value={query}
             onChange={(e) => {
+              manualCloseRef.current = false
               applyQuery(e.target.value)
               setActiveIndex(-1)
             }}
             onFocus={() => {
+              manualCloseRef.current = false
               setDropdownOpen(true)
               setRecent(readRecent())
             }}

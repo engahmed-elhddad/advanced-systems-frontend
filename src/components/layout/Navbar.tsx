@@ -10,6 +10,7 @@ import { CartDrawer } from '@/components/cart/CartDrawer'
 import { CartIcon } from '@/components/cart/CartIcon'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
+import { supportPhoneDisplay, supportPhoneTelHref } from '@/lib/constants'
 
 const NAV_ITEMS = [
   { key: 'nav.brands', href: '/brands' },
@@ -45,6 +46,8 @@ export function Navbar() {
   const pathname = usePathname()
   const hideInlineSearch = pathname === '/search'
   const { locale, setLocale, t } = useI18n()
+  const phoneHref = supportPhoneTelHref() || 'tel:+201000629229'
+  const phoneDisplay = supportPhoneDisplay() || '+20 10 0062 9229'
 
   return (
     <header
@@ -63,15 +66,15 @@ export function Navbar() {
               {t('nav.trackOrder')}
             </Link>
             <a
-              href="tel:+201000629229"
+              href={phoneHref}
               className="flex items-center gap-1.5 text-[--text-secondary] transition-colors hover:text-[--text-primary]"
-              aria-label="Call +20 100 062 9229"
+              aria-label={`Call ${phoneDisplay}`}
             >
               <Phone className="h-3 w-3" />
-              +20 100 062 9229
+              {phoneDisplay}
             </a>
             <Link
-              href="/admin/login"
+              href="/login"
               className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
             >
               {t('nav.login')}
@@ -132,9 +135,9 @@ export function Navbar() {
           {/* Right actions */}
           <div className="ml-auto hidden shrink-0 items-center gap-2 md:flex">
             <a
-              href="tel:+201000629229"
+              href={phoneHref}
               className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
-              aria-label="Call +20 100 062 9229"
+              aria-label={`Call ${phoneDisplay}`}
             >
               <Phone className="h-4 w-4" />
             </a>
@@ -220,14 +223,14 @@ export function Navbar() {
             ))}
             <div className="border-t border-white/[0.06] pt-2">
               <a
-                href="tel:+201000629229"
+                href={phoneHref}
                 className="flex items-center gap-2 px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
               >
                 <Phone className="h-4 w-4" />
-                +20 100 062 9229
+                {phoneDisplay}
               </a>
               <Link
-                href="/admin/login"
+                href="/login"
                 className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
                 onClick={() => setMobileOpen(false)}
               >

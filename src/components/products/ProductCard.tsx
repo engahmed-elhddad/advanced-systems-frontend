@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { trackClickProduct } from '@/lib/analytics'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { BrandLogo } from '@/components/ui/BrandLogo'
@@ -14,6 +14,7 @@ import { useCart } from '@/context/CartContext'
 import type { ProductPricing } from '@/types/product'
 import type { StockBadge } from '@/types/warehouse'
 import { StockBadgeList } from '@/components/products/StockBadgeList'
+import toast from 'react-hot-toast'
 
 function KeySpecs({
   quickSpecs,
@@ -117,6 +118,7 @@ function ProductCardInner({
   const { showExactPricing, openLoginModal } = usePricingGate()
   const { addItem, items: cartItems } = useCart()
   const isInListFromStore = cartItems.some((i) => i.part_number === part_number)
+  const [isAdding, setIsAdding] = useState(false)
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => {
     setHydrated(true)
@@ -312,17 +314,36 @@ function ProductCardInner({
           <button
             type="button"
             onClick={() => {
+              if (isAdding || isInList) return
+              setIsAdding(true)
               void addItem({ part_number, qty: 1 })
+                .then(() => {
+                  toast.success(`Added ${part_number} to cart`)
+                })
+                .catch((e) => {
+                  toast.error(e instanceof Error ? e.message : 'Failed to add item to cart')
+                })
+                .finally(() => {
+                  setIsAdding(false)
+                })
             }}
-            disabled={isInList}
+            disabled={isInList || isAdding}
             className={
               isInList
                 ? 'inline-flex cursor-default items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 p-2 text-emerald-200'
-                : 'inline-flex items-center justify-center rounded-xl border border-[--border] p-2 text-[--text-secondary] transition-all duration-300 hover:border-[--accent]/35 hover:text-[--accent]'
+                : isAdding
+                  ? 'inline-flex cursor-wait items-center justify-center rounded-xl border border-[--accent]/45 bg-[--accent]/10 p-2 text-[--accent]'
+                  : 'inline-flex items-center justify-center rounded-xl border border-[--border] p-2 text-[--text-secondary] transition-all duration-300 hover:border-[--accent]/35 hover:text-[--accent]'
             }
-            aria-label={isInList ? `${part_number} added to cart` : `Add ${part_number} to cart`}
+            aria-label={
+              isInList
+                ? `${part_number} added to cart`
+                : isAdding
+                  ? `Adding ${part_number} to cart`
+                  : `Add ${part_number} to cart`
+            }
           >
-            <Plus className="h-4 w-4" />
+            {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           </button>
         </div>
       </div>

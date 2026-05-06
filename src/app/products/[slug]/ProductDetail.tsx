@@ -7,6 +7,7 @@ import {
   Zap,
   Download,
   Check,
+  Loader2,
   Plus,
   MessageCircle,
   FileText,
@@ -41,6 +42,7 @@ import {
   variantStockHint,
 } from '@/lib/productVariants'
 import { useI18n } from '@/lib/i18n'
+import toast from 'react-hot-toast'
 
 const rfqSchema = z.object({
   email: z.string().email('Valid email required'),
@@ -117,6 +119,7 @@ export function ProductDetail({
     variants.length === 1 ? variantOptionKey(variants[0], 0) : null,
   )
   const [variantError, setVariantError] = useState<string | null>(null)
+  const [addingToCart, setAddingToCart] = useState(false)
   const { submit, isLoading, isSuccess, data, error, reset } = useRFQSubmit({
     successToast: false,
     errorToast: false,
@@ -645,9 +648,20 @@ export function ProductDetail({
                         scrollToRfqPanel()
                         return
                       }
+                      if (addingToCart || isInRFQList) return
+                      setAddingToCart(true)
                       void addItem({ part_number: partNumber, qty: Math.max(1, Number(quantity) || 1) })
+                        .then(() => {
+                          toast.success(locale === 'ar' ? 'تمت إضافة المنتج إلى السلة' : 'Added to cart')
+                        })
+                        .catch((e) => {
+                          toast.error(e instanceof Error ? e.message : locale === 'ar' ? 'تعذر الإضافة إلى السلة' : 'Failed to add to cart')
+                        })
+                        .finally(() => {
+                          setAddingToCart(false)
+                        })
                     }}
-                    disabled={isInRFQList}
+                    disabled={isInRFQList || addingToCart}
                     className={cn(
                       'inline-flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-xs font-bold transition-all duration-300',
                       isInRFQList
@@ -655,8 +669,20 @@ export function ProductDetail({
                         : 'border-[--accent]/40 bg-[--accent]/10 text-[--accent] hover:bg-[--accent]/20',
                     )}
                   >
-                    {isInRFQList ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                    {isInRFQList ? (locale === 'ar' ? 'في السلة' : 'In cart') : locale === 'ar' ? 'إضافة سريعة إلى السلة' : 'Quick add to cart'}
+                    {isInRFQList ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : addingToCart ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" />
+                    )}
+                    {isInRFQList
+                      ? (locale === 'ar' ? 'في السلة' : 'In cart')
+                      : addingToCart
+                        ? (locale === 'ar' ? 'جارٍ الإضافة...' : 'Adding...')
+                        : locale === 'ar'
+                          ? 'إضافة سريعة إلى السلة'
+                          : 'Quick add to cart'}
                   </button>
                 </div>
                 {variantError ? (

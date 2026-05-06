@@ -77,6 +77,22 @@ const EMPTY_TOTALS: CartTotals = {
   total_egp: 0,
 }
 
+async function getApiErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const data = (await res.json()) as { detail?: string }
+    if (typeof data?.detail === 'string' && data.detail.trim()) return data.detail
+  } catch {
+    // ignore json parse errors
+  }
+  try {
+    const text = await res.text()
+    if (text.trim()) return text
+  } catch {
+    // ignore body read errors
+  }
+  return fallback
+}
+
 // ── Visitor ID ────────────────────────────────────────────────────────────────
 
 function getOrCreateVisitorId(): string {
@@ -145,7 +161,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       credentials: 'include',
       body: JSON.stringify(body),
     })
-    if (!res.ok) throw new Error('Failed to add item')
+    if (!res.ok) throw new Error(await getApiErrorMessage(res, 'Failed to add item'))
     const data = (await res.json()) as CartApiResponse
     applyCart(data)
   }, [applyCart, headers])
@@ -155,7 +171,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       `${API_BASE_URL}/api/v1/cart/items/${encodeURIComponent(partNumber)}`,
       { method: 'DELETE', headers: headers(), credentials: 'include' },
     )
-    if (!res.ok) throw new Error('Failed to remove item')
+    if (!res.ok) throw new Error(await getApiErrorMessage(res, 'Failed to remove item'))
     const data = (await res.json()) as CartApiResponse
     applyCart(data)
   }, [applyCart, headers])
@@ -170,7 +186,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ qty }),
       },
     )
-    if (!res.ok) throw new Error('Failed to update qty')
+    if (!res.ok) throw new Error(await getApiErrorMessage(res, 'Failed to update qty'))
     const data = (await res.json()) as CartApiResponse
     applyCart(data)
   }, [applyCart, headers])
