@@ -16,9 +16,7 @@ type ShopAuthContextValue = {
   user: ShopUser | null
   loading: boolean
   refreshSession: () => Promise<void>
-  loginModalOpen: boolean
   openLoginModal: () => void
-  closeLoginModal: () => void
   signOut: () => Promise<void>
 }
 
@@ -47,7 +45,6 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
   const openLoginModal = useCallback(() => {
     router.push('/login')
   }, [router])
-  const closeLoginModal = useCallback(() => {}, [])
 
   const signOut = useCallback(async () => {
     try {
@@ -62,12 +59,10 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       refreshSession,
-      loginModalOpen: false,
       openLoginModal,
-      closeLoginModal,
       signOut,
     }),
-    [user, loading, refreshSession, openLoginModal, closeLoginModal, signOut],
+    [user, loading, refreshSession, openLoginModal, signOut],
   )
 
   return (
