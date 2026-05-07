@@ -1,4 +1,4 @@
-export const revalidate = 0
+export const revalidate = 300
 
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'

@@ -1,4 +1,4 @@
-export const revalidate = 0
+export const revalidate = 60
 
 import { Suspense } from 'react'
 import { HeroSection } from '@/components/home/HeroSection'
