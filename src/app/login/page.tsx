@@ -48,6 +48,7 @@ export default function LoginPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
@@ -60,6 +61,7 @@ export default function LoginPage() {
         throw new Error(payload.detail || 'Invalid email or password.')
       }
 
+      await refreshSession()
       router.push('/account/company')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed.')
