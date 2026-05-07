@@ -73,15 +73,6 @@ export function Navbar() {
               <Phone className="h-3 w-3" />
               {phoneDisplay}
             </a>
-            <Link href="/login" className="text-[--text-secondary] transition-colors hover:text-[--text-primary]">
-              {t('nav.customerLogin')}
-            </Link>
-            <Link
-              href="/admin/login"
-              className="text-[--text-secondary] transition-colors hover:text-[--text-primary]"
-            >
-              {t('nav.adminLogin')}
-            </Link>
             <Link
               href="/account/company"
               className="text-[--text-secondary] hover:text-[--text-primary]"
@@ -233,20 +224,6 @@ export function Navbar() {
                 <Phone className="h-4 w-4" />
                 {phoneDisplay}
               </a>
-              <Link
-                href="/login"
-                className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
-                onClick={() => setMobileOpen(false)}
-              >
-                {t('nav.customerLogin')}
-              </Link>
-              <Link
-                href="/admin/login"
-                className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"
-                onClick={() => setMobileOpen(false)}
-              >
-                {t('nav.adminLogin')}
-              </Link>
               <Link
                 href="/account/company"
                 className="block px-4 py-2.5 text-sm text-[--text-secondary] transition-colors hover:text-[--text-primary]"

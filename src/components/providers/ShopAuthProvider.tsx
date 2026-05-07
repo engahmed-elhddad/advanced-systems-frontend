@@ -43,7 +43,7 @@ export function ShopAuthProvider({ children }: { children: ReactNode }) {
   }, [refreshSession])
 
   const openLoginModal = useCallback(() => {
-    router.push('/login')
+    router.push('/account/company')
   }, [router])
 
   const signOut = useCallback(async () => {
