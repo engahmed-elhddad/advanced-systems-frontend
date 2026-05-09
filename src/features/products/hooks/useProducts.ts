@@ -34,6 +34,16 @@ export type AdminProductSpec = {
   value: string
 }
 
+export type AdminProductImage = {
+  /** Stored as string for object-key indexing in gallery components. */
+  id: string
+  url: string
+  thumbnail_url?: string | null
+  medium_url?: string | null
+  is_primary: boolean
+  sort_order?: number | null
+}
+
 export type AdminProduct = {
   id: number
   name: string
@@ -46,6 +56,8 @@ export type AdminProduct = {
   imageUrl: string
   datasheetUrl: string
   status: AdminProductStatus
+  /** Per-product image gallery (admin) — backend returns ``ProductImageSchema[]``. */
+  images: AdminProductImage[]
   /** Distinct offer conditions (lowercase) from API ``variants``, for list badges */
   offerConditions?: string[]
   /** Product lifecycle (e.g. active, obsolete) from API */
@@ -171,6 +183,28 @@ function normalizeProduct(row: any): AdminProduct {
       ? row.category
       : row?.category?.name || row?.category_name || ''
 
+  const imagesRaw = Array.isArray(row?.images) ? row.images : []
+  const images: AdminProductImage[] = imagesRaw
+    .map((img: any) => {
+      const id = img?.id
+      // ProductImageSchema validation_alias accepts ``image_url`` or ``url``.
+      const url = String(img?.url ?? img?.image_url ?? '').trim()
+      if (id == null || !url) return null
+      return {
+        id: String(id),
+        url,
+        thumbnail_url:
+          img?.thumbnail_url == null ? null : String(img.thumbnail_url) || null,
+        medium_url: img?.medium_url == null ? null : String(img.medium_url) || null,
+        is_primary: Boolean(img?.is_primary),
+        sort_order:
+          img?.sort_order == null || img.sort_order === ''
+            ? null
+            : Number(img.sort_order),
+      } satisfies AdminProductImage
+    })
+    .filter((x: AdminProductImage | null): x is AdminProductImage => x !== null)
+
   return {
     id: Number(row?.id ?? 0),
     name: String(row?.name || row?.part_number || `Product ${row?.id ?? ''}`).trim(),
@@ -191,6 +225,7 @@ function normalizeProduct(row: any): AdminProduct {
     imageUrl: String(row?.image_url ?? '').trim(),
     datasheetUrl: String(row?.datasheet_url || ''),
     status: fromApiStatus(row),
+    images,
     offerConditions: extractOfferConditions(row),
     lifecycleStatus: String(row?.lifecycle_status ?? 'active'),
     is_enriched: Boolean(row?.is_enriched),

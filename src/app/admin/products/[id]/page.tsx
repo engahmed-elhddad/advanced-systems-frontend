@@ -9,6 +9,7 @@ import { useBrands } from '@/features/products/hooks/useBrands'
 import { useCategories } from '@/features/products/hooks/useCategories'
 import { api, getApiErrorMessage } from '@/lib/api'
 import { useAdminProduct, useUpdateAdminProduct } from '@/features/products/hooks/useProducts'
+import ProductImagesSection from '@/components/admin/ProductImagesSection'
 import { ProductForm } from '../_components/ProductForm'
 import { ProductInventorySection } from '../_components/ProductInventorySection'
 import { ProductOffersSection } from '../_components/ProductOffersSection'
@@ -132,6 +133,13 @@ export default function AdminEditProductPage() {
                 } catch (error) {
                   toast.error(getApiErrorMessage(error, 'Failed to update product'))
                 }
+              }}
+            />
+            <ProductImagesSection
+              productId={product.id}
+              images={product.images ?? []}
+              onChanged={async () => {
+                await productQuery.refetch()
               }}
             />
             <ProductOffersSection productId={product.id} />
