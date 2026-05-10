@@ -133,10 +133,38 @@ export default function AdminDashboard() {
                 ) : null}
               </p>
               <ul className="grid gap-2 text-sm text-white/70 sm:grid-cols-2">
-                <li>Missing brand: {readiness?.missing_brand ?? 0}</li>
-                <li>Missing category: {readiness?.missing_category ?? 0}</li>
-                <li>Missing description: {readiness?.missing_description ?? 0}</li>
-                <li>Missing images: {readiness?.missing_images ?? 0}</li>
+                <li>
+                  <Link
+                    href="/admin/products?missing_brand=1"
+                    className="rounded-md px-1 py-0.5 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Missing brand: <span className="font-semibold text-white">{readiness?.missing_brand ?? 0}</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/products?missing_category=1"
+                    className="rounded-md px-1 py-0.5 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Missing category: <span className="font-semibold text-white">{readiness?.missing_category ?? 0}</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/products?missing_description=1"
+                    className="rounded-md px-1 py-0.5 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Missing description: <span className="font-semibold text-white">{readiness?.missing_description ?? 0}</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/products?missing_images=1"
+                    className="rounded-md px-1 py-0.5 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Missing images: <span className="font-semibold text-white">{readiness?.missing_images ?? 0}</span>
+                  </Link>
+                </li>
               </ul>
               <div className="flex flex-wrap gap-2 pt-1">
                 <Button asChild size="sm" variant="secondary">

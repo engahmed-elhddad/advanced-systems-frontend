@@ -259,16 +259,45 @@ function unwrapAdminEnvelope(raw: unknown): { inner: Record<string, unknown>; me
   return { inner: (raw as Record<string, unknown>) ?? {}, meta: {} }
 }
 
+/** Composable readiness filters mirrored from the backend admin endpoint. */
+export type AdminProductFilter = {
+  missing_brand?: boolean
+  missing_category?: boolean
+  missing_description?: boolean
+  missing_images?: boolean
+  has_images?: boolean
+  published?: boolean
+  unpublished?: boolean
+}
+
+export const ADMIN_PRODUCT_FILTER_KEYS: ReadonlyArray<keyof AdminProductFilter> = [
+  'missing_brand',
+  'missing_category',
+  'missing_description',
+  'missing_images',
+  'has_images',
+  'published',
+  'unpublished',
+] as const
+
 async function getAdminProducts(
-  params: { page?: number; size?: number; search?: string },
+  params: { page?: number; size?: number; search?: string; filters?: AdminProductFilter },
   signal?: AbortSignal,
 ) {
   const page = params.page ?? 1
   const size = params.size ?? 50
   const search = params.search?.trim() || undefined
 
+  // Emit only truthy filter keys as ``&missing_X=1`` to keep URLs clean.
+  const filterParams: Record<string, string> = {}
+  if (params.filters) {
+    for (const key of ADMIN_PRODUCT_FILTER_KEYS) {
+      if (params.filters[key]) filterParams[key] = '1'
+    }
+  }
+
   const res = await api.get('/api/v1/admin/products', {
-    params: { page, per_page: size, size, search, sort: 'newest' },
+    params: { page, per_page: size, size, search, sort: 'newest', ...filterParams },
     signal,
   })
   const { inner: data, meta } = unwrapAdminEnvelope(res.data)
@@ -484,7 +513,12 @@ async function deleteAdminProduct(id: number, etag: string) {
   return res.data
 }
 
-export function useAdminProducts(params: { page?: number; size?: number; search?: string }) {
+export function useAdminProducts(params: {
+  page?: number
+  size?: number
+  search?: string
+  filters?: AdminProductFilter
+}) {
   return useDataTableQuery({
     queryKey: ['admin-products', params],
     queryFn: ({ signal }) => getAdminProducts(params, signal),

@@ -28,10 +28,12 @@ import { AdminQueryErrorCard } from '@/components/admin/AdminQueryErrorCard'
 import { getApiErrorMessage } from '@/lib/api'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import {
+  ADMIN_PRODUCT_FILTER_KEYS,
   conflictProductIdsFromError,
   useAdminProducts,
   useDeleteAdminProduct,
   type AdminProduct,
+  type AdminProductFilter,
   type AdminProductStatus,
 } from '@/features/products/hooks/useProducts'
 import toast from 'react-hot-toast'
@@ -136,19 +138,29 @@ export default function AdminProductsListPage() {
 
   const initialQ = searchParams.get('q') ?? ''
   const initialPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
+  const initialFilters: AdminProductFilter = Object.fromEntries(
+    ADMIN_PRODUCT_FILTER_KEYS.filter((k) => searchParams.get(k) === '1').map((k) => [k, true]),
+  )
 
   const [inputQuery, setInputQuery] = useState(initialQ)
   const [page, setPage] = useState(initialPage)
+  const [filters, setFilters] = useState<AdminProductFilter>(initialFilters)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [staleRowIds, setStaleRowIds] = useState<Set<number>>(() => new Set())
   const prevDebounced = useRef(initialQ)
+  const filtersKey = ADMIN_PRODUCT_FILTER_KEYS.filter((k) => filters[k]).join(',')
+  const prevFiltersKey = useRef(filtersKey)
 
   useEffect(() => {
     const q = searchParams.get('q') ?? ''
     const p = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
+    const f: AdminProductFilter = Object.fromEntries(
+      ADMIN_PRODUCT_FILTER_KEYS.filter((k) => searchParams.get(k) === '1').map((k) => [k, true]),
+    )
     setInputQuery(q)
     setPage(p)
+    setFilters(f)
   }, [searchParams])
 
   const debouncedQuery = useDebouncedValue(inputQuery, 300)
@@ -161,6 +173,13 @@ export default function AdminProductsListPage() {
   }, [debouncedQuery])
 
   useEffect(() => {
+    if (prevFiltersKey.current !== filtersKey) {
+      setPage(1)
+      prevFiltersKey.current = filtersKey
+    }
+  }, [filtersKey])
+
+  useEffect(() => {
     setStaleRowIds(new Set())
   }, [debouncedQuery, page])
 
@@ -169,11 +188,14 @@ export default function AdminProductsListPage() {
     const q = debouncedQuery.trim()
     if (q) p.set('q', q)
     if (page > 1) p.set('page', String(page))
+    for (const k of ADMIN_PRODUCT_FILTER_KEYS) {
+      if (filters[k]) p.set(k, '1')
+    }
     const next = p.toString()
     const cur = searchParams.toString()
     if (next === cur) return
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false })
-  }, [debouncedQuery, page, pathname, router, searchParams])
+  }, [debouncedQuery, page, filtersKey, pathname, router, searchParams])
 
   useEffect(() => {
     syncUrl()
@@ -183,7 +205,26 @@ export default function AdminProductsListPage() {
     page,
     size: PAGE_SIZE,
     search: debouncedQuery.trim() || undefined,
+    filters,
   })
+
+  const activeFilterCount = ADMIN_PRODUCT_FILTER_KEYS.filter((k) => filters[k]).length
+
+  function toggleFilter(key: keyof AdminProductFilter) {
+    setFilters((prev) => {
+      const next = { ...prev }
+      if (next[key]) {
+        delete next[key]
+      } else {
+        next[key] = true
+      }
+      return next
+    })
+  }
+
+  function clearAllFilters() {
+    setFilters({})
+  }
   const dtPlatform = useDataTablePlatform({
     tableId: 'admin.products.catalog',
     tenantId: TENANT_ID,
@@ -428,6 +469,51 @@ export default function AdminProductsListPage() {
             />
             <p className="mt-1.5 text-[11px] text-white/40">Results update after you stop typing (300ms).</p>
           </div>
+        </div>
+
+        <div
+          className="flex flex-wrap items-center gap-2 p-4"
+          role="group"
+          aria-label="Catalog readiness filters"
+        >
+          <span className="text-[11px] uppercase tracking-wider text-white/45">Filters</span>
+          {(
+            [
+              { key: 'missing_images', label: 'Missing images' },
+              { key: 'has_images', label: 'Has images' },
+              { key: 'missing_description', label: 'Missing description' },
+              { key: 'missing_category', label: 'Missing category' },
+              { key: 'missing_brand', label: 'Missing brand' },
+              { key: 'published', label: 'Published' },
+              { key: 'unpublished', label: 'Unpublished' },
+            ] as Array<{ key: keyof AdminProductFilter; label: string }>
+          ).map(({ key, label }) => {
+            const active = Boolean(filters[key])
+            return (
+              <Button
+                key={key}
+                type="button"
+                size="sm"
+                variant={active ? 'primary' : 'secondary'}
+                surface="dark"
+                aria-pressed={active}
+                onClick={() => toggleFilter(key)}
+              >
+                {label}
+              </Button>
+            )
+          })}
+          {activeFilterCount > 0 ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              surface="dark"
+              onClick={clearAllFilters}
+            >
+              Clear filters ({activeFilterCount})
+            </Button>
+          ) : null}
         </div>
       </Card>
 
