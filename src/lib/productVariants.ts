@@ -5,6 +5,7 @@
 
 export interface ProductVariantOption {
   id: number | null
+  part_number?: string | null
   condition: string
   stock: number
   price?: number | null
@@ -62,13 +63,14 @@ export function normalizeProductVariants(product: Record<string, unknown>): Prod
           : typeof idRaw === 'string' && /^\d+$/.test(idRaw)
             ? Number(idRaw)
             : null
-      const condition = String(v.condition ?? v.condition_code ?? `option_${i}`)
+      const partNumber = typeof v.part_number === 'string' && v.part_number.trim() ? v.part_number.trim() : null
+      const condition = String(v.condition ?? v.condition_code ?? partNumber ?? `option_${i}`)
       const stockRaw = v.stock ?? v.stock_quantity
       const stock =
         typeof stockRaw === 'number' && Number.isFinite(stockRaw)
           ? Math.max(0, Math.floor(stockRaw))
           : Math.max(0, Math.floor(Number(stockRaw) || 0))
-      const priceRaw = v.price
+      const priceRaw = v.price ?? v.price_usd
       const price =
         typeof priceRaw === 'number' && Number.isFinite(priceRaw)
           ? priceRaw
@@ -77,7 +79,7 @@ export function normalizeProductVariants(product: Record<string, unknown>): Prod
             : null
       const status = v.status != null ? String(v.status) : 'active'
       const image_url = typeof v.image_url === 'string' ? v.image_url : null
-      out.push({ id, condition, stock, price: Number.isFinite(price as number) ? price : null, image_url, status })
+      out.push({ id, part_number: partNumber, condition, stock, price: Number.isFinite(price as number) ? price : null, image_url, status })
     }
     if (out.length > 0) return out
   }

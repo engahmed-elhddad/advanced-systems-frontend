@@ -10,6 +10,7 @@ export interface RFQCreateInput {
   country?: string
   phone?: string
   product_id?: number
+  variant_id?: number
   /** Set automatically by submitPublicRFQ when analytics consent is accepted */
   visitor_id?: string
   utm_source?: string

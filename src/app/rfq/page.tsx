@@ -70,6 +70,7 @@ export default function RFQPage() {
   const [submitted, setSubmitted] = useState(false)
   const [completed, setCompleted] = useState(false)
   const [linkedProductId, setLinkedProductId] = useState<number | undefined>()
+  const [linkedVariantId, setLinkedVariantId] = useState<number | undefined>()
   const { submitAsync, isLoading, reset } = useRFQSubmit({ analyticsSource: 'rfq_page' })
 
   useEffect(() => {
@@ -82,6 +83,7 @@ export default function RFQPage() {
     const q = params.get('quantity')
     const vCond = params.get('variant_condition')
     const vId = params.get('variant_id')
+    if (vId && /^\d+$/.test(vId)) setLinkedVariantId(Number(vId))
     const savedEmail = localStorage.getItem('rfq_email')
     const savedCompany = localStorage.getItem('rfq_company')
 
@@ -156,6 +158,7 @@ export default function RFQPage() {
         country: parsed.data.country?.trim() || undefined,
         message: parsed.data.message?.trim() || undefined,
         product_id: linkedProductId,
+        variant_id: linkedVariantId,
       })
       setCompleted(true)
       setForm(emptyForm)

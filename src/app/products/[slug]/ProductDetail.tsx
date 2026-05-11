@@ -224,7 +224,7 @@ export function ProductDetail({
       e.preventDefault()
       setErrors({})
       setVariantError(null)
-      if (!selectedVariant) {
+      if (variants.length > 1 && !selectedVariant) {
         setVariantError('Choose a condition above to continue.')
         scrollToRfqPanel()
         return
@@ -250,11 +250,13 @@ export function ProductDetail({
         localStorage.setItem('rfq_email', email)
         if (company.trim()) localStorage.setItem('rfq_company', company.trim())
       }
-      const variantBlock = buildRfqVariantFooter({
-        partNumber,
-        productId,
-        variant: selectedVariant,
-      })
+      const variantBlock = selectedVariant
+        ? buildRfqVariantFooter({
+            partNumber,
+            productId,
+            variant: selectedVariant,
+          })
+        : ''
       const combinedMessage = mergeVariantIntoMessage(message.trim(), variantBlock)
 
       submit({
@@ -267,6 +269,7 @@ export function ProductDetail({
         country: parsed.data.country,
         message: combinedMessage || undefined,
         product_id: productId,
+        variant_id: selectedVariant?.id ?? undefined,
       })
     },
     [
@@ -279,6 +282,7 @@ export function ProductDetail({
       message,
       partNumber,
       productId,
+      variants.length,
       submit,
       selectedVariant,
       scrollToRfqPanel,
@@ -888,7 +892,7 @@ export function ProductDetail({
                   fullWidth
                   size="lg"
                   loading={isLoading}
-                  disabled={!selectedVariant}
+                  disabled={variants.length > 1 && !selectedVariant}
                   className="min-h-[52px] rounded-xl text-base font-bold"
                   onClick={() =>
                     trackRfqCtaClick({
