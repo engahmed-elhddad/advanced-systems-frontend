@@ -1,32 +1,62 @@
 /**
  * Spec 010 US1 — exact part-number lookup from global header search.
  */
+import type { APIRequestContext } from '@playwright/test'
 import { test, expect } from './fixtures/live-e2e'
+import { getApiBaseUrl } from './e2e-target'
 
-const VARIANTS = [
-  '1LA7113-4AA60',
-  '1la7113-4aa60',
-  '1LA7113 4AA60',
-  '1LA7113_4AA60',
-  '1LA7113/4AA60',
-  '1la71134aa60',
-]
 const HIDDEN_PART_NUMBER = (process.env.E2E_HIDDEN_PART_NUMBER || '').trim()
 
+type ProductListItem = {
+  part_number?: string
+  slug?: string
+}
+
+function lookupVariants(partNumber: string): string[] {
+  const canonical = partNumber.trim()
+  const compact = canonical.replace(/[\s\-_/]/g, '')
+  return [
+    canonical,
+    canonical.toLowerCase(),
+    canonical.replace(/[\s\-_/]+/g, ' '),
+    canonical.replace(/[\s\-_/]+/g, '_'),
+    canonical.replace(/[\s\-_/]+/g, '/'),
+    compact.toLowerCase(),
+  ]
+}
+
+async function discoverExactLookupFixture(request: APIRequestContext) {
+  const base = getApiBaseUrl()
+  const res = await request.get(`${base}/api/v1/products?limit=100`)
+  expect(res.ok(), `GET public products for Spec 010 fixture returned ${res.status()}`).toBeTruthy()
+  const body = await res.json()
+  const items = Array.isArray(body) ? body : ((body as { items?: ProductListItem[] }).items ?? [])
+  const product = items.find((item) => {
+    const partNumber = (item.part_number ?? '').trim()
+    const slug = (item.slug ?? '').trim()
+    return slug && /[A-Za-z]/.test(partNumber) && /[\s\-_/]/.test(partNumber)
+  })
+  test.skip(!product, 'Public catalog needs one published product with letters and separators for Spec 010 E2E')
+  return {
+    partNumber: String(product?.part_number || ''),
+    slug: String(product?.slug || ''),
+  }
+}
+
 test.describe('Exact part-number lookup (010 US1)', () => {
-  test('six header-search variants land on same PDP', async ({ page, request, baseURL }) => {
-    const origin = (baseURL ?? '').replace(/\/$/, '')
-    const probe = await request.get(`${origin}/api/v1/products/part/${encodeURIComponent('1LA7113-4AA60')}`)
-    test.skip(!probe.ok(), 'Seed publish-ready product 1LA7113-4AA60 (spec 010 quickstart)')
+  test('six header-search variants land on same PDP', async ({ page, request }) => {
+    const fixture = await discoverExactLookupFixture(request)
+    const probe = await request.get(`${getApiBaseUrl()}/api/v1/products/part/${encodeURIComponent(fixture.partNumber)}`)
+    expect(probe.ok(), `lookup fixture ${fixture.partNumber} should resolve through part lookup API`).toBeTruthy()
 
     const payload = (await probe.json()) as { slug?: string }
-    const expectedSlug = (payload.slug ?? '').trim()
-    test.skip(!expectedSlug, 'Product response missing slug')
+    const expectedSlug = (payload.slug ?? fixture.slug).trim()
+    expect(expectedSlug, 'Product response missing slug').toBeTruthy()
 
     const searchForm = page.locator('form[role="search"]')
     const searchInput = searchForm.locator('input[type="search"]')
 
-    for (const q of VARIANTS) {
+    for (const q of lookupVariants(fixture.partNumber)) {
       await page.goto('/', { waitUntil: 'domcontentloaded' })
       await expect(searchInput).toBeVisible({ timeout: 30_000 })
       await searchInput.fill(q)

@@ -503,12 +503,12 @@ export function SearchBar({
         e.preventDefault()
         setActiveIndex((i) => (i > 0 ? i - 1 : totalOptions - 1))
       } else if (e.key === 'Enter') {
-        e.preventDefault()
         if (activeIndex >= 0 && activeIndex < totalOptions) {
+          e.preventDefault()
           selectOption(options[activeIndex])
-        } else {
-          navigateToSearch()
+          return
         }
+        setDropdownOpen(false)
       } else if (e.key === 'Escape') {
         e.preventDefault()
         setDropdownOpen(false)
