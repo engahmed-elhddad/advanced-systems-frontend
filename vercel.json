@@ -10,6 +10,14 @@
     {
       "path": "/api/cron/sitemap-refresh",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/expire-payments",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/reconcile-payments",
+      "schedule": "0 2 * * *"
     }
   ]
 }
