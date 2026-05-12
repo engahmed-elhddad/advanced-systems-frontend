@@ -24,6 +24,7 @@
     "@tanstack/react-table": "^8.20.5",
     "@tanstack/react-virtual": "^3.10.9",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "axios": "^1.13.6",
     "axios-retry": "^4.5.0",
     "clsx": "^2.1.1",

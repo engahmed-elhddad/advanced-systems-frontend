@@ -12,6 +12,7 @@ import { ThemeProvider } from '@/components/ui/ThemeProvider'
 import { CartProvider } from '@/context/CartContext'
 import { I18nProvider } from '@/lib/i18n'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono', display: 'swap' })
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${rajdhani.variable} ${inter.className} font-sans antialiased text-[--text-primary]`}>
         <AnalyticsClient />
         <Analytics />
+        <SpeedInsights />
         <ThemeProvider>
         <I18nProvider>
         <QueryProvider>
@@ -92,7 +94,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </QueryProvider>
         </I18nProvider>
         </ThemeProvider>
-        <Analytics />
       </body>
     </html>
   )
