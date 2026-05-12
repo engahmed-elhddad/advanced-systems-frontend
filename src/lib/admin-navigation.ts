@@ -52,6 +52,7 @@ export const adminNavSections: AdminNavSection[] = [
       { href: '/admin/orders', label: 'Orders', desc: 'Track approved and submitted orders' },
       { href: '/admin/leads', label: 'Leads', desc: 'CRM pipeline linked to RFQ activity' },
       { href: '/admin/rfq-instant', label: 'Instant RFQ', desc: 'Monitor instant RFQ channel traffic' },
+      { href: '/admin/payments', label: 'Payments', desc: 'SLO metrics, stuck payments, drift inbox, and manual cron triggers' },
     ],
   },
   {
