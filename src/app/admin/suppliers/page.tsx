@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { apiFetch } from '@/lib/api'
-import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { getAuthHeaders } from "@/lib/admin-auth"
 import { Button, Input, Modal } from "@/components/ui"
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
@@ -10,59 +10,65 @@ const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems
 type Supplier = {
   id: number
   name: string
-  country: string
-  email: string
+  country?: string | null
+  contact_email?: string | null
   website?: string
   notes?: string
 }
 
-const EMPTY_SUPPLIER: Omit<Supplier, "id"> = { name: "", country: "", email: "", website: "", notes: "" }
+type SupplierForm = {
+  name: string
+  country: string
+  email: string
+  website: string
+  notes: string
+}
+
+const EMPTY_SUPPLIER: SupplierForm = { name: "", country: "", email: "", website: "", notes: "" }
 
 export default function AdminSuppliersPage() {
-  const ADMIN_KEY = getBrowserAdminApiKey()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState<Omit<Supplier, "id">>(EMPTY_SUPPLIER)
+  const [form, setForm] = useState<SupplierForm>(EMPTY_SUPPLIER)
   const [editing, setEditing] = useState<Supplier | null>(null)
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
-    if (!ADMIN_KEY) {
-      setLoading(false)
-      return
-    }
-    apiFetch(`${API}/admin/suppliers`, { headers: { "api-key": ADMIN_KEY } })
+    apiFetch(`${API}/api/v1/suppliers/`)
       .then(r => r.json())
-      .then(d => setSuppliers(d.suppliers ?? d ?? []))
+      .then(d => setSuppliers(Array.isArray(d) ? d : d.suppliers ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [ADMIN_KEY])
+  }, [])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
   async function handleSave() {
-    if (!ADMIN_KEY) {
-      alert("Set NEXT_PUBLIC_ADMIN_API_KEY in .env.local")
-      return
-    }
     setSaving(true)
     try {
+      const payload = {
+        name: form.name.trim(),
+        country: form.country.trim() || null,
+        contact_email: form.email.trim() || null,
+        website: form.website.trim() || null,
+        notes: form.notes.trim() || null,
+      }
       if (editing) {
-        const res = await apiFetch(`${API}/admin/suppliers/${editing.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", "api-key": ADMIN_KEY },
-          body: JSON.stringify(form),
+        const res = await apiFetch(`${API}/api/v1/admin/suppliers/${editing.id}`, {
+          method: "PUT",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload),
         })
         const updated = await res.json()
         setSuppliers(prev => prev.map(s => s.id === editing.id ? { ...updated } : s))
       } else {
-        const res = await apiFetch(`${API}/admin/suppliers`, {
+        const res = await apiFetch(`${API}/api/v1/admin/suppliers`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "api-key": ADMIN_KEY },
-          body: JSON.stringify(form),
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload),
         })
         const created = await res.json()
         setSuppliers(prev => [...prev, created])
@@ -78,12 +84,11 @@ export default function AdminSuppliersPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!ADMIN_KEY) return
     if (!confirm("Delete this supplier?")) return
     try {
-      await apiFetch(`${API}/admin/suppliers/${id}`, {
+      await apiFetch(`${API}/api/v1/admin/suppliers/${id}`, {
         method: "DELETE",
-        headers: { "api-key": ADMIN_KEY },
+        headers: getAuthHeaders(),
       })
       setSuppliers(prev => prev.filter(s => s.id !== id))
     } catch {
@@ -93,7 +98,13 @@ export default function AdminSuppliersPage() {
 
   function startEdit(s: Supplier) {
     setEditing(s)
-    setForm({ name: s.name, country: s.country, email: s.email, website: s.website ?? "", notes: s.notes ?? "" })
+    setForm({
+      name: s.name,
+      country: s.country ?? "",
+      email: s.contact_email ?? "",
+      website: s.website ?? "",
+      notes: s.notes ?? "",
+    })
     setShowForm(true)
   }
 
@@ -138,7 +149,9 @@ export default function AdminSuppliersPage() {
                         <td className="px-5 py-3 font-medium text-white">{s.name}</td>
                         <td className="px-5 py-3 text-white/70">{s.country}</td>
                         <td className="px-5 py-3">
-                          <a href={`mailto:${s.email}`} className="text-sky-400 hover:underline">{s.email}</a>
+                          {s.contact_email ? (
+                            <a href={`mailto:${s.contact_email}`} className="text-sky-400 hover:underline">{s.contact_email}</a>
+                          ) : "â€”"}
                         </td>
                         <td className="px-5 py-3">
                           {s.website ? (

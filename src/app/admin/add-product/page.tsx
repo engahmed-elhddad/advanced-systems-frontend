@@ -1,7 +1,7 @@
 "use client"
 
 import { api, apiFetch, getApiErrorMessage } from '@/lib/api'
-import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { getAuthHeaders } from "@/lib/admin-auth"
 import { adminLightInputClass, adminLightLabelClass, adminLightTextareaClass } from '@/lib/adminFormClasses'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -34,7 +34,6 @@ const AVAILABILITY_OPTIONS = [
 ]
 
 export default function AddProductPage() {
-  const ADMIN_KEY = getBrowserAdminApiKey()
   const [brands, setBrands] = useState<Brand[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [form, setForm] = useState({
@@ -141,36 +140,31 @@ export default function AddProductPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!ADMIN_KEY) {
-      setStatus("error")
-      setMessage("Set NEXT_PUBLIC_ADMIN_API_KEY in .env.local.")
-      return
-    }
     setStatus("loading")
     setMessage("")
 
     try {
-      const specifications: Record<string, string> = {}
-      for (const s of specs) {
-        if (s.key.trim()) specifications[s.key.trim()] = s.value.trim()
-      }
+      const specifications = specs
+        .filter((s) => s.key.trim())
+        .map((s, index) => ({ key: s.key.trim(), value: s.value.trim(), sort_order: index }))
 
       const body = {
         part_number: form.part_number.trim().toUpperCase(),
+        name: form.part_number.trim().toUpperCase(),
         brand_id: form.brand_id ? parseInt(form.brand_id) : null,
         category_id: form.category_id ? parseInt(form.category_id) : null,
         series: form.series || null,
         description: form.description || null,
         condition: form.condition,
-        quantity: parseInt(form.quantity) || 0,
+        stock_quantity: parseInt(form.quantity) || 1,
+        initial_quantity: parseInt(form.quantity) || 1,
         availability: form.availability,
-        lead_time: form.lead_time || null,
-        specifications,
+        specs: specifications,
       }
 
-      const res = await apiFetch(`${API}/admin/products`, {
+      const res = await apiFetch(`${API}/api/v1/admin/products`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "api-key": ADMIN_KEY },
+        headers: getAuthHeaders(),
         body: JSON.stringify(body),
       })
 
@@ -187,9 +181,11 @@ export default function AddProductPage() {
         const fd = new FormData()
         fd.append("file", imageFile)
         fd.append("is_primary", "true")
-        await apiFetch(`${API}/admin/products/${productId}/images?is_primary=true`, {
+        const headers = getAuthHeaders()
+        delete headers["Content-Type"]
+        await apiFetch(`${API}/api/v1/admin/products/${productId}/images`, {
           method: "POST",
-          headers: { "api-key": ADMIN_KEY },
+          headers,
           body: fd,
         })
       }
@@ -198,9 +194,11 @@ export default function AddProductPage() {
       if (datasheetFile && productId) {
         const fd = new FormData()
         fd.append("file", datasheetFile)
-        await apiFetch(`${API}/admin/products/${productId}/datasheets`, {
+        const headers = getAuthHeaders()
+        delete headers["Content-Type"]
+        await apiFetch(`${API}/api/v1/admin/products/${productId}/datasheets`, {
           method: "POST",
-          headers: { "api-key": ADMIN_KEY },
+          headers,
           body: fd,
         })
       }

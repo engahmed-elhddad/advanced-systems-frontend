@@ -33,9 +33,12 @@ export default function CrawlImagesPage() {
     setResults([])
 
     try {
+      const token = typeof window !== "undefined" ? window.localStorage.getItem("admin_token") : null
+      const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (token) headers.Authorization = `Bearer ${token}`
       const res = await fetch("/api/crawl-image", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ part_numbers: parts }),
       })
       const data = await res.json()

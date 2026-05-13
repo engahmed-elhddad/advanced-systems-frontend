@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { requireBackendAdmin } from "@/lib/serverAdminAuth"
 
 const API =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
@@ -14,7 +15,10 @@ function serverAdminApiKey(): string | undefined {
  * Proxies the enrichment request to the FastAPI backend so that
  * ``ADMIN_API_KEY`` stays server-side and is never exposed to the browser.
  */
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const authFailure = await requireBackendAdmin(request)
+  if (authFailure) return authFailure
+
   const adminKey = serverAdminApiKey()
   if (!adminKey) {
     return NextResponse.json(

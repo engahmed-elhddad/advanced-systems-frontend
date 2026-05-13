@@ -1,7 +1,7 @@
 "use client"
 
 import { apiFetch } from '@/lib/api'
-import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -35,13 +35,7 @@ export default function AdminInstantRFQPage() {
   useEffect(() => {
     setLoading(true)
     setError("")
-    const key = getBrowserAdminApiKey()
-    if (!key) {
-      setError("Set NEXT_PUBLIC_ADMIN_API_KEY in .env.local to load Instant RFQs.")
-      setLoading(false)
-      return
-    }
-    const headers = { "api-key": key }
+    const headers = getAuthHeaders()
     apiFetch(`${API}/api/v1/admin/rfq-instant/list?page=${page}&limit=50`, { headers })
       .then((r) => {
         if (r.ok) return r.json()
@@ -54,7 +48,7 @@ export default function AdminInstantRFQPage() {
         setItems(d.items ?? [])
         setTotal(d.total ?? 0)
       })
-      .catch(() => setError("Could not load Instant RFQs. Check API and api-key."))
+      .catch(() => setError("Could not load Instant RFQs. Check API and admin login."))
       .finally(() => setLoading(false))
   }, [page])
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { apiFetch } from '@/lib/api'
-import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -29,12 +29,7 @@ export default function SystemToolsPage() {
   const [generateResult, setGenerateResult] = useState<Record<string, unknown> | null>(null)
 
   useEffect(() => {
-    const ADMIN_KEY = getBrowserAdminApiKey()
-    if (!ADMIN_KEY) {
-      setLoading(false)
-      return
-    }
-    apiFetch(`${API}/admin/scripts`, { headers: { "api-key": ADMIN_KEY } })
+    apiFetch(`${API}/admin/scripts`, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => setScripts(data.scripts || []))
       .catch(() => setScripts([]))
@@ -43,17 +38,12 @@ export default function SystemToolsPage() {
 
   async function generateProduct() {
     if (!partNumber.trim()) return
-    const ADMIN_KEY = getBrowserAdminApiKey()
-    if (!ADMIN_KEY) {
-      setGenerateResult({ error: "NEXT_PUBLIC_ADMIN_API_KEY is not set" })
-      return
-    }
     setGenerateLoading(true)
     setGenerateResult(null)
     try {
       const res = await apiFetch(`${API}/admin/intelligence/generate`, {
         method: "POST",
-        headers: { "api-key": ADMIN_KEY, "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ part_number: partNumber.trim() }),
       })
       const data = await res.json()
@@ -66,17 +56,12 @@ export default function SystemToolsPage() {
   }
 
   async function runScript(scriptId: string, batchSize = 50, limit = 500) {
-    const ADMIN_KEY = getBrowserAdminApiKey()
-    if (!ADMIN_KEY) {
-      setResult({ script_id: scriptId, data: { status: "error", message: "NEXT_PUBLIC_ADMIN_API_KEY is not set" } })
-      return
-    }
     setRunning(scriptId)
     setResult(null)
     try {
       const res = await apiFetch(
         `${API}/admin/run-script/${scriptId}?batch_size=${batchSize}&limit=${limit}`,
-        { method: "POST", headers: { "api-key": ADMIN_KEY } }
+        { method: "POST", headers: getAuthHeaders() }
       )
       const data = await res.json()
       setResult({ script_id: scriptId, data })

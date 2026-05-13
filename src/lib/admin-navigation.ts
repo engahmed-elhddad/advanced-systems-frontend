@@ -71,7 +71,6 @@ export const adminNavSections: AdminNavSection[] = [
     icon: BarChart3,
     links: [
       { href: '/admin/analytics', label: 'Analytics', desc: 'Search demand and RFQ trend insights' },
-      { href: '/admin/stock', label: 'Stock Dashboard', desc: 'Inventory overview' },
       { href: '/admin/dashboard', label: 'Dashboard', desc: 'Operational KPIs and system health' },
     ],
   },

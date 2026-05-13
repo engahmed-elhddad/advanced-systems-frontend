@@ -3,8 +3,9 @@
  *
  * The browser POSTs `{ action: "expire" | "reconcile", lookback_hours?: number }`
  * with the admin's Bearer token (from localStorage) in the `Authorization` header.
- * This route validates the admin Bearer shape, then forwards to the backend with
- * `Authorization: Bearer ${process.env.CRON_SECRET}` injected server-side.
+ * This route validates the admin Bearer token with the backend, then forwards to
+ * the backend with `Authorization: Bearer ${process.env.CRON_SECRET}` injected
+ * server-side.
  *
  * AC-08: CRON_SECRET MUST never appear in the browser network tab. The browser
  * only ever sees its own admin Bearer token; the CRON_SECRET stays on the
@@ -13,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { API_BASE_URL } from '@/lib/constants'
+import { requireBackendAdmin } from '@/lib/serverAdminAuth'
 
 const ACTION_TO_PATH: Record<string, string> = {
   expire: '/api/v1/internal/payments/expire-stale',
@@ -25,10 +27,8 @@ interface TriggerBody {
 }
 
 export async function POST(request: NextRequest) {
-  const authorization = request.headers.get('authorization')
-  if (!authorization || !authorization.toLowerCase().startsWith('bearer ')) {
-    return NextResponse.json({ error: 'missing_admin_bearer' }, { status: 401 })
-  }
+  const authFailure = await requireBackendAdmin(request)
+  if (authFailure) return authFailure
 
   const cronSecret = (process.env.CRON_SECRET ?? process.env.E2E_CRON_SECRET ?? '').trim()
   if (!cronSecret) {

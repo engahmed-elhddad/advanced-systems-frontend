@@ -1,7 +1,7 @@
 "use client"
 
 import { apiFetch } from '@/lib/api'
-import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -10,7 +10,6 @@ import { Network, Zap, RefreshCw, Search } from "lucide-react"
 const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
 export default function KnowledgeGraphPage() {
-  const ADMIN_KEY = getBrowserAdminApiKey()
   const [building, setBuilding] = useState(false)
   const [result, setResult] = useState<{ added?: number; status?: string } | null>(null)
   const [schema, setSchema] = useState<{ entity_types?: string[]; relationship_types?: string[]; relationships_count?: number } | null>(null)
@@ -23,15 +22,11 @@ export default function KnowledgeGraphPage() {
   }, [])
 
   const buildGraph = () => {
-    if (!ADMIN_KEY) {
-      setResult({ status: "error" })
-      return
-    }
     setBuilding(true)
     setResult(null)
     apiFetch(`${API}/admin/knowledge-graph/build?limit=500`, {
       method: "POST",
-      headers: { "api-key": ADMIN_KEY },
+      headers: getAuthHeaders(),
     })
       .then((r) => r.json())
       .then(setResult)

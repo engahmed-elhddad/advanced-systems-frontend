@@ -1,7 +1,7 @@
 "use client"
 
 import { apiFetch } from '@/lib/api'
-import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -41,10 +41,7 @@ export default function PatternRulesAdminPage() {
   const [categorySaving, setCategorySaving] = useState(false)
 
   const headers = () => {
-    const key = getBrowserAdminApiKey()
-    const h: Record<string, string> = { "Content-Type": "application/json" }
-    if (key) h["api-key"] = key
-    return h
+    return getAuthHeaders()
   }
 
   async function loadBrands() {

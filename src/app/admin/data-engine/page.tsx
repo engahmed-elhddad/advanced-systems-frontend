@@ -1,7 +1,7 @@
 "use client"
 
 import { apiFetch } from '@/lib/api'
-import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -50,18 +50,18 @@ const JOBS = [
 ]
 
 export default function DataEnginePage() {
-  const ADMIN_KEY = getBrowserAdminApiKey()
   const [status, setStatus] = useState<EngineStatus | null>(null)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState<string | null>(null)
 
   const fetchData = () => {
+    const headers = getAuthHeaders()
     Promise.all([
-      apiFetch(`${API}/admin/data-engine/status`, { headers: { "api-key": ADMIN_KEY } })
+      apiFetch(`${API}/admin/data-engine/status`, { headers })
         .then((r) => r.json())
         .catch(() => ({})),
-      apiFetch(`${API}/admin/data-engine/logs?limit=80`, { headers: { "api-key": ADMIN_KEY } })
+      apiFetch(`${API}/admin/data-engine/logs?limit=80`, { headers })
         .then((r) => r.json())
         .then((d) => d.logs || [])
         .catch(() => []),
@@ -77,12 +77,11 @@ export default function DataEnginePage() {
   }, [])
 
   const runJob = async (jobId: string) => {
-    if (!ADMIN_KEY) return
     setRunning(jobId)
     try {
       const res = await apiFetch(`${API}/admin/data-engine/run/${jobId}`, {
         method: "POST",
-        headers: { "api-key": ADMIN_KEY },
+        headers: getAuthHeaders(),
       })
       const data = await res.json()
       fetchData()

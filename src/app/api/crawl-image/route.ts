@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireBackendAdmin } from "@/lib/serverAdminAuth"
 
 const API =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.advancedsystems-int.com"
@@ -237,6 +238,9 @@ async function uploadImageToBackend(
 }
 
 export async function POST(req: NextRequest) {
+  const authFailure = await requireBackendAdmin(req)
+  if (authFailure) return authFailure
+
   let body: { part_number?: string; part_numbers?: string[] }
   try {
     body = await req.json()

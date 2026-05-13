@@ -1,7 +1,7 @@
 "use client"
 
 import { apiFetch } from '@/lib/api'
-import { getBrowserAdminApiKey } from "@/lib/admin-api-key"
+import { getAuthHeaders } from "@/lib/admin-auth"
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -12,31 +12,22 @@ const API = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_
 type Pattern = { series: string; brand: string; suffixes?: string[]; numeric_range?: number[] }
 
 export default function SeoEnginePage() {
-  const ADMIN_KEY = getBrowserAdminApiKey()
   const [patterns, setPatterns] = useState<Pattern[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [result, setResult] = useState<{ created?: number; skipped?: number; message?: string; errors?: string[] } | null>(null)
 
   useEffect(() => {
-    if (!ADMIN_KEY) {
-      setLoading(false)
-      return
-    }
     apiFetch(`${API}/admin/seo-engine/patterns`, {
-      headers: { "api-key": ADMIN_KEY },
+      headers: getAuthHeaders(),
     })
       .then((r) => r.json())
       .then((d) => setPatterns(d.patterns || []))
       .catch(() => setPatterns([]))
       .finally(() => setLoading(false))
-  }, [ADMIN_KEY])
+  }, [])
 
   const runGenerate = (series?: string, limit = 50) => {
-    if (!ADMIN_KEY) {
-      setResult({ errors: ["NEXT_PUBLIC_ADMIN_API_KEY is not set"] })
-      return
-    }
     setGenerating(true)
     setResult(null)
     const params = new URLSearchParams()
@@ -44,7 +35,7 @@ export default function SeoEnginePage() {
     params.set("limit_per_series", String(limit))
     apiFetch(`${API}/admin/seo-engine/generate?${params}`, {
       method: "POST",
-      headers: { "api-key": ADMIN_KEY },
+      headers: getAuthHeaders(),
     })
       .then((r) => r.json())
       .then(setResult)

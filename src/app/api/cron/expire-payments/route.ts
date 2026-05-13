@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { API_BASE_URL } from '@/lib/constants'
 
 /**
- * Spec 030 T026 — Vercel cron: every 15 minutes, ask the backend to reap
- * payment_attempts whose `expires_at` has passed.
+ * Vercel cron safety sweep: ask the backend to reap payment_attempts whose
+ * `expires_at` has passed. High-frequency expiry belongs on Railway or a
+ * Pro-plan cron; this route is scheduled daily so Hobby deployments do not fail.
  *
  * Vercel automatically sends `Authorization: Bearer ${CRON_SECRET}` when the
  * cron fires. We forward that same header to the backend, where
