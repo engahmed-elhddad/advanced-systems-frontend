@@ -18,6 +18,10 @@
     {
       "path": "/api/cron/reconcile-payments",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/search-consistency",
+      "schedule": "30 2 * * *"
     }
   ]
 }
