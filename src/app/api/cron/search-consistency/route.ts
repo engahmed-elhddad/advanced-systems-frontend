@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       headers: {
         Authorization: expectedAuth,
         'Content-Type': 'application/json',
-        'User-Agent': 'AdvancedSystems-Operations/1.0',
+        'User-Agent': 'AdvancedSystems-VercelCron/search-consistency',
       },
       body: JSON.stringify({ batch_size: 500 }),
       cache: 'no-store',

@@ -52,7 +52,8 @@ describe('/api/cron/reconcile-payments', () => {
     expect(fetchMock.mock.calls[0][1]?.headers).toEqual({
       Authorization: 'Bearer cron-secret',
       'Content-Type': 'application/json',
+      'User-Agent': 'AdvancedSystems-VercelCron/payment-reconciliation',
     })
-    expect(fetchMock.mock.calls[0][1]?.body).toBe('{}')
+    expect(fetchMock.mock.calls[0][1]?.body).toBe(JSON.stringify({}))
   })
 })

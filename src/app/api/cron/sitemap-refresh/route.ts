@@ -19,6 +19,14 @@ function getAuthSecret(): string | null {
   return process.env.CRON_SECRET?.trim() || process.env.E2E_CRON_SECRET?.trim() || null
 }
 
+function getRunnerUserAgent(request: NextRequest): string {
+  const incoming = request.headers.get('user-agent')?.trim().toLowerCase() || ''
+  if (incoming.includes('advancedsystems-railwaycron')) {
+    return 'AdvancedSystems-RailwayCron/sitemap-refresh'
+  }
+  return 'AdvancedSystems-VercelCron/sitemap-refresh'
+}
+
 function summarizeStatus(values: Array<number | null>): 'success' | 'partial' | 'failed' {
   const successCount = values.filter((v) => v !== null).length
   if (successCount === values.length) return 'success'
@@ -75,6 +83,7 @@ export async function GET(request: NextRequest) {
   const secret = getAuthSecret()
   const incomingAuth = request.headers.get('authorization')?.trim() || ''
   const expectedAuth = secret ? `Bearer ${secret}` : ''
+  const runnerUserAgent = getRunnerUserAgent(request)
   if (!secret || incomingAuth !== expectedAuth) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
@@ -121,6 +130,7 @@ export async function GET(request: NextRequest) {
     headers: {
       'Content-Type': 'application/json',
       Authorization: expectedAuth,
+      'User-Agent': runnerUserAgent,
     },
     body: JSON.stringify({
       status,

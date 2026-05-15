@@ -48,6 +48,9 @@ describe('/api/cron/expire-payments', () => {
     })
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock.mock.calls[0][0]).toContain('/api/v1/internal/payments/expire-stale')
-    expect(fetchMock.mock.calls[0][1]?.headers).toEqual({ Authorization: 'Bearer cron-secret' })
+    expect(fetchMock.mock.calls[0][1]?.headers).toEqual({
+      Authorization: 'Bearer cron-secret',
+      'User-Agent': 'AdvancedSystems-VercelCron/payment-expiry',
+    })
   })
 })

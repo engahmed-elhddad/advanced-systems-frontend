@@ -2,20 +2,15 @@ import { describe, expect, it } from 'vitest'
 import vercelConfig from '../../vercel.json'
 
 describe('vercel cron config', () => {
-  it('schedules payment expiry, reconciliation, and search consistency checks', () => {
+  it('keeps only payment reconciliation on the Vercel scheduler', () => {
     const crons = vercelConfig.crons ?? []
 
-    expect(crons).toContainEqual({
-      path: '/api/cron/expire-payments',
-      schedule: '30 1 * * *',
-    })
     expect(crons).toContainEqual({
       path: '/api/cron/reconcile-payments',
       schedule: '0 2 * * *',
     })
-    expect(crons).toContainEqual({
-      path: '/api/cron/search-consistency',
-      schedule: '30 2 * * *',
-    })
+    expect(crons.find((entry) => entry.path === '/api/cron/expire-payments')).toBeUndefined()
+    expect(crons.find((entry) => entry.path === '/api/cron/search-consistency')).toBeUndefined()
+    expect(crons.find((entry) => entry.path === '/api/cron/sitemap-refresh')).toBeUndefined()
   })
 })

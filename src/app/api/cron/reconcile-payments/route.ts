@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
       headers: {
         Authorization: expectedAuth,
         'Content-Type': 'application/json',
+        'User-Agent': 'AdvancedSystems-VercelCron/payment-reconciliation',
       },
       body: JSON.stringify({}),
       cache: 'no-store',

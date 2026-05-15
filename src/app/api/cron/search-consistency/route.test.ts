@@ -28,7 +28,7 @@ describe('/api/cron/search-consistency', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('forwards cron bearer and operations user-agent to backend consistency endpoint', async () => {
+  it('forwards cron bearer and Vercel cron user-agent to backend consistency endpoint', async () => {
     process.env = { ...OLD_ENV, CRON_SECRET: 'cron-secret' }
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
@@ -58,7 +58,7 @@ describe('/api/cron/search-consistency', () => {
     expect(fetchMock.mock.calls[0][1]?.headers).toEqual({
       Authorization: 'Bearer cron-secret',
       'Content-Type': 'application/json',
-      'User-Agent': 'AdvancedSystems-Operations/1.0',
+      'User-Agent': 'AdvancedSystems-VercelCron/search-consistency',
     })
     expect(fetchMock.mock.calls[0][1]?.body).toBe(JSON.stringify({ batch_size: 500 }))
   })

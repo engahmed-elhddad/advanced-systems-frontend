@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
   try {
     response = await fetch(`${API_BASE_URL}/api/v1/internal/payments/expire-stale`, {
       method: 'POST',
-      headers: { Authorization: expectedAuth },
+      headers: {
+        Authorization: expectedAuth,
+        'User-Agent': 'AdvancedSystems-VercelCron/payment-expiry',
+      },
       cache: 'no-store',
     })
   } catch (error) {
